@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SharePal — Payout Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,400;0,500;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --blue:#1B4FD8;--blue-d:#1035a8;--blue-l:#EEF3FF;--blue-m:#2563EB;
+  --green:#16A34A;--green-l:#DCFCE7;
+  --amber:#D97706;--amber-l:#FEF3C7;
+  --gray-900:#0F1623;--gray-800:#1E2433;--gray-600:#5A6278;
+  --gray-400:#9BA3B5;--gray-200:#E4E7EF;--gray-100:#F1F3F7;--gray-50:#F8F9FB;
+  --white:#fff;
+  --monthly-accent:#7C3AED;--monthly-light:#F5F3FF;--monthly-border:#DDD6FE;
+  --font-display:'Ubuntu',sans-serif;--font-body:'Inter',sans-serif;
+  --radius-sm:8px;--radius-md:14px;--radius-lg:20px;--radius-xl:28px;
+  --shadow-sm:0 1px 4px rgba(0,0,0,.06);
+  --shadow-md:0 6px 24px rgba(0,0,0,.09);
+  --shadow-lg:0 16px 48px rgba(0,0,0,.13);
+  --shadow-blue:0 8px 32px rgba(27,79,216,.28);
+  --shadow-purple:0 8px 32px rgba(124,58,237,.28);
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-body);background:var(--gray-50);color:var(--gray-800);min-height:100vh;line-height:1.6;overflow-x:hidden}
+
+/* ── NAV ── */
+nav{background:var(--white);border-bottom:1px solid var(--gray-200);position:sticky;top:0;z-index:200;box-shadow:var(--shadow-sm)}
+.nav-inner{max-width:1080px;margin:0 auto;padding:0 1.5rem;height:62px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.logo-mark{width:36px;height:36px;background:var(--blue);border-radius:10px;display:flex;align-items:center;justify-content:center}
+.logo-mark svg{width:18px;height:18px;fill:white}
+.logo-name{font-family:var(--font-display);font-size:19px;font-weight:800;color:var(--blue);letter-spacing:-0.5px}
+.logo-name span{color:var(--green)}
+.nav-links{display:flex;align-items:center;gap:1.75rem}
+.nav-links a{font-size:13px;font-weight:500;color:var(--gray-600);text-decoration:none;transition:color .15s}
+.nav-links a:hover{color:var(--blue)}
+.nav-btn{background:var(--blue);color:white!important;padding:7px 18px;border-radius:8px;font-size:13px;font-weight:600;transition:background .15s,transform .15s}
+.nav-btn:hover{background:var(--blue-d)!important;transform:translateY(-1px)}
+
+/* ── HERO ── */
+.hero{position:relative;overflow:hidden;padding:4.5rem 1.5rem 3.5rem;text-align:center;
+  background:linear-gradient(160deg,#0a1f6e 0%,#1B4FD8 45%,#2563EB 75%,#3b82f6 100%)}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);background-size:48px 48px;pointer-events:none}
+.hero-glow{position:absolute;top:-80px;left:50%;transform:translateX(-50%);width:600px;height:300px;background:radial-gradient(ellipse,rgba(255,255,255,.12) 0%,transparent 70%);pointer-events:none}
+.hero-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);border-radius:100px;padding:6px 16px;font-size:12px;font-weight:600;color:white;margin-bottom:1.25rem;position:relative;letter-spacing:.3px}
+.badge-dot{width:6px;height:6px;border-radius:50%;background:#6EF0A4;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.7;transform:scale(1.3)}}
+.hero h1{font-family:var(--font-display);font-size:clamp(2rem,5vw,3rem);font-weight:800;line-height:1.15;letter-spacing:-1.5px;color:white;margin-bottom:.9rem;position:relative}
+.hero h1 em{font-style:normal;color:#93C5FD}
+.hero p{font-size:1rem;color:rgba(255,255,255,.72);max-width:500px;margin:0 auto 2.5rem;position:relative}
+.hero-stats{display:flex;justify-content:center;gap:3rem;position:relative}
+.stat-val{font-family:var(--font-display);font-size:1.55rem;font-weight:800;color:white;line-height:1}
+.stat-lbl{font-size:11px;color:rgba(255,255,255,.55);margin-top:3px;font-weight:500;letter-spacing:.3px}
+
+/* ── MAIN WRAPPER ── */
+.main{max-width:900px;margin:-2rem auto 0;padding:0 1.25rem 5rem;position:relative;z-index:10}
+
+/* ── TOGGLE ── */
+.toggle-wrap{display:flex;justify-content:center;margin-bottom:1.75rem}
+.toggle-pill{display:flex;background:var(--white);border:1.5px solid var(--gray-200);border-radius:100px;padding:4px;box-shadow:var(--shadow-md);gap:4px}
+.toggle-btn{font-family:var(--font-display);font-size:13px;font-weight:700;padding:10px 28px;border-radius:100px;border:none;cursor:pointer;background:transparent;transition:all .25s;display:flex;align-items:center;gap:7px;letter-spacing:.2px;color:var(--gray-600)}
+.toggle-btn svg{width:15px;height:15px;transition:all .25s}
+.toggle-btn.active-yearly{background:var(--blue);color:white;box-shadow:var(--shadow-blue)}
+.toggle-btn.active-yearly svg{stroke:white;fill:none}
+.toggle-btn.active-monthly{background:var(--monthly-accent);color:white;box-shadow:var(--shadow-purple)}
+.toggle-btn.active-monthly svg{stroke:white;fill:none}
+.toggle-btn:not(.active-yearly):not(.active-monthly) svg{stroke:var(--gray-400);fill:none}
+
+/* ── CARD ── */
+.card{background:var(--white);border-radius:var(--radius-xl);box-shadow:var(--shadow-lg);border:1px solid var(--gray-200);overflow:hidden}
+.card-pad{padding:1.75rem 2rem}
+.card+.card{margin-top:1.25rem}
+
+/* ── GRID ── */
+.calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;align-items:start}
+
+/* ── SECTION LABEL ── */
+.sec-label{font-size:10px;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:.75rem}
+
+/* ── AMOUNT INPUT ── */
+.amt-box{display:flex;align-items:center;gap:6px;background:var(--gray-50);border:2px solid var(--gray-200);border-radius:var(--radius-md);padding:12px 16px;transition:all .2s}
+.amt-box:focus-within{border-color:var(--blue);background:var(--blue-l)}
+.amt-box.monthly-focus:focus-within{border-color:var(--monthly-accent);background:var(--monthly-light)}
+.rupee{font-family:var(--font-display);font-size:22px;font-weight:800;color:var(--blue)}
+.rupee.m{color:var(--monthly-accent)}
+input.amt{border:none;background:transparent;font-family:var(--font-display);font-size:22px;font-weight:800;color:var(--gray-800);flex:1;outline:none;width:100%}
+input.amt::placeholder{color:var(--gray-400);font-weight:500;font-size:18px;font-family:var(--font-body)}
+
+.quick-row{display:flex;gap:5px;margin-top:9px;flex-wrap:wrap}
+.qbtn{font-size:11px;font-weight:600;padding:4px 11px;border-radius:100px;border:1.5px solid var(--blue);color:var(--blue);background:transparent;cursor:pointer;transition:all .15s;font-family:var(--font-body)}
+.qbtn:hover,.qbtn.active-q{background:var(--blue);color:white}
+.qbtn.m{border-color:var(--monthly-accent);color:var(--monthly-accent)}
+.qbtn.m:hover,.qbtn.m.active-q{background:var(--monthly-accent);color:white}
+
+/* ── TENURE ── */
+.tenure-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tbtn{padding:14px 6px;border-radius:var(--radius-md);border:2px solid var(--gray-200);background:var(--gray-50);cursor:pointer;font-family:var(--font-display);text-align:center;transition:all .2s;position:relative;overflow:hidden}
+.tbtn:hover{border-color:var(--blue)}
+.tbtn.ay{background:var(--blue);border-color:var(--blue);box-shadow:var(--shadow-blue);transform:translateY(-2px)}
+.tbtn.am{background:var(--monthly-accent);border-color:var(--monthly-accent);box-shadow:var(--shadow-purple);transform:translateY(-2px)}
+.t-yr{font-family:var(--font-display);font-size:24px;font-weight:800;color:var(--gray-800);line-height:1}
+.t-lbl{font-size:10px;color:var(--gray-400);font-weight:600;margin-top:3px;text-transform:uppercase;letter-spacing:.5px}
+.tbtn.ay .t-yr,.tbtn.ay .t-lbl{color:white}
+.tbtn.am .t-yr,.tbtn.am .t-lbl{color:white}
+.tbtn.am .t-lbl{color:rgba(255,255,255,.75)}
+.best-tag{position:absolute;top:6px;right:6px;background:#6EF0A4;color:#065F46;font-size:8px;font-weight:800;padding:2px 6px;border-radius:20px;letter-spacing:.3px}
+
+/* ── RESULT CARD ── */
+.result-y{background:linear-gradient(145deg,#1B4FD8,#2563EB);border-radius:var(--radius-xl);padding:2rem;color:white;position:relative;overflow:hidden;box-shadow:var(--shadow-blue)}
+.result-m{background:linear-gradient(145deg,#6D28D9,#7C3AED);border-radius:var(--radius-xl);padding:2rem;color:white;position:relative;overflow:hidden;box-shadow:var(--shadow-purple)}
+.result-y::after,.result-m::after{content:'';position:absolute;top:-60px;right:-60px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.06);pointer-events:none}
+.r-label{font-size:10px;font-weight:700;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;position:relative}
+.r-value{font-family:var(--font-display);font-size:2.8rem;font-weight:800;letter-spacing:-2px;line-height:1;position:relative}
+.r-gain{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.12);border-radius:100px;padding:4px 12px;font-size:12px;font-weight:700;color:#6EF0A4;margin-top:9px;position:relative}
+.r-note{margin-top:12px;padding:11px 13px;background:rgba(255,255,255,.1);border-radius:var(--radius-md);display:flex;align-items:center;gap:9px;position:relative}
+.r-note-icon{width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.r-note-icon svg{width:14px;height:14px;stroke:white;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.r-note-text{font-size:11.5px;color:rgba(255,255,255,.8);font-weight:500;line-height:1.4}
+.r-note-text strong{color:white;display:block;font-size:12.5px;font-weight:700;margin-bottom:1px}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:13px;position:relative}
+.mbox{background:rgba(255,255,255,.1);border-radius:var(--radius-sm);padding:11px;text-align:center}
+.mbox-val{font-family:var(--font-display);font-size:14px;font-weight:800;color:white}
+.mbox-lbl{font-size:9px;color:rgba(255,255,255,.5);margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+
+/* ── SCHEDULE ── */
+.sch-wrap{border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--gray-200)}
+.sch-hdr{padding:12px 16px;border-bottom:1px solid var(--gray-200);display:flex;justify-content:space-between;align-items:center;background:var(--gray-50)}
+.sch-title{font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--gray-800)}
+.sch-pill{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.3px}
+.sch-pill-y{background:var(--blue-l);color:var(--blue)}
+.sch-pill-m{background:var(--monthly-light);color:var(--monthly-accent)}
+.sch-body{max-height:260px;overflow-y:auto}
+.sch-body::-webkit-scrollbar{width:4px}
+.sch-body::-webkit-scrollbar-track{background:var(--gray-100)}
+.sch-body::-webkit-scrollbar-thumb{background:var(--gray-300,#ccc);border-radius:4px}
+.sch-row{display:flex;align-items:center;padding:11px 16px;border-bottom:1px solid var(--gray-100);transition:background .12s}
+.sch-row:last-child{border-bottom:none}
+.sch-row:hover{background:var(--gray-50)}
+.sch-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;margin-right:12px;flex-shrink:0}
+.sch-num-y{background:var(--blue-l);color:var(--blue)}
+.sch-num-m{background:var(--monthly-light);color:var(--monthly-accent)}
+.sch-info{flex:1}
+.sch-name{font-size:12.5px;font-weight:600;color:var(--gray-800)}
+.sch-sub{font-size:10.5px;color:var(--gray-400);margin-top:1px;font-weight:500}
+.sch-amt{font-family:var(--font-display);font-size:14px;font-weight:800;color:var(--green)}
+.sch-row-final-y{background:var(--blue-l)}
+.sch-row-final-m{background:var(--monthly-light)}
+.sch-row-final-y .sch-num{background:var(--blue);color:white}
+.sch-row-final-m .sch-num{background:var(--monthly-accent);color:white}
+.sch-row-final-y .sch-amt{color:var(--blue);font-size:15px}
+.sch-row-final-m .sch-amt{color:var(--monthly-accent);font-size:15px}
+.final-tag{font-size:9px;font-weight:800;padding:2px 7px;border-radius:20px;margin-left:6px;vertical-align:middle}
+.final-tag-y{background:var(--blue);color:white}
+.final-tag-m{background:var(--monthly-accent);color:white}
+
+/* ── BREAKDOWN ── */
+.bd-row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--gray-100)}
+.bd-row:last-of-type{border-bottom:none}
+.bd-left{display:flex;align-items:center;gap:11px}
+.bd-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.bd-icon svg{width:15px;height:15px;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none}
+.bd-label{font-size:12.5px;font-weight:600;color:var(--gray-800)}
+.bd-sub{font-size:10.5px;color:var(--gray-400);margin-top:1px}
+.bd-val{font-family:var(--font-display);font-size:14px;font-weight:800}
+.total-box{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-radius:var(--radius-md);margin-top:10px;border:1.5px solid}
+.total-box-y{background:var(--blue-l);border-color:#c7d8ff}
+.total-box-m{background:var(--monthly-light);border-color:var(--monthly-border)}
+.total-lbl{font-size:12.5px;font-weight:700}
+.total-val{font-family:var(--font-display);font-size:18px;font-weight:800}
+
+/* ── WHY / FEATURES ── */
+.why{background:var(--white);padding:5rem 1.5rem;border-top:1px solid var(--gray-200)}
+.section-wrap{max-width:960px;margin:0 auto}
+.eyebrow{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px}
+.eyebrow-y{color:var(--blue)}
+.eyebrow-m{color:var(--monthly-accent)}
+.sec-h{font-family:var(--font-display);font-size:clamp(1.6rem,3vw,2.1rem);font-weight:800;letter-spacing:-0.5px;color:var(--gray-800);margin-bottom:.5rem}
+.sec-p{font-size:.95rem;color:var(--gray-600);max-width:460px}
+.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.1rem;margin-top:2.25rem}
+.feat{background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-lg);padding:1.4rem;transition:box-shadow .2s,transform .2s}
+.feat:hover{box-shadow:var(--shadow-md);transform:translateY(-3px)}
+.feat-ic{width:42px;height:42px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;margin-bottom:.9rem}
+.feat-ic svg{width:20px;height:20px;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none}
+.feat-t{font-family:var(--font-display);font-size:14px;font-weight:700;color:var(--gray-800);margin-bottom:5px}
+.feat-d{font-size:12.5px;color:var(--gray-600);line-height:1.6}
+
+/* ── CTA ── */
+.cta{background:linear-gradient(135deg,#0a1f6e,#1B4FD8);padding:5rem 1.5rem;text-align:center;color:white}
+.cta h2{font-family:var(--font-display);font-size:1.9rem;font-weight:800;letter-spacing:-0.5px;margin-bottom:.7rem}
+.cta p{font-size:.95rem;color:rgba(255,255,255,.65);margin-bottom:2rem}
+.cta-btn{display:inline-flex;align-items:center;gap:8px;background:white;color:var(--blue);padding:13px 30px;border-radius:var(--radius-md);font-family:var(--font-display);font-size:14px;font-weight:700;text-decoration:none;box-shadow:0 4px 20px rgba(0,0,0,.2);transition:transform .15s,box-shadow .15s}
+.cta-btn:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.25)}
+
+/* ── FOOTER ── */
+footer{background:var(--gray-800);color:rgba(255,255,255,.45);padding:1.75rem 1.5rem;text-align:center;font-size:12px}
+footer strong{color:rgba(255,255,255,.75)}
+
+.disclaimer{font-size:10.5px;color:var(--gray-400);text-align:center;margin-top:1.5rem;line-height:1.8;max-width:660px;margin-left:auto;margin-right:auto}
+
+/* ── MODE PANELS ── */
+#panel-yearly,#panel-monthly{display:none}
+#panel-yearly.visible,#panel-monthly.visible{display:block;animation:fadeUp .3s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+@media(max-width:680px){
+  .calc-grid,.feat-grid{grid-template-columns:1fr}
+  .hero-stats{gap:1.5rem}
+  .nav-links{display:none}
+  .toggle-btn{padding:9px 18px;font-size:12px}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <a href="#" class="logo">
+      <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg></div>
+      <span class="logo-name">Share<span>Pal</span></span>
+    </a>
+    <div class="nav-links">
+      <a href="#">Home</a><a href="#">Browse Assets</a><a href="#">Dashboard</a>
+      <a href="#" class="nav-btn">Login</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-badge"><div class="badge-dot"></div>Asset-Backed Returns</div>
+  <h1>Calculate Your<br><em>Earnings</em></h1>
+  <p>Choose monthly payouts or a lump sum at maturity — see exactly what you'll earn before you invest.</p>
+  <div class="hero-stats">
+    <div><div class="stat-val">₹15+ Cr</div><div class="stat-lbl">Deployed Assets</div></div>
+    <div><div class="stat-val">+80%</div><div class="stat-lbl">Utilisation</div></div>
+    <div><div class="stat-val">3,000+</div><div class="stat-lbl">Active Assets</div></div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- TOGGLE -->
+  <div class="toggle-wrap">
+    <div class="toggle-pill">
+      <button class="toggle-btn" id="btn-yearly" onclick="switchMode('yearly')">
+        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Yearly Lump Sum
+      </button>
+      <button class="toggle-btn active-monthly" id="btn-monthly" onclick="switchMode('monthly')">
+        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Monthly Payout
+      </button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════ YEARLY PANEL ══════════════════════════════ -->
+  <div id="panel-yearly">
+    <div class="calc-grid">
+
+      <!-- LEFT -->
+      <div>
+        <div class="card card-pad">
+          <div class="sec-label">Asset Cost</div>
+          <div class="amt-box">
+            <span class="rupee">₹</span>
+            <input class="amt" id="y-principal" type="number" placeholder="Enter amount" value="100000" oninput="calcYearly()"/>
+          </div>
+          <div class="quick-row">
+            <button class="qbtn" onclick="ySetAmt(50000)">₹50K</button>
+            <button class="qbtn" onclick="ySetAmt(100000)">₹1L</button>
+            <button class="qbtn" onclick="ySetAmt(250000)">₹2.5L</button>
+            <button class="qbtn" onclick="ySetAmt(500000)">₹5L</button>
+            <button class="qbtn" onclick="ySetAmt(1000000)">₹10L</button>
+          </div>
+        </div>
+
+        <div class="card card-pad">
+          <div class="sec-label">Select Tenure</div>
+          <div class="tenure-grid">
+            <button class="tbtn ay" id="yt1" onclick="ySetTenure(1)"><div class="t-yr">1</div><div class="t-lbl">Year</div></button>
+            <button class="tbtn" id="yt2" onclick="ySetTenure(2)"><div class="t-yr">2</div><div class="t-lbl">Years</div></button>
+            <button class="tbtn" id="yt3" onclick="ySetTenure(3)"><div class="best-tag">BEST</div><div class="t-yr">3</div><div class="t-lbl">Years</div></button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="sch-hdr">
+            <span class="sch-title">Payout Timeline</span>
+            <span class="sch-pill sch-pill-y" id="y-sch-pill">1 Year</span>
+          </div>
+          <div class="sch-body" id="y-schedule"></div>
+        </div>
+
+        <div class="card card-pad">
+          <div class="sec-label">Payout Breakdown</div>
+          <div class="bd-row">
+            <div class="bd-left">
+              <div class="bd-icon" style="background:var(--blue-l)"><svg viewBox="0 0 24 24" stroke="var(--blue)"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></div>
+              <div><div class="bd-label">Your Asset Cost</div><div class="bd-sub">Amount you invest in asset</div></div>
+            </div>
+            <div class="bd-val" style="color:var(--blue)" id="y-bd-p">₹0</div>
+          </div>
+          <div class="bd-row">
+            <div class="bd-left">
+              <div class="bd-icon" style="background:var(--amber-l)"><svg viewBox="0 0 24 24" stroke="var(--amber)"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+              <div><div class="bd-label">Total Earning</div><div class="bd-sub" id="y-bd-rate-sub">14% × 1 yr (flat)</div></div>
+            </div>
+            <div class="bd-val" style="color:var(--amber)" id="y-bd-i">₹0</div>
+          </div>
+          <div class="total-box total-box-y">
+            <div class="total-lbl" style="color:var(--blue)">✓ &nbsp;Lump Sum at Maturity</div>
+            <div class="total-val" style="color:var(--blue)" id="y-bd-total">₹0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div>
+        <div class="result-y" style="margin-bottom:1.25rem">
+          <div class="r-label">You Receive at Maturity</div>
+          <div class="r-value" id="y-total">₹0</div>
+          <div class="r-gain" id="y-gain">+₹0 total gain</div>
+          <div class="r-note">
+            <div class="r-note-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+            <div class="r-note-text"><strong id="y-when">Paid after 1 year</strong>Single lump sum — asset cost + all earning paid together at end</div>
+          </div>
+          <div class="metrics">
+            <div class="mbox"><div class="mbox-val" id="y-m1">₹0</div><div class="mbox-lbl">Asset Cost</div></div>
+            <div class="mbox"><div class="mbox-val" id="y-m2">₹0</div><div class="mbox-lbl">Earning</div></div>
+            <div class="mbox"><div class="mbox-val" id="y-m3">0%</div><div class="mbox-lbl">Return</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="disclaimer">* Flat simple earning on starting asset cost — not compounded. No payouts during tenure.<br>Rates: 14% p.a. (1 yr) · 14.5% p.a. (2 yrs) · 15% p.a. (3 yrs). Indicative figures only.</div>
+  </div>
+
+  <!-- ══════════════════════════════ MONTHLY PANEL ══════════════════════════════ -->
+  <div id="panel-monthly" class="visible">
+    <div class="calc-grid">
+
+      <!-- LEFT -->
+      <div>
+        <div class="card card-pad">
+          <div class="sec-label">Asset Cost</div>
+          <div class="amt-box monthly-focus">
+            <span class="rupee m">₹</span>
+            <input class="amt" id="m-principal" type="number" placeholder="Enter amount" value="100000" oninput="calcMonthly()"/>
+          </div>
+          <div class="quick-row">
+            <button class="qbtn m" onclick="mSetAmt(50000)">₹50K</button>
+            <button class="qbtn m" onclick="mSetAmt(100000)">₹1L</button>
+            <button class="qbtn m" onclick="mSetAmt(250000)">₹2.5L</button>
+            <button class="qbtn m" onclick="mSetAmt(500000)">₹5L</button>
+            <button class="qbtn m" onclick="mSetAmt(1000000)">₹10L</button>
+          </div>
+        </div>
+
+        <div class="card card-pad">
+          <div class="sec-label">Select Tenure</div>
+          <div class="tenure-grid">
+            <button class="tbtn am" id="mt1" onclick="mSetTenure(1)"><div class="t-yr">1</div><div class="t-lbl">Year</div></button>
+            <button class="tbtn" id="mt2" onclick="mSetTenure(2)"><div class="t-yr">2</div><div class="t-lbl">Years</div></button>
+            <button class="tbtn" id="mt3" onclick="mSetTenure(3)"><div class="best-tag">BEST</div><div class="t-yr">3</div><div class="t-lbl">Years</div></button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="sch-hdr">
+            <span class="sch-title">Monthly Payout Schedule</span>
+            <span class="sch-pill sch-pill-m" id="m-sch-pill">12 Months</span>
+          </div>
+          <div class="sch-body" id="m-schedule"></div>
+        </div>
+
+        <div class="card card-pad">
+          <div class="sec-label">Payout Breakdown</div>
+          <div class="bd-row">
+            <div class="bd-left">
+              <div class="bd-icon" style="background:var(--monthly-light)"><svg viewBox="0 0 24 24" stroke="var(--monthly-accent)"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></div>
+              <div><div class="bd-label">Your Asset Cost</div><div class="bd-sub">Returned at end of tenure</div></div>
+            </div>
+            <div class="bd-val" style="color:var(--monthly-accent)" id="m-bd-p">₹0</div>
+          </div>
+          <div class="bd-row">
+            <div class="bd-left">
+              <div class="bd-icon" style="background:var(--amber-l)"><svg viewBox="0 0 24 24" stroke="var(--amber)"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+              <div><div class="bd-label">Monthly Earning × Months</div><div class="bd-sub" id="m-bd-rate-sub">15.6% ÷ 12 × 12</div></div>
+            </div>
+            <div class="bd-val" style="color:var(--amber)" id="m-bd-i">₹0</div>
+          </div>
+          <div class="total-box total-box-m">
+            <div class="total-lbl" style="color:var(--monthly-accent)">✓ &nbsp;Total Received</div>
+            <div class="total-val" style="color:var(--monthly-accent)" id="m-bd-total">₹0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div>
+        <div class="result-m" style="margin-bottom:1.25rem">
+          <div class="r-label">Monthly Earning Payout</div>
+          <div class="r-value" id="m-monthly">₹0<span style="font-size:1.1rem;font-weight:600;opacity:.7">/mo</span></div>
+          <div class="r-gain" id="m-gain">+₹0 total earning</div>
+          <div class="r-note">
+            <div class="r-note-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+            <div class="r-note-text"><strong id="m-when">₹0/month for 11 months</strong>Last month: earning + full asset cost returned together</div>
+          </div>
+          <div class="metrics">
+            <div class="mbox"><div class="mbox-val" id="m-m1">₹0</div><div class="mbox-lbl">Per Month</div></div>
+            <div class="mbox"><div class="mbox-val" id="m-m2">₹0</div><div class="mbox-lbl">Total Earning</div></div>
+            <div class="mbox"><div class="mbox-val" id="m-m3">0%</div><div class="mbox-lbl">Return</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="disclaimer">* Flat simple earning on starting asset cost — not compounded. Monthly earning paid every month.<br>Rates: 15.6% p.a. (1 yr) · 16.1% p.a. (2 yrs) · 16.6% p.a. (3 yrs). Last month: earning + asset cost returned. Indicative figures only.</div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- WHY SHAREPAL -->
+<section class="why">
+  <div class="section-wrap">
+    <div class="eyebrow eyebrow-y">Why SharePal</div>
+    <div class="sec-h">Earn Without the Hassle</div>
+    <div class="sec-p">Two payout structures, both fully managed — pick what suits your cashflow needs.</div>
+    <div class="feat-grid">
+      <div class="feat">
+        <div class="feat-ic" style="background:var(--blue-l)"><svg viewBox="0 0 24 24" stroke="var(--blue)"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <div class="feat-t">Asset-Backed Security</div>
+        <div class="feat-d">Your investment is secured by physical rental assets — real equipment, real confidence.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-ic" style="background:var(--monthly-light)"><svg viewBox="0 0 24 24" stroke="var(--monthly-accent)"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        <div class="feat-t">Flexible Payout Options</div>
+        <div class="feat-d">Monthly earning for regular income, or lump sum at maturity for maximum accumulation.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-ic" style="background:var(--green-l)"><svg viewBox="0 0 24 24" stroke="var(--green)"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+        <div class="feat-t">Zero Operational Hassle</div>
+        <div class="feat-d">Logistics, maintenance, rentals — all handled by SharePal. You just track and collect.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta">
+  <h2>Ready to Start Earning?</h2>
+  <p>Join hundreds of partners growing their wealth through high-demand rental assets</p>
+  <a href="#" class="cta-btn">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    Start Earning
+  </a>
+</section>
+
+<footer>
+  <strong>SharePal</strong> &nbsp;·&nbsp; © 2025 Madam Ventures LLP &nbsp;·&nbsp; Made with ♥ in India
+</footer>
+
+<script>
+// ── HELPERS ──
+const yRates = {1:0.14, 2:0.145, 3:0.15};
+const mRates = {1:0.156, 2:0.161, 3:0.166};
+const yRateLbls = {1:'14% p.a.',2:'14.5% p.a.',3:'15% p.a.'};
+const mRateLbls = {1:'15.6% p.a.',2:'16.1% p.a.',3:'16.6% p.a.'};
+let yTenure=1, mTenure=1;
+
+function fmt(n){ return '₹'+Math.round(n).toLocaleString('en-IN'); }
+function fmtS(n){
+  n=Math.round(n);
+  if(n>=10000000) return '₹'+(n/10000000).toFixed(1)+'Cr';
+  if(n>=100000)   return '₹'+(n/100000).toFixed(1)+'L';
+  if(n>=1000)     return '₹'+(n/1000).toFixed(0)+'K';
+  return '₹'+n;
+}
+
+// ── MODE SWITCH ──
+function switchMode(mode){
+  document.getElementById('panel-yearly').classList.toggle('visible', mode==='yearly');
+  document.getElementById('panel-monthly').classList.toggle('visible', mode==='monthly');
+  const by=document.getElementById('btn-yearly');
+  const bm=document.getElementById('btn-monthly');
+  if(mode==='yearly'){
+    by.className='toggle-btn active-yearly';
+    bm.className='toggle-btn';
+  } else {
+    bm.className='toggle-btn active-monthly';
+    by.className='toggle-btn';
+  }
+}
+
+// ════════════ YEARLY ════════════
+function ySetAmt(v){ document.getElementById('y-principal').value=v; calcYearly(); }
+function ySetTenure(t){
+  yTenure=t;
+  [1,2,3].forEach(i=>{
+    const b=document.getElementById('yt'+i);
+    b.className='tbtn'+(i===t?' ay':'');
+  });
+  calcYearly();
+}
+
+function calcYearly(){
+  const p=parseFloat(document.getElementById('y-principal').value)||0;
+  const r=yRates[yTenure];
+  const interest=p*r*yTenure;
+  const total=p+interest;
+  const retPct=p>0?((interest/p)*100).toFixed(1):'0.0';
+  const yrLbl=yTenure===1?'1 year':yTenure+' years';
+
+  document.getElementById('y-total').textContent=fmt(total);
+  document.getElementById('y-gain').textContent='+'+fmt(interest)+' total gain';
+  document.getElementById('y-when').textContent='Paid after '+yrLbl;
+  document.getElementById('y-m1').textContent=fmtS(p);
+  document.getElementById('y-m2').textContent=fmtS(interest);
+  document.getElementById('y-m3').textContent=retPct+'%';
+  document.getElementById('y-bd-p').textContent=fmt(p);
+  document.getElementById('y-bd-rate-sub').textContent=yRateLbls[yTenure]+' × '+yrLbl+' (flat)';
+  document.getElementById('y-bd-i').textContent=fmt(interest);
+  document.getElementById('y-bd-total').textContent=fmt(total);
+  document.getElementById('y-sch-pill').textContent=yTenure+' Year'+(yTenure>1?'s':'');
+
+  // Timeline
+  let html='';
+  // Investment start
+  html+=`<div class="sch-row">
+    <div class="sch-num sch-num-y">★</div>
+    <div class="sch-info"><div class="sch-name">Day 0 — You Invest</div><div class="sch-sub">${fmt(p)} locked into SharePal rental assets</div></div>
+    <div class="sch-amt" style="color:var(--gray-400)">—</div>
+  </div>`;
+  // Intermediate years
+  for(let y=1;y<yTenure;y++){
+    html+=`<div class="sch-row">
+      <div class="sch-num sch-num-y">${y}</div>
+      <div class="sch-info"><div class="sch-name">Year ${y}</div><div class="sch-sub">Assets earning rental income — funds locked in</div></div>
+      <div class="sch-amt" style="color:var(--gray-400)">₹0</div>
+    </div>`;
+  }
+  // Final
+  html+=`<div class="sch-row sch-row-final-y">
+    <div class="sch-num sch-num-y">${yTenure}</div>
+    <div class="sch-info">
+      <div class="sch-name">Year ${yTenure} — Maturity 🎉 <span class="final-tag final-tag-y">LUMP SUM</span></div>
+      <div class="sch-sub">${fmt(p)} asset cost + ${fmt(interest)} earning</div>
+    </div>
+    <div class="sch-amt">${fmt(total)}</div>
+  </div>`;
+  document.getElementById('y-schedule').innerHTML=html;
+}
+
+// ════════════ MONTHLY ════════════
+function mSetAmt(v){ document.getElementById('m-principal').value=v; calcMonthly(); }
+function mSetTenure(t){
+  mTenure=t;
+  [1,2,3].forEach(i=>{
+    const b=document.getElementById('mt'+i);
+    b.className='tbtn'+(i===t?' am':'');
+  });
+  calcMonthly();
+}
+
+function calcMonthly(){
+  const p=parseFloat(document.getElementById('m-principal').value)||0;
+  const r=mRates[mTenure];
+  const totalMonths=mTenure*12;
+  const monthlyInt=p*r/12;
+  const totalInt=monthlyInt*totalMonths;
+  const totalReceived=p+totalInt;
+  const retPct=p>0?((totalInt/p)*100).toFixed(1):'0.0';
+
+  document.getElementById('m-monthly').innerHTML=fmt(monthlyInt)+'<span style="font-size:1.1rem;font-weight:600;opacity:.7">/mo</span>';
+  document.getElementById('m-gain').textContent='+'+fmt(totalInt)+' total earning';
+  document.getElementById('m-when').textContent=fmt(monthlyInt)+'/month for '+(totalMonths-1)+' months';
+  document.getElementById('m-m1').textContent=fmtS(monthlyInt);
+  document.getElementById('m-m2').textContent=fmtS(totalInt);
+  document.getElementById('m-m3').textContent=retPct+'%';
+  document.getElementById('m-bd-p').textContent=fmt(p);
+  document.getElementById('m-bd-rate-sub').textContent=mRateLbls[mTenure]+' ÷ 12 × '+totalMonths+' months';
+  document.getElementById('m-bd-i').textContent=fmt(totalInt);
+  document.getElementById('m-bd-total').textContent=fmt(totalReceived);
+  document.getElementById('m-sch-pill').textContent=totalMonths+' Months';
+
+  // Monthly schedule
+  let html='';
+  for(let mo=1;mo<=totalMonths;mo++){
+    const isFinal=mo===totalMonths;
+    const amt=isFinal?monthlyInt+p:monthlyInt;
+    const rowClass=isFinal?'sch-row sch-row-final-m':'sch-row';
+    const finalTag=isFinal?`<span class="final-tag final-tag-m">+PRINCIPAL</span>`:'';
+    const sub=isFinal?`${fmt(monthlyInt)} earning + ${fmt(p)} asset cost`:`Earning payout`;
+    html+=`<div class="${rowClass}">
+      <div class="sch-num sch-num-m">${mo}</div>
+      <div class="sch-info">
+        <div class="sch-name">Month ${mo} ${finalTag}</div>
+        <div class="sch-sub">${sub}</div>
+      </div>
+      <div class="sch-amt">${fmt(amt)}</div>
+    </div>`;
+  }
+  document.getElementById('m-schedule').innerHTML=html;
+}
+
+// Init
+calcYearly();
+calcMonthly();
+</script>
+</body>
+</html>
