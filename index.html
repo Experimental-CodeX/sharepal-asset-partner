@@ -14,14 +14,14 @@
   --gray-900:#0F1623;--gray-800:#1E2433;--gray-600:#5A6278;
   --gray-400:#9BA3B5;--gray-200:#E4E7EF;--gray-100:#F1F3F7;--gray-50:#F8F9FB;
   --white:#fff;
-  --monthly-accent:#7C3AED;--monthly-light:#F5F3FF;--monthly-border:#DDD6FE;
+  --monthly-accent:#1B4FD8;--monthly-light:#EEF3FF;--monthly-border:#C7D8FF;
   --font-display:'Ubuntu',sans-serif;--font-body:'Inter',sans-serif;
   --radius-sm:8px;--radius-md:14px;--radius-lg:20px;--radius-xl:28px;
   --shadow-sm:0 1px 4px rgba(0,0,0,.06);
   --shadow-md:0 6px 24px rgba(0,0,0,.09);
   --shadow-lg:0 16px 48px rgba(0,0,0,.13);
   --shadow-blue:0 8px 32px rgba(27,79,216,.28);
-  --shadow-purple:0 8px 32px rgba(124,58,237,.28);
+  --shadow-purple:0 8px 32px rgba(27,79,216,.28);
 }
 html{scroll-behavior:smooth}
 body{font-family:var(--font-body);background:var(--gray-50);color:var(--gray-800);min-height:100vh;line-height:1.6;overflow-x:hidden}
@@ -56,7 +56,7 @@ nav{background:var(--white);border-bottom:1px solid var(--gray-200);position:sti
 .stat-lbl{font-size:11px;color:rgba(255,255,255,.55);margin-top:3px;font-weight:500;letter-spacing:.3px}
 
 /* ── MAIN WRAPPER ── */
-.main{max-width:900px;margin:-2rem auto 0;padding:0 1.25rem 5rem;position:relative;z-index:10}
+.main{max-width:1100px;margin:-2rem auto 0;padding:0 1.25rem 5rem;position:relative;z-index:10}
 
 /* ── TOGGLE ── */
 .toggle-wrap{display:flex;justify-content:center;margin-bottom:1.75rem}
@@ -75,7 +75,7 @@ nav{background:var(--white);border-bottom:1px solid var(--gray-200);position:sti
 .card+.card{margin-top:1.25rem}
 
 /* ── GRID ── */
-.calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;align-items:start}
+.calc-grid{display:grid;grid-template-columns:1fr 1.1fr 1fr;gap:1.25rem;align-items:start}
 
 /* ── SECTION LABEL ── */
 .sec-label{font-size:10px;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:.75rem}
@@ -156,7 +156,25 @@ input.amt::placeholder{color:var(--gray-400);font-weight:500;font-size:18px;font
 .final-tag-y{background:var(--blue);color:white}
 .final-tag-m{background:var(--monthly-accent);color:white}
 
-/* ── BREAKDOWN ── */
+/* ── SUMMARY CARD (SharePal style) ── */
+.summary-card{padding:1.5rem 1.75rem}
+.smc-row{display:flex;align-items:flex-start;justify-content:space-between;padding:10px 0}
+.smc-label{font-size:14px;color:var(--gray-600);font-weight:500;padding-top:4px}
+.smc-right{text-align:right}
+.smc-value{font-family:'Ubuntu',sans-serif;font-size:22px;font-weight:700;color:var(--gray-800);letter-spacing:-0.5px}
+.smc-sub{font-size:11px;color:var(--gray-400);margin-top:2px;font-weight:500}
+.smc-payout{color:var(--green)!important}
+.smc-payout-m{color:var(--green)!important}
+.smc-gain{font-size:12px;font-weight:600;color:var(--gray-600);margin-top:2px}
+.smc-gain-m{color:var(--gray-600)}
+.smc-divider{border:none;border-top:1px dashed var(--gray-200);margin:4px 0;position:relative;text-align:center}
+.smc-divider-m{border-color:var(--monthly-border)}
+.smc-divider::after{content:attr(data-tenure);position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--white);padding:0 10px;font-size:11px;font-weight:700;color:var(--blue);white-space:nowrap}
+.smc-period-box{display:flex;align-items:center;justify-content:space-between;background:var(--blue-l);border-radius:var(--radius-md);padding:13px 16px;margin-top:10px}
+.smc-period-box-m{background:var(--monthly-light)}
+.smc-period-lbl{font-size:13px;font-weight:600;color:var(--gray-800)}
+.smc-period-val{font-family:'Ubuntu',sans-serif;font-size:16px;font-weight:700;color:var(--blue);letter-spacing:-0.3px}
+.smc-period-val-m{color:var(--monthly-accent)}
 .bd-row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--gray-100)}
 .bd-row:last-of-type{border-bottom:none}
 .bd-left{display:flex;align-items:center;gap:11px}
@@ -268,7 +286,7 @@ footer strong{color:rgba(255,255,255,.75)}
   <div id="panel-lumpsum">
     <div class="calc-grid">
 
-      <!-- LEFT -->
+      <!-- COL 1: INPUTS -->
       <div>
         <div class="card card-pad">
           <div class="sec-label">Asset Cost</div>
@@ -284,16 +302,18 @@ footer strong{color:rgba(255,255,255,.75)}
             <button class="qbtn" onclick="lSetAmt(1000000)">₹10L</button>
           </div>
         </div>
-
         <div class="card card-pad">
           <div class="sec-label">Select Tenure</div>
           <div class="tenure-grid">
-            <button class="tbtn ay" id="lt1" onclick="lSetTenure(1)"><div class="t-yr">1</div><div class="t-lbl">Year</div></button>
+            <button class="tbtn" id="lt1" onclick="lSetTenure(1)"><div class="t-yr">1</div><div class="t-lbl">Year</div></button>
             <button class="tbtn" id="lt2" onclick="lSetTenure(2)"><div class="t-yr">2</div><div class="t-lbl">Years</div></button>
-            <button class="tbtn" id="lt3" onclick="lSetTenure(3)"><div class="best-tag">BEST</div><div class="t-yr">3</div><div class="t-lbl">Years</div></button>
+            <button class="tbtn ay" id="lt3" onclick="lSetTenure(3)"><div class="best-tag">BEST</div><div class="t-yr">3</div><div class="t-lbl">Years</div></button>
           </div>
         </div>
+      </div>
 
+      <!-- COL 2: SCHEDULE -->
+      <div>
         <div class="card">
           <div class="sch-hdr">
             <span class="sch-title">Payout Timeline</span>
@@ -301,33 +321,32 @@ footer strong{color:rgba(255,255,255,.75)}
           </div>
           <div class="sch-body" id="l-schedule"></div>
         </div>
-
-        <div class="card card-pad">
-          <div class="sec-label">Payout Breakdown</div>
-          <div class="bd-row">
-            <div class="bd-left">
-              <div class="bd-icon" style="background:var(--blue-l)"><svg viewBox="0 0 24 24" stroke="var(--blue)"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></div>
-              <div><div class="bd-label">Your Asset Cost</div><div class="bd-sub">Amount you invest in asset</div></div>
-            </div>
-            <div class="bd-val" style="color:var(--blue)" id="l-bd-p">₹0</div>
-          </div>
-          <div class="bd-row">
-            <div class="bd-left">
-              <div class="bd-icon" style="background:var(--amber-l)"><svg viewBox="0 0 24 24" stroke="var(--amber)"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-              <div><div class="bd-label">Total Earning</div><div class="bd-sub" id="l-bd-rate-sub">14% × 1 yr (flat)</div></div>
-            </div>
-            <div class="bd-val" style="color:var(--amber)" id="l-bd-i">₹0</div>
-          </div>
-          <div class="total-box total-box-y">
-            <div class="total-lbl" style="color:var(--blue)">✓ &nbsp;Lump Sum at Maturity</div>
-            <div class="total-val" style="color:var(--blue)" id="l-bd-total">₹0</div>
-          </div>
-        </div>
       </div>
 
-      <!-- RIGHT -->
+      <!-- COL 3: SUMMARY + RESULT -->
       <div>
-        <div class="result-y" style="margin-bottom:1.25rem">
+        <div class="card summary-card" style="margin-bottom:1.25rem">
+          <div class="smc-row">
+            <span class="smc-label">Total Asset Cost</span>
+            <div class="smc-right">
+              <div class="smc-value" id="l-bd-p">₹0</div>
+              <div class="smc-sub" id="l-bd-rate-sub">Tenure: 1 Year</div>
+            </div>
+          </div>
+          <div class="smc-divider"></div>
+          <div class="smc-row">
+            <span class="smc-label">Total Payout</span>
+            <div class="smc-right">
+              <div class="smc-value smc-payout" id="l-bd-total">₹0</div>
+              <div class="smc-gain" id="l-bd-gain">Total Gain: +₹0</div>
+            </div>
+          </div>
+          <div class="smc-period-box">
+            <span class="smc-period-lbl">Lump Sum at Maturity</span>
+            <span class="smc-period-val" id="l-bd-period">₹0</span>
+          </div>
+        </div>
+        <div class="result-y">
           <div class="r-label">You Receive at Maturity</div>
           <div class="r-value" id="l-total">₹0</div>
           <div class="r-gain" id="l-gain">+₹0 total earning</div>
@@ -350,7 +369,7 @@ footer strong{color:rgba(255,255,255,.75)}
   <div id="panel-yearly">
     <div class="calc-grid">
 
-      <!-- LEFT -->
+      <!-- COL 1: INPUTS -->
       <div>
         <div class="card card-pad">
           <div class="sec-label">Asset Cost</div>
@@ -366,16 +385,18 @@ footer strong{color:rgba(255,255,255,.75)}
             <button class="qbtn" onclick="ySetAmt(1000000)">₹10L</button>
           </div>
         </div>
-
         <div class="card card-pad">
           <div class="sec-label">Select Tenure</div>
           <div class="tenure-grid">
-            <button class="tbtn ay" id="yt1" onclick="ySetTenure(1)"><div class="t-yr">1</div><div class="t-lbl">Year</div></button>
+            <button class="tbtn" id="yt1" onclick="ySetTenure(1)"><div class="t-yr">1</div><div class="t-lbl">Year</div></button>
             <button class="tbtn" id="yt2" onclick="ySetTenure(2)"><div class="t-yr">2</div><div class="t-lbl">Years</div></button>
-            <button class="tbtn" id="yt3" onclick="ySetTenure(3)"><div class="best-tag">BEST</div><div class="t-yr">3</div><div class="t-lbl">Years</div></button>
+            <button class="tbtn ay" id="yt3" onclick="ySetTenure(3)"><div class="best-tag">BEST</div><div class="t-yr">3</div><div class="t-lbl">Years</div></button>
           </div>
         </div>
+      </div>
 
+      <!-- COL 2: SCHEDULE -->
+      <div>
         <div class="card">
           <div class="sch-hdr">
             <span class="sch-title">Payout Timeline</span>
@@ -383,33 +404,32 @@ footer strong{color:rgba(255,255,255,.75)}
           </div>
           <div class="sch-body" id="y-schedule"></div>
         </div>
-
-        <div class="card card-pad">
-          <div class="sec-label">Payout Breakdown</div>
-          <div class="bd-row">
-            <div class="bd-left">
-              <div class="bd-icon" style="background:var(--blue-l)"><svg viewBox="0 0 24 24" stroke="var(--blue)"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></div>
-              <div><div class="bd-label">Your Asset Cost</div><div class="bd-sub">Amount you invest in asset</div></div>
-            </div>
-            <div class="bd-val" style="color:var(--blue)" id="y-bd-p">₹0</div>
-          </div>
-          <div class="bd-row">
-            <div class="bd-left">
-              <div class="bd-icon" style="background:var(--amber-l)"><svg viewBox="0 0 24 24" stroke="var(--amber)"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-              <div><div class="bd-label">Annual Earning × Years</div><div class="bd-sub" id="y-bd-rate-sub">14% × 1 yr (flat)</div></div>
-            </div>
-            <div class="bd-val" style="color:var(--amber)" id="y-bd-i">₹0</div>
-          </div>
-          <div class="total-box total-box-y">
-            <div class="total-lbl" style="color:var(--blue)">✓ &nbsp;Total Received</div>
-            <div class="total-val" style="color:var(--blue)" id="y-bd-total">₹0</div>
-          </div>
-        </div>
       </div>
 
-      <!-- RIGHT -->
+      <!-- COL 3: SUMMARY + RESULT -->
       <div>
-        <div class="result-y" style="margin-bottom:1.25rem">
+        <div class="card summary-card" style="margin-bottom:1.25rem">
+          <div class="smc-row">
+            <span class="smc-label">Total Asset Cost</span>
+            <div class="smc-right">
+              <div class="smc-value" id="y-bd-p">₹0</div>
+              <div class="smc-sub" id="y-bd-rate-sub">Tenure: 1 Year</div>
+            </div>
+          </div>
+          <div class="smc-divider"></div>
+          <div class="smc-row">
+            <span class="smc-label">Total Payout</span>
+            <div class="smc-right">
+              <div class="smc-value smc-payout" id="y-bd-total">₹0</div>
+              <div class="smc-gain" id="y-bd-gain">Total Gain: +₹0</div>
+            </div>
+          </div>
+          <div class="smc-period-box">
+            <span class="smc-period-lbl">Yearly Payout</span>
+            <span class="smc-period-val" id="y-bd-period">₹0/yr</span>
+          </div>
+        </div>
+        <div class="result-y">
           <div class="r-label">Annual Earning Payout</div>
           <div class="r-value" id="y-total">₹0<span style="font-size:1.1rem;font-weight:600;opacity:.7">/yr</span></div>
           <div class="r-gain" id="y-gain">+₹0 total earning</div>
@@ -425,7 +445,6 @@ footer strong{color:rgba(255,255,255,.75)}
         </div>
       </div>
     </div>
-
     <div class="disclaimer">* Flat simple earning on starting asset cost — not compounded. Annual earning paid every year. Last year: earning + full asset cost returned together.<br>Rates: 14% p.a. (1 yr) · 14.5% p.a. (2 yrs) · 15% p.a. (3 yrs). Indicative figures only.</div>
   </div>
 
@@ -433,7 +452,7 @@ footer strong{color:rgba(255,255,255,.75)}
   <div id="panel-monthly" class="visible">
     <div class="calc-grid">
 
-      <!-- LEFT -->
+      <!-- COL 1: INPUTS -->
       <div>
         <div class="card card-pad">
           <div class="sec-label">Asset Cost</div>
@@ -449,16 +468,18 @@ footer strong{color:rgba(255,255,255,.75)}
             <button class="qbtn m" onclick="mSetAmt(1000000)">₹10L</button>
           </div>
         </div>
-
         <div class="card card-pad">
           <div class="sec-label">Select Tenure</div>
           <div class="tenure-grid">
-            <button class="tbtn am" id="mt1" onclick="mSetTenure(1)"><div class="t-yr">1</div><div class="t-lbl">Year</div></button>
+            <button class="tbtn" id="mt1" onclick="mSetTenure(1)"><div class="t-yr">1</div><div class="t-lbl">Year</div></button>
             <button class="tbtn" id="mt2" onclick="mSetTenure(2)"><div class="t-yr">2</div><div class="t-lbl">Years</div></button>
-            <button class="tbtn" id="mt3" onclick="mSetTenure(3)"><div class="best-tag">BEST</div><div class="t-yr">3</div><div class="t-lbl">Years</div></button>
+            <button class="tbtn am" id="mt3" onclick="mSetTenure(3)"><div class="best-tag">BEST</div><div class="t-yr">3</div><div class="t-lbl">Years</div></button>
           </div>
         </div>
+      </div>
 
+      <!-- COL 2: SCHEDULE -->
+      <div>
         <div class="card">
           <div class="sch-hdr">
             <span class="sch-title">Monthly Payout Schedule</span>
@@ -466,33 +487,32 @@ footer strong{color:rgba(255,255,255,.75)}
           </div>
           <div class="sch-body" id="m-schedule"></div>
         </div>
-
-        <div class="card card-pad">
-          <div class="sec-label">Payout Breakdown</div>
-          <div class="bd-row">
-            <div class="bd-left">
-              <div class="bd-icon" style="background:var(--monthly-light)"><svg viewBox="0 0 24 24" stroke="var(--monthly-accent)"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></div>
-              <div><div class="bd-label">Your Asset Cost</div><div class="bd-sub">Returned at end of tenure</div></div>
-            </div>
-            <div class="bd-val" style="color:var(--monthly-accent)" id="m-bd-p">₹0</div>
-          </div>
-          <div class="bd-row">
-            <div class="bd-left">
-              <div class="bd-icon" style="background:var(--amber-l)"><svg viewBox="0 0 24 24" stroke="var(--amber)"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-              <div><div class="bd-label">Monthly Earning × Months</div><div class="bd-sub" id="m-bd-rate-sub">15.6% ÷ 12 × 12</div></div>
-            </div>
-            <div class="bd-val" style="color:var(--amber)" id="m-bd-i">₹0</div>
-          </div>
-          <div class="total-box total-box-m">
-            <div class="total-lbl" style="color:var(--monthly-accent)">✓ &nbsp;Total Received</div>
-            <div class="total-val" style="color:var(--monthly-accent)" id="m-bd-total">₹0</div>
-          </div>
-        </div>
       </div>
 
-      <!-- RIGHT -->
+      <!-- COL 3: SUMMARY + RESULT -->
       <div>
-        <div class="result-m" style="margin-bottom:1.25rem">
+        <div class="card summary-card summary-card-m" style="margin-bottom:1.25rem">
+          <div class="smc-row">
+            <span class="smc-label">Total Asset Cost</span>
+            <div class="smc-right">
+              <div class="smc-value" id="m-bd-p">₹0</div>
+              <div class="smc-sub" id="m-bd-rate-sub">Tenure: 12 Months</div>
+            </div>
+          </div>
+          <div class="smc-divider smc-divider-m"></div>
+          <div class="smc-row">
+            <span class="smc-label">Total Payout</span>
+            <div class="smc-right">
+              <div class="smc-value smc-payout-m" id="m-bd-total">₹0</div>
+              <div class="smc-gain smc-gain-m" id="m-bd-gain">Total Gain: +₹0</div>
+            </div>
+          </div>
+          <div class="smc-period-box smc-period-box-m">
+            <span class="smc-period-lbl">Monthly Payout</span>
+            <span class="smc-period-val smc-period-val-m" id="m-bd-period">₹0/mo</span>
+          </div>
+        </div>
+        <div class="result-m">
           <div class="r-label">Monthly Earning Payout</div>
           <div class="r-value" id="m-monthly">₹0<span style="font-size:1.1rem;font-weight:600;opacity:.7">/mo</span></div>
           <div class="r-gain" id="m-gain">+₹0 total earning</div>
@@ -560,7 +580,7 @@ const yRates = {1:0.14, 2:0.145, 3:0.15};
 const mRates = {1:0.156, 2:0.161, 3:0.166};
 const yRateLbls = {1:'14% p.a.',2:'14.5% p.a.',3:'15% p.a.'};
 const mRateLbls = {1:'15.6% p.a.',2:'16.1% p.a.',3:'16.6% p.a.'};
-let yTenure=1, mTenure=1;
+let yTenure=3, mTenure=3;
 
 function fmt(n){ return '₹'+Math.round(n).toLocaleString('en-IN'); }
 function fmtS(n){
@@ -582,7 +602,7 @@ function switchMode(mode){
 }
 
 // ════════════ LUMP SUM ════════════
-let lTenure=1;
+let lTenure=3;
 function lSetAmt(v){ document.getElementById('l-principal').value=v; calcLumpsum(); }
 function lSetTenure(t){
   lTenure=t;
@@ -604,10 +624,14 @@ function calcLumpsum(){
   document.getElementById('l-m2').textContent=fmtS(totalEarning);
   document.getElementById('l-m3').textContent=retPct+'%';
   document.getElementById('l-bd-p').textContent=fmt(p);
-  document.getElementById('l-bd-rate-sub').textContent=yRateLbls[lTenure]+' × '+yrLbl+' (flat)';
-  document.getElementById('l-bd-i').textContent=fmt(totalEarning);
+  document.getElementById('l-bd-rate-sub').textContent='Tenure: '+yrLbl;
   document.getElementById('l-bd-total').textContent=fmt(total);
+  document.getElementById('l-bd-gain').textContent='Total Gain: +'+fmt(totalEarning);
+  document.getElementById('l-bd-period').textContent=fmt(total);
   document.getElementById('l-sch-pill').textContent=lTenure+' Year'+(lTenure>1?'s':'');
+  // Update divider tenure label
+  const ldiv=document.querySelector('#panel-lumpsum .smc-divider');
+  if(ldiv) ldiv.setAttribute('data-tenure','Tenure: '+yrLbl);
 
   let html='';
   html+=`<div class="sch-row">
@@ -660,10 +684,13 @@ function calcYearly(){
   document.getElementById('y-m2').textContent=fmtS(totalEarning);
   document.getElementById('y-m3').textContent=retPct+'%';
   document.getElementById('y-bd-p').textContent=fmt(p);
-  document.getElementById('y-bd-rate-sub').textContent=yRateLbls[yTenure]+' × '+yrLbl+' (flat)';
-  document.getElementById('y-bd-i').textContent=fmt(totalEarning);
+  document.getElementById('y-bd-rate-sub').textContent='Tenure: '+yrLbl;
   document.getElementById('y-bd-total').textContent=fmt(totalReceived);
+  document.getElementById('y-bd-gain').textContent='Total Gain: +'+fmt(totalEarning);
+  document.getElementById('y-bd-period').textContent=fmt(annualEarning)+'/yr';
   document.getElementById('y-sch-pill').textContent=yTenure+' Year'+(yTenure>1?'s':'');
+  const ydiv=document.querySelector('#panel-yearly .smc-divider');
+  if(ydiv) ydiv.setAttribute('data-tenure','Tenure: '+yrLbl);
 
   // Yearly schedule — earning every year, principal back on last year
   let html='';
@@ -712,10 +739,13 @@ function calcMonthly(){
   document.getElementById('m-m2').textContent=fmtS(totalInt);
   document.getElementById('m-m3').textContent=retPct+'%';
   document.getElementById('m-bd-p').textContent=fmt(p);
-  document.getElementById('m-bd-rate-sub').textContent=mRateLbls[mTenure]+' ÷ 12 × '+totalMonths+' months';
-  document.getElementById('m-bd-i').textContent=fmt(totalInt);
+  document.getElementById('m-bd-rate-sub').textContent='Tenure: '+totalMonths+' Months';
   document.getElementById('m-bd-total').textContent=fmt(totalReceived);
+  document.getElementById('m-bd-gain').textContent='Total Gain: +'+fmt(totalInt);
+  document.getElementById('m-bd-period').textContent=fmt(monthlyInt)+'/mo';
   document.getElementById('m-sch-pill').textContent=totalMonths+' Months';
+  const mdiv=document.querySelector('#panel-monthly .smc-divider');
+  if(mdiv) mdiv.setAttribute('data-tenure','Tenure: '+totalMonths+' Months');
 
   // Monthly schedule
   let html='';
