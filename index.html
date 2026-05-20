@@ -254,18 +254,26 @@ footer strong{color:rgba(255,255,255,.75)}
 <div class="main">
 
   <!-- TOGGLE -->
-  <div class="toggle-wrap">
-    <div class="toggle-pill">
-      <button class="toggle-btn" id="btn-yearly" onclick="switchMode('yearly')">
-        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-        Yearly Payout
-      </button>
-      <button class="toggle-btn active-monthly" id="btn-monthly" onclick="switchMode('monthly')">
-        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        Monthly Payout
-      </button>
-    </div>
+<div class="toggle-wrap">
+  <div class="toggle-pill">
+    
+    <button class="toggle-btn" id="btn-yearly" onclick="switchMode('yearly')">
+      <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+      Yearly Payout
+    </button>
+
+    <button class="toggle-btn active-monthly" id="btn-monthly" onclick="switchMode('monthly')">
+      <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+        <circle cx="12" cy="12" r="10"/>
+        <polyline points="12 6 12 12 16 14"/>
+      </svg>
+      Monthly Payout
+    </button>
+
   </div>
+</div>
 
   <!-- ══════════════════════════════ LUMP SUM PANEL ══════════════════════════════ -->
   <div id="panel-lumpsum">
