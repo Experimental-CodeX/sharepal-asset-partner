@@ -325,10 +325,87 @@ tr:hover td{background:rgba(108,92,231,0.03)}
 .dl-divider{width:1px;height:32px;background:var(--border);flex-shrink:0;align-self:center}
 @media(max-width:680px){.dl-divider{width:100%;height:1px}}
 .btn-dl:disabled{opacity:.45;cursor:not-allowed;transform:none!important}
-.dl-spin{width:13px;height:13px;border:2px solid rgba(162,155,254,.3);border-top-color:var(--accent-lt);border-radius:50%;animation:spin .65s linear infinite;display:inline-block;flex-shrink:0}
+/* ── History ── */
+.hist-btn{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:8px 16px;border-radius:9px;border:1px solid var(--border);
+  background:var(--surface);color:var(--muted);
+  font-family:'Inter',sans-serif;font-size:13px;font-weight:500;
+  cursor:pointer;transition:all .16s;
+}
+.hist-btn:hover{border-color:var(--border-hi);color:var(--text);background:var(--surface2)}
+.hist-btn .hcount{
+  background:var(--accent);color:#fff;border-radius:10px;
+  font-size:10px;font-family:'DM Mono',monospace;
+  padding:1px 6px;min-width:18px;text-align:center;
+}
+/* Overlay */
+.hist-overlay{
+  display:none;position:fixed;inset:0;z-index:200;
+  background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);
+}
+.hist-overlay.open{display:flex;align-items:flex-start;justify-content:flex-end}
+.hist-drawer{
+  width:min(520px,100vw);height:100vh;overflow-y:auto;
+  background:var(--surface);border-left:1px solid var(--border);
+  padding:28px 24px;display:flex;flex-direction:column;gap:0;
+}
+.hist-drawer-head{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:22px;
+}
+.hist-drawer-head h2{
+  font-family:'Ubuntu',sans-serif;font-size:18px;font-weight:700;color:var(--text);
+}
+.hist-close{
+  width:32px;height:32px;border-radius:8px;border:1px solid var(--border);
+  background:transparent;color:var(--muted);font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;
+}
+.hist-close:hover{background:var(--surface2);color:var(--text)}
+.hist-empty{
+  text-align:center;padding:60px 20px;color:var(--muted);font-size:13px;
+}
+.hist-empty svg{opacity:.3;margin-bottom:12px;display:block;margin-left:auto;margin-right:auto}
+.hist-card{
+  background:var(--surface2);border:1px solid var(--border);border-radius:12px;
+  padding:16px 18px;margin-bottom:12px;transition:border-color .15s;
+}
+.hist-card:hover{border-color:var(--border-hi)}
+.hist-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
+.hist-name{font-family:'Ubuntu',sans-serif;font-size:15px;font-weight:700;color:var(--text)}
+.hist-date{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);white-space:nowrap;margin-top:2px}
+.hist-meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.hist-tag{
+  font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.06em;
+  padding:3px 8px;border-radius:6px;background:rgba(108,92,231,0.1);
+  color:var(--accent-lt);border:1px solid rgba(108,92,231,0.2);
+}
+.hist-tag.green{background:rgba(0,206,201,0.08);color:var(--accent2);border-color:rgba(0,206,201,0.2)}
+.hist-tag.yellow{background:rgba(253,203,110,0.08);color:var(--accent3);border-color:rgba(253,203,110,0.2)}
+.hist-actions{display:flex;gap:8px;flex-wrap:wrap}
+.hist-act{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:7px 13px;border-radius:7px;border:1px solid var(--border);
+  background:transparent;color:var(--muted);
+  font-family:'Inter',sans-serif;font-size:12px;font-weight:500;
+  cursor:pointer;transition:all .14s;
+}
+.hist-act:hover{background:var(--border);color:var(--text);border-color:var(--border-hi)}
+.hist-act.pdf:hover{background:rgba(255,118,117,.1);color:#ff7675;border-color:rgba(255,118,117,.3)}
+.hist-act.docx:hover{background:rgba(108,92,231,.1);color:var(--accent-lt);border-color:rgba(108,92,231,.3)}
+.hist-act.gdocs:hover{background:rgba(15,157,88,.1);color:#0f9d58;border-color:rgba(15,157,88,.3)}
+.hist-act.del:hover{background:rgba(255,118,117,.08);color:#ff7675;border-color:rgba(255,118,117,.25)}
+.hist-act.restore:hover{background:rgba(253,203,110,.1);color:var(--accent3);border-color:rgba(253,203,110,.3)}
+.hist-divider{height:1px;background:var(--border);margin:4px 0 16px}
+.hist-clear{
+  margin-top:auto;padding-top:20px;text-align:center;
+  font-size:12px;color:var(--muted);cursor:pointer;
+  font-family:'Inter',sans-serif;transition:color .15s;
+}
+.hist-clear:hover{color:#ff7675}
 @media(max-width:680px){
-  .dl-bar{flex-direction:column;align-items:stretch}
-  .btn-dl{justify-content:center}
+  .hist-drawer{width:100vw}
 }
 </style>
 </head>
@@ -345,6 +422,11 @@ tr:hover td{background:rgba(108,92,231,0.03)}
     </div>
   </div>
   <div class="pill">AFP · Monthly Agreement</div>
+  <button class="hist-btn" onclick="openHistory()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    History
+    <span class="hcount" id="hist-count">0</span>
+  </button>
 </header>
 
 <!-- Step nav -->
@@ -738,6 +820,20 @@ tr:hover td{background:rgba(108,92,231,0.03)}
 
 </div><!-- /shell -->
 
+<!-- ══════════ History Drawer ══════════ -->
+<div class="hist-overlay" id="hist-overlay" onclick="closeHistoryIfOutside(event)">
+  <div class="hist-drawer" id="hist-drawer">
+    <div class="hist-drawer-head">
+      <h2>Agreement History</h2>
+      <button class="hist-close" onclick="closeHistory()">✕</button>
+    </div>
+    <div id="hist-list"></div>
+    <div class="hist-clear" id="hist-clear-btn" onclick="clearAllHistory()" style="display:none">
+      🗑 Clear all history
+    </div>
+  </div>
+</div>
+
 <script>
 // ── State ──
 let cur = 1;
@@ -1070,6 +1166,8 @@ function buildPreview() {
 
     <div style="height:32px"></div>
   `;
+  // Auto-save to history every time preview is generated
+  saveToHistory();
 }
 
 // ── Sync signatories ──
@@ -1593,6 +1691,320 @@ ${body}
   return zip.generateAsync({ type:'blob', mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
 }
 
+// ════════════════════════════════════════
+// ── Agreement History (localStorage) ──
+// ════════════════════════════════════════
+const HIST_KEY = 'sp_agreement_history';
+
+function histLoad() {
+  try { return JSON.parse(localStorage.getItem(HIST_KEY) || '[]'); }
+  catch(_) { return []; }
+}
+function histSave(arr) {
+  localStorage.setItem(HIST_KEY, JSON.stringify(arr));
+}
+
+// Save current agreement state to history
+function saveToHistory() {
+  const g = id => document.getElementById(id)?.value || '';
+  const assets = getAssets();
+  const record = {
+    id:           Date.now(),
+    savedAt:      new Date().toISOString(),
+    lender_name:  g('lender_name'),
+    lender_pan:   g('lender_pan'),
+    lender_aadhaar: g('lender_aadhaar'),
+    lender_address: g('lender_address'),
+    lender_email: g('lender_email'),
+    lender_mobile: g('lender_mobile'),
+    bank_name:    g('bank_name'),
+    bank_acc:     g('bank_acc'),
+    bank_ifsc:    g('bank_ifsc'),
+    bank_bankname: g('bank_bankname'),
+    loan_amount:  g('loan_amount'),
+    effective_date: g('effective_date'),
+    tenure:       g('tenure'),
+    monthly_payout: g('monthly_payout'),
+    txn_date:     g('txn_date'),
+    txn_amount:   g('txn_amount'),
+    txn_id:       g('txn_id'),
+    assets:       assets,
+    amortData:    amortData,
+    previewHTML:  document.getElementById('preview-doc').innerHTML,
+  };
+  const arr = histLoad();
+  arr.unshift(record); // newest first
+  if (arr.length > 100) arr.splice(100); // cap at 100
+  histSave(arr);
+  updateHistCount();
+}
+
+// Restore a record back into the form fields
+function restoreFromHistory(id) {
+  const arr = histLoad();
+  const rec = arr.find(r => r.id === id);
+  if (!rec) return;
+
+  const s = (elId, val) => { const el = document.getElementById(elId); if(el) el.value = val||''; };
+  s('lender_name',    rec.lender_name);
+  s('lender_pan',     rec.lender_pan);
+  s('lender_aadhaar', rec.lender_aadhaar);
+  s('lender_address', rec.lender_address);
+  s('lender_email',   rec.lender_email);
+  s('lender_mobile',  rec.lender_mobile);
+  s('bank_name',      rec.bank_name);
+  s('bank_acc',       rec.bank_acc);
+  s('bank_ifsc',      rec.bank_ifsc);
+  s('bank_bankname',  rec.bank_bankname);
+  s('loan_amount',    rec.loan_amount);
+  s('effective_date', rec.effective_date);
+  s('tenure',         rec.tenure);
+  s('monthly_payout', rec.monthly_payout);
+  s('txn_date',       rec.txn_date);
+  s('txn_amount',     rec.txn_amount);
+  s('txn_id',         rec.txn_id);
+
+  // Restore tenure pill highlight
+  if (rec.tenure) {
+    document.querySelectorAll('.pill-opt[id^="t"]').forEach(p => p.classList.remove('sel-ten'));
+    const tp = document.getElementById('t' + rec.tenure);
+    if (tp) tp.classList.add('sel-ten');
+  }
+
+  // Restore asset rows
+  document.getElementById('asset-rows').innerHTML = '';
+  assetRowCount = 0;
+  if (rec.assets && rec.assets.length) {
+    rec.assets.forEach(a => addAssetRow(a.name, a.serial, a.value));
+  } else {
+    addAssetRow();
+  }
+
+  // Restore amort data and preview
+  amortData = rec.amortData || [];
+  if (rec.previewHTML) {
+    document.getElementById('preview-doc').innerHTML = rec.previewHTML;
+    // Rebuild amort display
+    if (amortData.length) {
+      document.getElementById('sum-grid').style.display = 'grid';
+      document.getElementById('c_emi').textContent = fmtINR(amortData[0].payout);
+      const tot = amortData.reduce((s,r)=>s+r.payout,0);
+      document.getElementById('c_total').textContent = fmtINR(tot);
+      const tbody = document.getElementById('amort-body');
+      tbody.innerHTML = '';
+      amortData.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${r.num}</td><td>${r.date}</td><td>${fmtINR(r.payout)}</td>`;
+        tbody.appendChild(tr);
+      });
+      const totRow = document.createElement('tr');
+      totRow.className = 'tot';
+      totRow.innerHTML = `<td colspan="2" style="text-align:right;font-weight:500">Total</td><td>${fmtINR(tot)}</td>`;
+      tbody.appendChild(totRow);
+      document.getElementById('amort-card').style.display = 'block';
+    }
+  }
+
+  closeHistory();
+  goStep(5); // jump straight to preview
+}
+
+function deleteFromHistory(id) {
+  const arr = histLoad().filter(r => r.id !== id);
+  histSave(arr);
+  updateHistCount();
+  renderHistList();
+}
+
+function clearAllHistory() {
+  if (!confirm('Delete all saved agreements? This cannot be undone.')) return;
+  histSave([]);
+  updateHistCount();
+  renderHistList();
+}
+
+function updateHistCount() {
+  const n = histLoad().length;
+  document.getElementById('hist-count').textContent = n;
+}
+
+function openHistory() {
+  renderHistList();
+  document.getElementById('hist-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeHistory() {
+  document.getElementById('hist-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function closeHistoryIfOutside(e) {
+  if (e.target === document.getElementById('hist-overlay')) closeHistory();
+}
+
+// PDF download from a history record
+function histPDF(id) {
+  const arr = histLoad();
+  const rec = arr.find(r => r.id === id);
+  if (!rec || !rec.previewHTML) { alert('No preview saved for this record.'); return; }
+  const content = rec.previewHTML;
+  const lName = rec.lender_name || 'Agreement';
+  _openPrintWindow(content, lName);
+}
+
+// DOCX download from a history record
+async function histDOCX(id) {
+  const arr = histLoad();
+  const rec = arr.find(r => r.id === id);
+  if (!rec) return;
+  // Temporarily fill fields, build blob, then restore
+  _applyRecordToDOM(rec);
+  amortData = rec.amortData || [];
+  try {
+    const blob = await buildDocxBlob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Loan_Agreement_${(rec.lender_name||'Agreement').replace(/\s+/g,'_')}.docx`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch(e) { alert('DOCX error: ' + e.message); }
+}
+
+// Google Docs from history record
+async function histGDocs(id) {
+  const arr = histLoad();
+  const rec = arr.find(r => r.id === id);
+  if (!rec) return;
+  _applyRecordToDOM(rec);
+  amortData = rec.amortData || [];
+  const clientId = getGClientId();
+  if (!clientId) {
+    closeHistory();
+    document.getElementById('gdocs-setup').style.display = 'block';
+    goStep(5);
+    return;
+  }
+  try {
+    const token = await requestGISToken(clientId);
+    const blob = await buildDocxBlob();
+    const fname = `Loan_Agreement_${(rec.lender_name||'Draft').replace(/\s+/g,'_')}`;
+    const meta = JSON.stringify({ name: fname, mimeType: 'application/vnd.google-apps.document' });
+    const form = new FormData();
+    form.append('metadata', new Blob([meta], { type: 'application/json' }));
+    form.append('file', blob, fname + '.docx');
+    const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',
+      { method:'POST', headers:{ Authorization:'Bearer '+token }, body:form });
+    if (!res.ok) throw new Error('Drive upload failed');
+    const { id: fileId } = await res.json();
+    window.open(`https://docs.google.com/document/d/${fileId}/edit`, '_blank');
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+// Helper: set DOM fields from a record without navigating
+function _applyRecordToDOM(rec) {
+  const s = (elId, val) => { const el = document.getElementById(elId); if(el) el.value = val||''; };
+  ['lender_name','lender_pan','lender_aadhaar','lender_address','lender_email','lender_mobile',
+   'bank_name','bank_acc','bank_ifsc','bank_bankname','loan_amount','effective_date','tenure',
+   'monthly_payout','txn_date','txn_amount','txn_id'].forEach(k => s(k, rec[k]));
+  // restore assets silently (needed for buildDocxBlob to read getAssets())
+  document.getElementById('asset-rows').innerHTML = '';
+  assetRowCount = 0;
+  (rec.assets||[]).forEach(a => addAssetRow(a.name, a.serial, a.value));
+}
+
+function _openPrintWindow(content, name) {
+  const printHTML = `<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>${name}</title>
+<link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+@page{size:A4;margin:16mm 14mm}
+body{font-family:'Inter',sans-serif;font-size:12.5px;line-height:1.75;color:#111;background:#fff}
+h1{font-family:'Ubuntu',sans-serif;font-size:20px;font-weight:700;text-align:center;color:#0d0d20;margin-bottom:4px}
+.sub{text-align:center;font-size:11px;color:#777;font-style:italic;margin-bottom:20px}
+h2{font-family:'Ubuntu',sans-serif;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#0d0d20;margin:18px 0 4px;page-break-after:avoid}
+p{margin:3px 0 6px}
+.party-block{border-left:3px solid #6c5ce7;padding:10px 14px;background:#f7f7fc;margin:10px 0;font-size:12px;border-radius:0 6px 6px 0}
+.hl{font-weight:600;color:#4a3fbe}
+hr{border:none;border-top:1px solid #ccc;margin:16px 0}
+table{width:100%;border-collapse:collapse;font-size:11.5px;margin:8px 0;page-break-inside:auto}
+thead{display:table-header-group}
+th{background:#f0f0f8;padding:6px 10px;border:1px solid #ccc;text-align:left;font-size:10.5px}
+td{padding:6px 10px;border:1px solid #ddd;page-break-inside:avoid}
+.sig-tbl{margin-top:24px;page-break-inside:avoid}
+.sig-tbl td{padding:12px 14px;vertical-align:top;border:1px solid #bbb}
+.sig-line{border-bottom:1px solid #555;height:28px;margin-top:20px}
+.tot-row td{background:#f0f0f8;font-weight:600}
+div[style*="height:52px"]{height:24px!important}
+div[style*="height:32px"]{height:16px!important}
+</style></head><body>${content}
+<script>window.onload=function(){setTimeout(function(){window.focus();window.print();setTimeout(function(){window.close()},500)},600)}<\/script>
+</body></html>`;
+  const pw = window.open('','_blank','width=900,height=700');
+  if (!pw) { alert('Allow popups and try again.'); return; }
+  pw.document.write(printHTML);
+  pw.document.close();
+}
+
+function renderHistList() {
+  const arr = histLoad();
+  const list = document.getElementById('hist-list');
+  const clearBtn = document.getElementById('hist-clear-btn');
+
+  if (!arr.length) {
+    list.innerHTML = `
+      <div class="hist-empty">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <div style="font-size:14px;color:var(--text);margin-bottom:6px">No agreements yet</div>
+        <div>Generate and preview an agreement — it will appear here automatically.</div>
+      </div>`;
+    clearBtn.style.display = 'none';
+    return;
+  }
+
+  clearBtn.style.display = 'block';
+  list.innerHTML = arr.map(rec => {
+    const savedAt = new Date(rec.savedAt);
+    const dateStr = savedAt.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+    const timeStr = savedAt.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+    const amount  = rec.loan_amount ? fmtINR(parseFloat(rec.loan_amount)) : '—';
+    const tenure  = rec.tenure ? rec.tenure + ' mo' : '—';
+    const payout  = rec.monthly_payout ? fmtINR(parseFloat(rec.monthly_payout)) + '/mo' : '—';
+    return `
+    <div class="hist-card">
+      <div class="hist-card-top">
+        <div>
+          <div class="hist-name">${rec.lender_name || 'Unnamed Lender'}</div>
+          <div class="hist-date">${dateStr} · ${timeStr}</div>
+        </div>
+      </div>
+      <div class="hist-meta">
+        <span class="hist-tag">${amount}</span>
+        <span class="hist-tag yellow">${tenure}</span>
+        <span class="hist-tag green">${payout}</span>
+        ${rec.lender_pan ? `<span class="hist-tag">PAN: ${rec.lender_pan}</span>` : ''}
+      </div>
+      <div class="hist-divider"></div>
+      <div class="hist-actions">
+        <button class="hist-act restore" onclick="restoreFromHistory(${rec.id})">
+          ↩ Restore
+        </button>
+        <button class="hist-act pdf" onclick="histPDF(${rec.id})">
+          PDF
+        </button>
+        <button class="hist-act docx" onclick="histDOCX(${rec.id})">
+          DOCX
+        </button>
+        <button class="hist-act gdocs" onclick="histGDocs(${rec.id})">
+          Google Docs
+        </button>
+        <button class="hist-act del" onclick="deleteFromHistory(${rec.id})" style="margin-left:auto">
+          🗑
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
 function setStatus(type, title, body) {
   document.getElementById('digio-status').innerHTML =
     `<div class="status-box ${type}">
@@ -1607,8 +2019,8 @@ window.addEventListener('DOMContentLoaded', () => {
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('effective_date').value = today;
   document.getElementById('txn_date').value = today;
-  // Start with one blank asset row
   addAssetRow();
+  updateHistCount();
 });
 </script>
 </body>
