@@ -1,0 +1,1551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SharePal — Agreement Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&family=Inter:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style id="print-style">
+@media print {
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+  body > * { display: none !important; }
+  #print-zone {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    background: #fff !important;
+    padding: 24px 48px !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 12.5px !important;
+    color: #111 !important;
+    line-height: 1.7 !important;
+  }
+  #print-zone h1 { font-family: 'Ubuntu', sans-serif !important; font-size: 19px !important; text-align: center !important; margin-bottom: 2px !important; }
+  #print-zone .sub { text-align: center !important; font-size: 11px !important; color: #666 !important; font-style: italic !important; margin-bottom: 18px !important; }
+  #print-zone h2 { font-family: 'Ubuntu', sans-serif !important; font-size: 11.5px !important; font-weight: 700 !important; text-transform: uppercase !important; letter-spacing: 0.05em !important; margin: 16px 0 4px !important; color: #0d0d20 !important; }
+  #print-zone p { margin: 4px 0 !important; }
+  #print-zone .party-block { border-left: 3px solid #6c5ce7 !important; padding: 9px 14px !important; background: #f7f7fc !important; margin: 10px 0 !important; font-size: 12px !important; }
+  #print-zone .hl { font-weight: 600 !important; color: #4a3fbe !important; }
+  #print-zone hr { border: none !important; border-top: 1px solid #ccc !important; margin: 14px 0 !important; }
+  #print-zone table { width: 100% !important; border-collapse: collapse !important; font-size: 11px !important; margin: 8px 0 !important; page-break-inside: auto !important; }
+  #print-zone thead { display: table-header-group !important; }
+  #print-zone th { background: #f0f0f8 !important; padding: 6px 10px !important; border: 1px solid #ccc !important; text-align: left !important; font-size: 10.5px !important; }
+  #print-zone td { padding: 5px 10px !important; border: 1px solid #ddd !important; page-break-inside: avoid !important; }
+  #print-zone .sig-tbl td { padding: 12px 14px !important; vertical-align: top !important; border: 1px solid #bbb !important; }
+  #print-zone .sig-line { border-bottom: 1px solid #555 !important; height: 26px !important; margin-top: 18px !important; }
+  #print-zone .tot-row td { background: #f0f0f8 !important; font-weight: 600 !important; }
+  @page { margin: 16mm 14mm; size: A4; }
+}
+</style>
+<style>
+:root {
+  --bg: #0b0b12;
+  --surface: #13131e;
+  --surface2: #1c1c2b;
+  --border: #252538;
+  --border-hi: #353550;
+  --accent: #6c5ce7;
+  --accent-lt: #a29bfe;
+  --accent2: #00cec9;
+  --accent3: #fdcb6e;
+  --text: #e2e2f0;
+  --muted: #6b6b8a;
+  --danger: #ff7675;
+  --success: #00cec9;
+  --glow: 0 0 0 1px var(--border), 0 6px 32px rgba(108,92,231,0.07);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Inter',sans-serif;
+  font-size:14px;
+  line-height:1.65;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 700px 500px at 5% 15%,rgba(108,92,231,0.055) 0%,transparent 70%),
+    radial-gradient(ellipse 500px 350px at 95% 85%,rgba(0,206,201,0.04) 0%,transparent 70%);
+}
+.shell{position:relative;z-index:1;max-width:980px;margin:0 auto;padding:0 24px 100px}
+
+/* ── Header ── */
+header{
+  padding:36px 0 28px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--border);margin-bottom:36px;
+}
+.logo{display:flex;align-items:center;gap:14px}
+.logo-mark{
+  width:40px;height:40px;
+  background:linear-gradient(140deg,var(--accent) 0%,var(--accent2) 100%);
+  border-radius:11px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Ubuntu',sans-serif;font-size:15px;font-weight:700;color:#fff;
+  box-shadow:0 4px 16px rgba(108,92,231,0.3);
+}
+.logo-name{font-family:'Ubuntu',sans-serif;font-size:19px;font-weight:700;letter-spacing:-0.02em;color:var(--text)}
+.logo-tag{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-top:1px}
+.pill{
+  font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;
+  background:rgba(108,92,231,0.1);color:var(--accent-lt);
+  border:1px solid rgba(108,92,231,0.22);padding:5px 12px;border-radius:20px;
+}
+
+/* ── Step nav ── */
+.steps{
+  display:flex;align-items:center;gap:0;
+  background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:5px;
+  margin-bottom:28px;
+}
+.s-btn{
+  flex:1;display:flex;align-items:center;justify-content:center;gap:7px;
+  padding:9px 14px;border-radius:9px;border:none;
+  background:transparent;color:var(--muted);
+  font-family:'Inter',sans-serif;font-size:12.5px;font-weight:500;
+  cursor:pointer;transition:all .18s;white-space:nowrap;
+}
+.s-btn .n{
+  width:20px;height:20px;border-radius:50%;
+  background:var(--border);color:var(--muted);
+  font-family:'DM Mono',monospace;font-size:10px;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .18s;flex-shrink:0;
+}
+.s-btn.active{background:var(--surface2);color:var(--text)}
+.s-btn.active .n{background:var(--accent);color:#fff}
+.s-btn.done{color:var(--accent2)}
+.s-btn.done .n{background:rgba(0,206,201,0.18);color:var(--accent2)}
+.s-div{width:1px;height:18px;background:var(--border);flex-shrink:0}
+
+/* ── Progress ── */
+.prog-row{display:flex;align-items:center;gap:10px;margin-bottom:32px;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)}
+.prog-bar{flex:1;height:2px;background:var(--border);border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px;transition:width .4s ease}
+
+/* ── Panels ── */
+.panel{display:none}.panel.active{display:block}
+
+/* ── Section heading ── */
+.sec-head{margin-bottom:24px}
+.sec-head h2{font-family:'Ubuntu',sans-serif;font-size:21px;font-weight:700;letter-spacing:-0.02em;color:var(--text);margin-bottom:5px}
+.sec-head p{color:var(--muted);font-size:13px}
+
+/* ── Cards ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:22px 24px;margin-bottom:18px;box-shadow:var(--glow)}
+.card-label{
+  font-family:'Ubuntu',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.08em;
+  text-transform:uppercase;color:var(--accent-lt);margin-bottom:16px;
+  display:flex;align-items:center;gap:8px;
+}
+.card-label::before{content:'';width:3px;height:13px;background:var(--accent);border-radius:2px}
+
+/* ── Form grid ── */
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fg3{grid-template-columns:1fr 1fr 1fr}
+.fg1{grid-template-columns:1fr}
+.s2{grid-column:span 2}.s3{grid-column:span 3}
+
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{
+  font-family:'Inter',sans-serif;font-size:11px;font-weight:500;
+  letter-spacing:0.04em;text-transform:uppercase;color:var(--muted);
+}
+.field label .req{color:var(--accent-lt);margin-left:2px}
+.field input,.field select,.field textarea{
+  background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+  color:var(--text);font-family:'Inter',sans-serif;font-size:14px;
+  padding:10px 12px;outline:none;width:100%;
+  transition:border-color .18s,box-shadow .18s;
+}
+.field input:focus,.field select:focus,.field textarea:focus{
+  border-color:var(--accent);box-shadow:0 0 0 3px rgba(108,92,231,0.13);
+}
+.field select{
+  appearance:none;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' stroke='%236b6b8a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;
+}
+.field textarea{resize:vertical;min-height:74px}
+.field input::placeholder,.field textarea::placeholder{color:var(--border-hi)}
+.field input[readonly]{opacity:0.55;cursor:not-allowed}
+
+/* ── Pills ── */
+.pills{display:flex;gap:8px}
+.pill-opt{
+  flex:1;padding:10px 8px;border-radius:8px;
+  border:1px solid var(--border);background:var(--surface2);
+  color:var(--muted);font-family:'DM Mono',monospace;font-size:13px;
+  text-align:center;cursor:pointer;transition:all .16s;user-select:none;
+}
+.pill-opt:hover{border-color:var(--border-hi);color:var(--text)}
+.pill-opt.sel-irr{border-color:var(--accent);background:rgba(108,92,231,0.1);color:var(--accent-lt)}
+.pill-opt.sel-ten{border-color:var(--accent3);background:rgba(253,203,110,0.08);color:var(--accent3)}
+
+/* ── Computed summary ── */
+.sum-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+.sum-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.sum-box .lbl{font-family:'Inter',sans-serif;font-size:10px;font-weight:500;letter-spacing:0.07em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.sum-box .val{font-family:'DM Mono',monospace;font-size:18px;font-weight:500;color:var(--accent3)}
+.sum-box .val.sm{font-size:14px;color:var(--accent2)}
+
+/* ── Table ── */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:10px;margin-top:6px}
+table{width:100%;border-collapse:collapse;font-family:'DM Mono',monospace;font-size:12px}
+thead tr{background:var(--surface2)}
+th{padding:10px 14px;text-align:left;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:9px 14px;border-bottom:1px solid rgba(37,37,56,0.7);color:var(--text);white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tr.tot td{background:rgba(108,92,231,0.07);color:var(--accent2);font-weight:500}
+tr:hover td{background:rgba(108,92,231,0.03)}
+
+/* ── Preview document ── */
+.preview-wrap{
+  background:#fff;color:#1a1a2e;border-radius:12px;
+  padding:52px 60px;font-family:'Inter',sans-serif;font-size:13.5px;line-height:1.8;
+  box-shadow:0 10px 50px rgba(0,0,0,0.45);max-height:700px;overflow-y:auto;
+}
+.preview-wrap h1{font-family:'Ubuntu',sans-serif;font-size:22px;font-weight:700;text-align:center;color:#0d0d20;margin-bottom:3px;letter-spacing:-0.01em}
+.preview-wrap .sub{text-align:center;font-size:12px;color:#888;font-style:italic;margin-bottom:26px}
+.preview-wrap h2{font-family:'Ubuntu',sans-serif;font-size:13.5px;font-weight:700;color:#0d0d20;margin:20px 0 5px;text-transform:uppercase;letter-spacing:0.04em}
+.preview-wrap .party-block{background:#f6f6fc;border-left:3px solid #6c5ce7;padding:13px 17px;border-radius:0 8px 8px 0;margin:14px 0;font-size:13px}
+.preview-wrap .hl{font-weight:600;color:#4a3fbe}
+.preview-wrap hr{border:none;border-top:1px solid #e4e4f0;margin:18px 0}
+.preview-wrap table{width:100%;font-size:12px;margin:10px 0}
+.preview-wrap th{background:#f0f0f8;color:#333;font-size:11px;font-family:'Inter',sans-serif;letter-spacing:0.04em}
+.preview-wrap td{color:#333;border-bottom:1px solid #eee;font-family:'Inter',sans-serif}
+.preview-wrap tr.tot-row td{background:#f0f0f8;font-weight:600;color:#4a3fbe}
+.preview-wrap .sig-tbl{margin-top:28px}
+.preview-wrap .sig-tbl td{padding:14px 18px;vertical-align:top;border:1px solid #ddd}
+.preview-wrap .sig-line{border-bottom:1px solid #aaa;height:30px;margin-top:22px}
+
+/* ── Digio section ── */
+.digio-note{
+  background:linear-gradient(135deg,rgba(108,92,231,0.07),rgba(0,206,201,0.06));
+  border:1px solid rgba(108,92,231,0.18);border-radius:12px;padding:18px 22px;margin-bottom:18px;
+  font-size:13px;color:var(--muted);line-height:1.7;
+}
+.digio-note a{color:var(--accent-lt);text-decoration:none}
+.digio-note a:hover{text-decoration:underline}
+.status-box{border-radius:10px;padding:14px 18px;display:flex;align-items:flex-start;gap:12px;margin-bottom:14px;border:1px solid}
+.status-box.info{background:rgba(108,92,231,0.07);border-color:rgba(108,92,231,0.2)}
+.status-box.ok{background:rgba(0,206,201,0.07);border-color:rgba(0,206,201,0.22)}
+.status-box.err{background:rgba(255,118,117,0.07);border-color:rgba(255,118,117,0.22)}
+.status-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.status-text{font-size:13px;color:var(--text);line-height:1.5}
+.status-text strong{display:block;font-weight:600;margin-bottom:2px}
+
+/* ── Buttons ── */
+.btn-row{display:flex;gap:12px;align-items:center;margin-top:26px;flex-wrap:wrap}
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:11px 22px;border-radius:9px;
+  font-family:'Inter',sans-serif;font-size:14px;font-weight:500;
+  border:none;cursor:pointer;transition:all .16s;white-space:nowrap;
+}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#5a4dd0;transform:translateY(-1px);box-shadow:0 4px 18px rgba(108,92,231,0.32)}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+.btn-secondary:hover{background:var(--border);border-color:var(--border-hi)}
+.btn-go{background:var(--accent2);color:#002e2d;font-weight:600}
+.btn-go:hover{background:#00b5b2;transform:translateY(-1px);box-shadow:0 4px 18px rgba(0,206,201,0.28)}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}
+.btn-ghost:hover{color:var(--text);border-color:var(--border-hi)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important;box-shadow:none!important}
+
+/* ── Readonly card ── */
+.readonly-card{
+  background:rgba(0,206,201,0.04);border:1px solid rgba(0,206,201,0.16);border-radius:13px;
+  padding:18px 22px;margin-bottom:18px;
+}
+
+/* ── Next steps ── */
+.next-steps{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:24px}
+.ns-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 18px}
+.ns-num{font-family:'Ubuntu',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent-lt);margin-bottom:7px}
+.ns-txt{font-size:13px;color:var(--text);line-height:1.5}
+
+/* ── Spinner ── */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{width:15px;height:15px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .65s linear infinite;display:inline-block;flex-shrink:0}
+
+.divider{border:none;border-top:1px solid var(--border);margin:26px 0}
+
+/* ── Tooltip ── */
+.tip{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:14px;height:14px;border-radius:50%;background:var(--border);
+  color:var(--muted);font-size:9px;font-family:'DM Mono',monospace;
+  cursor:help;margin-left:4px;position:relative;vertical-align:middle;
+}
+.tip::after{
+  content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;
+  transform:translateX(-50%);background:var(--surface2);color:var(--text);
+  font-family:'Inter',sans-serif;font-size:11px;padding:6px 10px;border-radius:6px;
+  white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .18s;
+  z-index:100;border:1px solid var(--border);max-width:210px;white-space:normal;
+  text-align:center;line-height:1.4;
+}
+.tip:hover::after{opacity:1}
+
+/* scrollbar */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--border-hi)}
+
+/* ── Asset rows ── */
+.asset-row{display:grid;grid-template-columns:1fr 1fr 1fr 36px;gap:10px;align-items:end;margin-bottom:10px}
+.asset-row:last-child{margin-bottom:0}
+.btn-del{
+  width:36px;height:38px;border-radius:8px;border:1px solid rgba(255,118,117,0.25);
+  background:rgba(255,118,117,0.07);color:var(--danger);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:16px;transition:all .16s;flex-shrink:0;
+}
+.btn-del:hover{background:rgba(255,118,117,0.15);border-color:rgba(255,118,117,0.4)}
+.btn-add-row{
+  display:inline-flex;align-items:center;gap:7px;
+  margin-top:14px;padding:8px 16px;border-radius:8px;
+  border:1px dashed var(--border-hi);background:transparent;
+  color:var(--muted);font-family:'Inter',sans-serif;font-size:13px;font-weight:500;
+  cursor:pointer;transition:all .16s;
+}
+.btn-add-row:hover{border-color:var(--accent-lt);color:var(--accent-lt);background:rgba(108,92,231,0.05)}
+@media(max-width:680px){.asset-row{grid-template-columns:1fr 1fr;}.asset-row .serial-col{grid-column:span 1}}
+
+/* ── Download bar ── */
+.dl-bar{
+  display:flex;align-items:center;gap:10px;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:12px;padding:14px 18px;margin-bottom:18px;
+  flex-wrap:wrap;
+}
+.dl-bar-label{
+  font-family:'Inter',sans-serif;font-size:12px;font-weight:500;
+  color:var(--muted);letter-spacing:0.04em;text-transform:uppercase;
+  flex:1;min-width:100px;
+}
+.btn-dl{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:10px 20px;border-radius:8px;border:none;
+  font-family:'Inter',sans-serif;font-size:13px;font-weight:600;
+  cursor:pointer;transition:all .16s;white-space:nowrap;
+}
+.btn-dl-pdf{
+  background:rgba(255,118,117,0.12);color:#ff7675;
+  border:1px solid rgba(255,118,117,0.3);
+}
+.btn-dl-pdf:hover{background:rgba(255,118,117,0.22);border-color:rgba(255,118,117,0.5);transform:translateY(-1px)}
+.btn-dl-docx{
+  background:rgba(108,92,231,0.12);color:var(--accent-lt);
+  border:1px solid rgba(108,92,231,0.3);
+}
+.btn-dl-docx:hover{background:rgba(108,92,231,0.22);border-color:rgba(108,92,231,0.5);transform:translateY(-1px)}
+.btn-dl-gdocs{
+  background:rgba(15,157,88,0.1);color:#0f9d58;
+  border:1px solid rgba(15,157,88,0.28);
+}
+.btn-dl-gdocs:hover{background:rgba(15,157,88,0.18);border-color:rgba(15,157,88,0.5);transform:translateY(-1px)}
+.btn-dl-gdocs:disabled{opacity:.45;cursor:not-allowed;transform:none!important}
+.dl-divider{width:1px;height:32px;background:var(--border);flex-shrink:0;align-self:center}
+@media(max-width:680px){.dl-divider{width:100%;height:1px}}
+.btn-dl:disabled{opacity:.45;cursor:not-allowed;transform:none!important}
+.dl-spin{width:13px;height:13px;border:2px solid rgba(162,155,254,.3);border-top-color:var(--accent-lt);border-radius:50%;animation:spin .65s linear infinite;display:inline-block;flex-shrink:0}
+@media(max-width:680px){
+  .dl-bar{flex-direction:column;align-items:stretch}
+  .btn-dl{justify-content:center}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- Header -->
+<header>
+  <div class="logo">
+    <div class="logo-mark">SP</div>
+    <div>
+      <div class="logo-name">SharePal</div>
+      <div class="logo-tag">Agreement Generator</div>
+    </div>
+  </div>
+  <div class="pill">AFP · Monthly Agreement</div>
+</header>
+
+<!-- Step nav -->
+<div class="steps">
+  <button class="s-btn active" onclick="goStep(1)" id="sb1"><span class="n">1</span><span>Lender Info</span></button>
+  <div class="s-div"></div>
+  <button class="s-btn" onclick="goStep(2)" id="sb2"><span class="n">2</span><span>Loan Terms</span></button>
+  <div class="s-div"></div>
+  <button class="s-btn" onclick="goStep(3)" id="sb3"><span class="n">3</span><span>Transaction</span></button>
+  <div class="s-div"></div>
+  <button class="s-btn" onclick="goStep(4)" id="sb4"><span class="n">4</span><span>Asset Details</span></button>
+  <div class="s-div"></div>
+  <button class="s-btn" onclick="goStep(5)" id="sb5"><span class="n">5</span><span>Preview</span></button>
+  <div class="s-div"></div>
+  <button class="s-btn" onclick="goStep(6)" id="sb6"><span class="n">6</span><span>E-Sign</span></button>
+</div>
+<div class="prog-row">
+  <span id="prog-lbl">Step 1 of 6</span>
+  <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:17%"></div></div>
+  <span id="prog-pct">17%</span>
+</div>
+
+<!-- ════════════════════ STEP 1 ════════════════════ -->
+<div class="panel active" id="panel1">
+  <div class="sec-head">
+    <h2>Lender Information</h2>
+    <p>Personal details, contact info and bank account for EMI credits</p>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Personal Details</div>
+    <div class="fg">
+      <div class="field s2">
+        <label>Full Name <span class="req">*</span></label>
+        <input type="text" id="lender_name" placeholder="e.g. Shreehari U"/>
+      </div>
+      <div class="field">
+        <label>PAN Number <span class="req">*</span></label>
+        <input type="text" id="lender_pan" placeholder="ABCDE1234F" maxlength="10" oninput="this.value=this.value.toUpperCase()"/>
+      </div>
+      <div class="field">
+        <label>Aadhaar Number <span class="req">*</span></label>
+        <input type="text" id="lender_aadhaar" placeholder="XXXX XXXX XXXX" maxlength="14" oninput="fmtAadhaar(this)"/>
+      </div>
+      <div class="field s2">
+        <label>Residential Address <span class="req">*</span></label>
+        <textarea id="lender_address" placeholder="Full address — house/flat, area, city, state, PIN" rows="2"></textarea>
+      </div>
+      <div class="field">
+        <label>Email Address <span class="req">*</span></label>
+        <input type="email" id="lender_email" placeholder="name@example.com"/>
+      </div>
+      <div class="field">
+        <label>Mobile Number <span class="req">*</span></label>
+        <input type="tel" id="lender_mobile" placeholder="+91 9876543210" maxlength="13"/>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Bank Details (EMI will be credited here)</div>
+    <div class="fg">
+      <div class="field">
+        <label>Account Holder Name <span class="req">*</span></label>
+        <input type="text" id="bank_name" placeholder="As per bank records"/>
+      </div>
+      <div class="field">
+        <label>Account Number <span class="req">*</span></label>
+        <input type="text" id="bank_acc" placeholder="e.g. 0422131000085"/>
+      </div>
+      <div class="field">
+        <label>IFSC Code <span class="req">*</span></label>
+        <input type="text" id="bank_ifsc" placeholder="e.g. CNRB0000422" oninput="this.value=this.value.toUpperCase()"/>
+      </div>
+      <div class="field">
+        <label>Bank Name</label>
+        <input type="text" id="bank_bankname" placeholder="e.g. Canara Bank"/>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="goStep(2)">Continue → Loan Terms</button>
+  </div>
+</div>
+
+<!-- ════════════════════ STEP 2 ════════════════════ -->
+<div class="panel" id="panel2">
+  <div class="sec-head">
+    <h2>Loan Terms</h2>
+    <p>Set amount, tenure and monthly payout — schedule auto-calculates</p>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Core Terms</div>
+    <div class="fg">
+      <div class="field">
+        <label>Loan Amount (₹) <span class="req">*</span></label>
+        <input type="number" id="loan_amount" placeholder="e.g. 139500" min="10000" step="500" oninput="calcEMI()"/>
+      </div>
+      <div class="field">
+        <label>Effective Date <span class="req">*</span></label>
+        <input type="date" id="effective_date" oninput="calcEMI()"/>
+      </div>
+      <div class="field">
+        <label>Tenure <span class="req">*</span></label>
+        <div class="pills">
+          <div class="pill-opt" id="t12" onclick="selectTenure(12,this)">12 mo</div>
+          <div class="pill-opt" id="t24" onclick="selectTenure(24,this)">24 mo</div>
+          <div class="pill-opt" id="t36" onclick="selectTenure(36,this)">36 mo</div>
+        </div>
+        <input type="hidden" id="tenure"/>
+      </div>
+      <div class="field">
+        <label>Monthly Payout (₹) <span class="req">*</span>
+          <span class="tip" data-tip="Fixed EMI amount per month — enter directly or let the system calculate">?</span>
+        </label>
+        <input type="number" id="monthly_payout" placeholder="e.g. 6876" min="100" step="1" oninput="calcEMI()"/>
+      </div>
+    </div>
+  </div>
+
+  <!-- Computed boxes -->
+  <div class="sum-grid" id="sum-grid" style="display:none">
+    <div class="sum-box">
+      <div class="lbl">Monthly Payout</div>
+      <div class="val" id="c_emi">₹—</div>
+    </div>
+    <div class="sum-box">
+      <div class="lbl">Total Payout</div>
+      <div class="val" id="c_total">₹—</div>
+    </div>
+    <div class="sum-box">
+      <div class="lbl">Effective IRR (approx.)</div>
+      <div class="val sm" id="c_irr">—</div>
+    </div>
+  </div>
+
+  <!-- Amortization -->
+  <div class="card" id="amort-card" style="display:none">
+    <div class="card-label">Payment Schedule — Annexure I</div>
+    <div class="tbl-wrap">
+      <table id="amort-tbl">
+        <thead>
+          <tr>
+            <th>Payment #</th>
+            <th>Payment Date</th>
+            <th>Monthly Payout</th>
+          </tr>
+        </thead>
+        <tbody id="amort-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-ghost" onclick="goStep(1)">← Back</button>
+    <button class="btn btn-primary" onclick="goStep(3)">Continue → Transaction</button>
+  </div>
+</div>
+
+<!-- ════════════════════ STEP 3 ════════════════════ -->
+<div class="panel" id="panel3">
+  <div class="sec-head">
+    <h2>Transaction Details</h2>
+    <p>Record how the loan was transferred to Repium Ventures LLP</p>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Transfer Details</div>
+    <div class="fg">
+      <div class="field">
+        <label>Date of Transfer <span class="req">*</span></label>
+        <input type="date" id="txn_date"/>
+      </div>
+      <div class="field">
+        <label>Amount Transferred (₹) <span class="req">*</span></label>
+        <input type="number" id="txn_amount" placeholder="Same as loan amount"/>
+      </div>
+      <div class="field s2">
+        <label>Transaction ID <span class="req">*</span>
+          <span class="tip" data-tip="UTR / UPI transaction reference / NEFT reference number">?</span>
+        </label>
+        <input type="text" id="txn_id" placeholder="e.g. HDFC1234567890 or UPI/TXN/12345"/>
+      </div>
+    </div>
+  </div>
+
+  <div class="readonly-card">
+    <div class="card-label" style="color:var(--accent2)">Borrower's Receiving Account (Repium Ventures LLP)</div>
+    <div class="fg fg3">
+      <div class="field">
+        <label>Account Holder</label>
+        <input type="text" value="REPIUM VENTURES LLP" readonly/>
+      </div>
+      <div class="field">
+        <label>Account Number</label>
+        <input type="text" value="7917837471" readonly/>
+      </div>
+      <div class="field">
+        <label>IFSC Code</label>
+        <input type="text" value="IDIB000M050" readonly/>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-ghost" onclick="goStep(2)">← Back</button>
+    <button class="btn btn-primary" onclick="goStep(4)">Continue → Asset Details</button>
+  </div>
+</div>
+
+<!-- ════════════════════ STEP 4: Asset Details ════════════════════ -->
+<div class="panel" id="panel4">
+  <div class="sec-head">
+    <h2>Asset Details</h2>
+    <p>List the assets hypothecated as security for this loan (Annexure II)</p>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Hypothecated Assets</div>
+
+    <!-- Column headers -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 36px;gap:10px;margin-bottom:6px">
+      <div style="font-family:'Inter',sans-serif;font-size:11px;font-weight:500;letter-spacing:0.04em;text-transform:uppercase;color:var(--muted)">Asset Name <span style="color:var(--accent-lt)">*</span></div>
+      <div style="font-family:'Inter',sans-serif;font-size:11px;font-weight:500;letter-spacing:0.04em;text-transform:uppercase;color:var(--muted)">Serial Number</div>
+      <div style="font-family:'Inter',sans-serif;font-size:11px;font-weight:500;letter-spacing:0.04em;text-transform:uppercase;color:var(--muted)">Asset Value (₹) <span style="color:var(--accent-lt)">*</span></div>
+      <div></div>
+    </div>
+
+    <div id="asset-rows">
+      <!-- rows injected by JS -->
+    </div>
+
+    <button class="btn-add-row" onclick="addAssetRow()">
+      <span style="font-size:18px;line-height:1">+</span> Add Asset
+    </button>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-ghost" onclick="goStep(3)">← Back</button>
+    <button class="btn btn-primary" onclick="buildPreview();goStep(5)">Generate Preview →</button>
+  </div>
+</div>
+
+<!-- ════════════════════ STEP 5: Preview ════════════════════ -->
+<div class="panel" id="panel5">
+  <div class="sec-head">
+    <h2>Agreement Preview</h2>
+    <p>Review every field before dispatching for e-signature</p>
+  </div>
+
+  <!-- Download bar -->
+  <div class="dl-bar">
+    <span class="dl-bar-label">⬇ Download Agreement</span>
+    <button class="btn-dl btn-dl-pdf" id="btn-pdf" onclick="downloadPDF()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      Download PDF
+    </button>
+    <button class="btn-dl btn-dl-docx" id="btn-docx" onclick="downloadDOCX()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      Download DOCX
+    </button>
+    <div class="dl-divider"></div>
+    <button class="btn-dl btn-dl-gdocs" id="btn-gdocs" onclick="openInGoogleDocs()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2H9L3 8v13a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1z"/><polyline points="9 2 9 8 3 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+      Open in Google Docs
+    </button>
+  </div>
+
+  <!-- Google OAuth config note (shown only before first auth) -->
+  <div id="gdocs-setup" style="display:none;margin-bottom:16px">
+    <div class="digio-note" style="margin-bottom:0">
+      <strong style="color:var(--text)">Google Docs setup required</strong><br/>
+      To open in Google Docs, enter your Google OAuth Client ID below. 
+      <a href="https://console.cloud.google.com/apis/credentials" target="_blank">Get one from Google Cloud Console →</a>
+      (enable Google Drive API, create OAuth 2.0 Client ID with this page's origin as an allowed JavaScript origin).
+      <div style="display:flex;gap:10px;margin-top:12px;align-items:center;flex-wrap:wrap">
+        <input type="text" id="gclient_id" placeholder="xxxx.apps.googleusercontent.com"
+          style="flex:1;min-width:220px;background:var(--surface);border:1px solid var(--border);border-radius:8px;
+          color:var(--text);font-family:'Inter',sans-serif;font-size:13px;padding:9px 12px;outline:none"/>
+        <button class="btn btn-primary" style="padding:9px 18px;font-size:13px" onclick="saveGClientId()">Save &amp; Connect</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Preview document (also used as print zone) -->
+  <div class="preview-wrap" id="preview-doc"></div>
+
+  <!-- Hidden print zone — populated on PDF trigger -->
+  <div id="print-zone" style="display:none"></div>
+
+  <div class="btn-row">
+    <button class="btn btn-ghost" onclick="goStep(4)">← Edit Details</button>
+    <button class="btn btn-primary" onclick="goStep(6)">Send for E-Sign →</button>
+  </div>
+</div>
+
+<!-- ════════════════════ STEP 6: E-Sign ════════════════════ -->
+<div class="panel" id="panel6">
+  <div class="sec-head">
+    <h2>Send for E-Signature via Digio</h2>
+    <p>Enter API credentials and dispatch the signed agreement to the lender</p>
+  </div>
+
+  <div class="digio-note">
+    <strong style="color:var(--text)">How it works:</strong> The filled agreement is uploaded to Digio and the lender receives an SMS + email with an Aadhaar OTP signing link. Once both parties sign, a certified copy is auto-emailed and stored in your Digio vault.<br/>
+    No credentials yet? <a href="https://app.digio.in" target="_blank">Log in to Digio →</a> and copy your Client ID + Secret from the Developer section.
+  </div>
+
+  <div class="card">
+    <div class="card-label">Digio API Credentials</div>
+    <div class="fg">
+      <div class="field">
+        <label>Client ID <span class="req">*</span></label>
+        <input type="text" id="digio_id" placeholder="DIG-XXXXXXXX"/>
+      </div>
+      <div class="field">
+        <label>Client Secret <span class="req">*</span></label>
+        <input type="password" id="digio_secret" placeholder="your-digio-secret"/>
+      </div>
+      <div class="field">
+        <label>Signing Method</label>
+        <select id="sign_type">
+          <option value="aadhaar">Aadhaar OTP (recommended)</option>
+          <option value="electronic">Electronic — click to sign</option>
+          <option value="dsc">DSC</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Signing Deadline</label>
+        <select id="sign_days">
+          <option value="3">3 days</option>
+          <option value="5" selected>5 days</option>
+          <option value="7">7 days</option>
+          <option value="14">14 days</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Signatories</div>
+    <div class="fg">
+      <div class="field">
+        <label>Lender name</label>
+        <input type="text" id="s_name" readonly/>
+      </div>
+      <div class="field">
+        <label>Lender email</label>
+        <input type="email" id="s_email" readonly/>
+      </div>
+      <div class="field">
+        <label>Lender mobile</label>
+        <input type="tel" id="s_mobile" readonly/>
+      </div>
+      <div class="field" style="display:flex;flex-direction:column;justify-content:flex-end">
+        <div style="background:rgba(0,206,201,0.07);border:1px solid rgba(0,206,201,0.18);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--accent2)">
+          ✓ Repium Ventures LLP signs via Digio dashboard
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="digio-status"></div>
+
+  <div class="btn-row">
+    <button class="btn btn-ghost" onclick="goStep(5)">← Back to Preview</button>
+    <button class="btn btn-go" id="send-btn" onclick="sendDigio()">
+      <span id="send-lbl">Send for E-Signature</span>
+    </button>
+  </div>
+
+  <div id="post-send" style="display:none">
+    <hr class="divider"/>
+    <div class="sec-head"><h2 style="color:var(--accent2)">What happens next</h2></div>
+    <div class="next-steps">
+      <div class="ns-item">
+        <div class="ns-num">Step 1</div>
+        <div class="ns-txt">Lender gets SMS + email with Digio Aadhaar OTP signing link</div>
+      </div>
+      <div class="ns-item">
+        <div class="ns-num">Step 2</div>
+        <div class="ns-txt">Repium team countersigns via Digio dashboard — agreement is legally executed</div>
+      </div>
+      <div class="ns-item">
+        <div class="ns-num">Step 3</div>
+        <div class="ns-txt">Signed PDF auto-emailed to both parties and stored in your Digio vault</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /shell -->
+
+<script>
+// ── State ──
+let cur = 1;
+const TOTAL = 6;
+let amortData = [];
+let tenureVal = 0;
+let payoutVal = 0;
+
+// ── Navigation ──
+function goStep(n) {
+  document.getElementById('panel' + cur).classList.remove('active');
+  document.getElementById('sb' + cur).classList.remove('active');
+  cur = n;
+  document.getElementById('panel' + n).classList.add('active');
+  document.getElementById('sb' + n).classList.add('active');
+  const pct = Math.round(n / TOTAL * 100);
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-pct').textContent = pct + '%';
+  document.getElementById('prog-lbl').textContent = 'Step ' + n + ' of ' + TOTAL;
+  window.scrollTo({top:0,behavior:'smooth'});
+  if (n === 6) syncSig();
+}
+
+// ── Formatters ──
+function fmtAadhaar(el) {
+  let v = el.value.replace(/\D/g,'').substring(0,12);
+  el.value = v.replace(/(\d{4})(?=\d)/g,'$1 ');
+}
+function fmtINR(n) {
+  return '₹' + Math.round(n).toLocaleString('en-IN');
+}
+function fmtDate(d) {
+  return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+}
+function ordinal(d) {
+  const s=['th','st','nd','rd'], v=d%100;
+  return d+(s[(v-20)%10]||s[v]||s[0]);
+}
+function numWords(n) {
+  const a=['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine',
+    'Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
+  const b=['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+  if(!n) return 'Zero';
+  let r='';
+  if(Math.floor(n/10000000)>0){r+=numWords(Math.floor(n/10000000))+' Crore ';n%=10000000;}
+  if(Math.floor(n/100000)>0){r+=numWords(Math.floor(n/100000))+' Lakh ';n%=100000;}
+  if(Math.floor(n/1000)>0){r+=numWords(Math.floor(n/1000))+' Thousand ';n%=1000;}
+  if(Math.floor(n/100)>0){r+=numWords(Math.floor(n/100))+' Hundred ';n%=100;}
+  if(n>0){r+=n<20?a[n]:b[Math.floor(n/10)]+(n%10?' '+a[n%10]:'')}
+  return r.trim();
+}
+
+// ── Pill selectors ──
+function selectTenure(v, el) {
+  document.querySelectorAll('.pill-opt[id^="t"]').forEach(p=>p.classList.remove('sel-ten'));
+  el.classList.add('sel-ten');
+  document.getElementById('tenure').value = v;
+  tenureVal = v;
+  calcEMI();
+}
+
+// ── EMI Calculation ──
+function calcEMI() {
+  const P = parseFloat(document.getElementById('loan_amount').value);
+  const n = parseInt(document.getElementById('tenure').value);
+  const emi = parseFloat(document.getElementById('monthly_payout').value);
+  const dateStr = document.getElementById('effective_date').value;
+  if (!P || !n || !emi || !dateStr) return;
+
+  payoutVal = emi;
+  const startDate = new Date(dateStr);
+
+  amortData = [];
+  let totalPayout = 0;
+  for (let i = 1; i <= n; i++) {
+    const pd = new Date(startDate);
+    pd.setMonth(startDate.getMonth() + i);
+    amortData.push({num:i, date:fmtDate(pd), payout:emi});
+    totalPayout += emi;
+  }
+
+  // Back-calculate IRR
+  let r = 0.015;
+  for (let iter = 0; iter < 200; iter++) {
+    const f = emi * (1 - Math.pow(1+r,-n)) / r - P;
+    const df = emi * (n * Math.pow(1+r,-n-1) / r - (1 - Math.pow(1+r,-n)) / (r*r));
+    const rn = r - f/df;
+    if (Math.abs(rn - r) < 1e-9) { r = rn; break; }
+    r = rn;
+  }
+  const irrAnnual = (r * 12 * 100).toFixed(2);
+
+  document.getElementById('sum-grid').style.display = 'grid';
+  document.getElementById('c_emi').textContent = fmtINR(emi);
+  document.getElementById('c_total').textContent = fmtINR(totalPayout);
+  document.getElementById('c_irr').textContent = irrAnnual + '% p.a.';
+
+  const tbody = document.getElementById('amort-body');
+  tbody.innerHTML = '';
+  amortData.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${r.num}</td><td>${r.date}</td><td>${fmtINR(r.payout)}</td>`;
+    tbody.appendChild(tr);
+  });
+  const tot = document.createElement('tr');
+  tot.className = 'tot';
+  tot.innerHTML = `<td colspan="2" style="text-align:right;font-weight:500">Total</td><td>${fmtINR(totalPayout)}</td>`;
+  tbody.appendChild(tot);
+
+  document.getElementById('amort-card').style.display = 'block';
+}
+
+// ── Asset row management ──
+let assetRowCount = 0;
+function addAssetRow(name='', serial='', value='') {
+  assetRowCount++;
+  const id = assetRowCount;
+  const container = document.getElementById('asset-rows');
+  const row = document.createElement('div');
+  row.className = 'asset-row';
+  row.id = 'arow-' + id;
+  row.innerHTML = `
+    <input type="text" class="asset-name" placeholder="e.g. iPhone 17 Pro Max"
+      style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Inter',sans-serif;font-size:14px;padding:10px 12px;outline:none;width:100%;transition:border-color .18s,box-shadow .18s;"
+      value="${name}" onfocus="this.style.borderColor='var(--accent)';this.style.boxShadow='0 0 0 3px rgba(108,92,231,0.13)'"
+      onblur="this.style.borderColor='var(--border)';this.style.boxShadow='none'"/>
+    <input type="text" class="asset-serial serial-col" placeholder="Serial / IMEI (optional)"
+      style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Inter',sans-serif;font-size:14px;padding:10px 12px;outline:none;width:100%;transition:border-color .18s,box-shadow .18s;"
+      value="${serial}" onfocus="this.style.borderColor='var(--accent)';this.style.boxShadow='0 0 0 3px rgba(108,92,231,0.13)'"
+      onblur="this.style.borderColor='var(--border)';this.style.boxShadow='none'"/>
+    <input type="number" class="asset-value" placeholder="e.g. 139500" min="0" step="100"
+      style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Inter',sans-serif;font-size:14px;padding:10px 12px;outline:none;width:100%;transition:border-color .18s,box-shadow .18s;"
+      value="${value}" onfocus="this.style.borderColor='var(--accent)';this.style.boxShadow='0 0 0 3px rgba(108,92,231,0.13)'"
+      onblur="this.style.borderColor='var(--border)';this.style.boxShadow='none'"/>
+    <button class="btn-del" onclick="removeAssetRow('arow-${id}')" title="Remove row">×</button>
+  `;
+  container.appendChild(row);
+}
+function removeAssetRow(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+}
+function getAssets() {
+  const rows = document.querySelectorAll('#asset-rows .asset-row');
+  const assets = [];
+  rows.forEach(row => {
+    const name  = row.querySelector('.asset-name').value.trim();
+    const serial= row.querySelector('.asset-serial').value.trim();
+    const val   = row.querySelector('.asset-value').value.trim();
+    if (name || val) assets.push({name, serial, value: val});
+  });
+  return assets;
+}
+
+// ── Build preview ──
+function buildPreview() {
+  const g = id => document.getElementById(id).value;
+  const lName    = g('lender_name')    || '[Full Name of Individual]';
+  const lPan     = g('lender_pan')     || '____________';
+  const lAadhaar = g('lender_aadhaar') || '____________';
+  const lAddr    = g('lender_address') || '[Address]';
+  const bankName = g('bank_name')      || '____________';
+  const bankAcc  = g('bank_acc')       || '____________';
+  const bankIfsc = g('bank_ifsc')      || '____________';
+
+  const amount   = parseFloat(g('loan_amount')) || 0;
+  const tenure   = g('tenure') || '__';
+  const payout   = parseFloat(g('monthly_payout')) || 0;
+  const dateStr  = g('effective_date');
+
+  const txnDate  = g('txn_date') ? fmtDate(new Date(g('txn_date'))) : '____________';
+  const txnAmt   = amount ? fmtINR(amount) : '₹____________';
+  const txnId    = g('txn_id') || '____________';
+
+  let effDateTxt = '__ day of ______, 20__';
+  if (dateStr) {
+    const d = new Date(dateStr);
+    effDateTxt = ordinal(d.getDate()) + ' day of ' +
+      d.toLocaleDateString('en-IN',{month:'long'}) + ', ' + d.getFullYear();
+  }
+
+  const amountWords = amount ? numWords(amount) + ' Only' : '[Amount in Words]';
+  const amountFmt   = amount ? fmtINR(amount) + '/-' : '₹[Amount]';
+  const payoutFmt   = payout ? fmtINR(payout) + '/-' : '₹____________';
+
+  // Annexure I rows
+  let annexRows = '';
+  if (amortData.length) {
+    amortData.forEach(r => {
+      annexRows += `<tr><td>${r.num}</td><td>${r.date}</td><td>${fmtINR(r.payout)}</td></tr>`;
+    });
+    const tot = amortData.reduce((s,r)=>s+r.payout,0);
+    annexRows += `<tr class="tot-row"><td colspan="2" style="text-align:right;font-weight:600">Total</td><td>${fmtINR(tot)}</td></tr>`;
+  } else {
+    for(let i=1;i<=24;i++) annexRows+=`<tr><td>${i}</td><td></td><td></td></tr>`;
+  }
+
+  // Annexure II rows from Step 4
+  const assets = getAssets();
+  let assetRows = '';
+  if (assets.length) {
+    assets.forEach(a => {
+      assetRows += `<tr>
+        <td>${a.name || '&nbsp;'}</td>
+        <td>${a.serial || '&nbsp;'}</td>
+        <td>${a.value ? fmtINR(parseFloat(a.value)) : '&nbsp;'}</td>
+      </tr>`;
+    });
+  } else {
+    // 4 blank rows if nothing entered
+    for(let i=0;i<4;i++) assetRows += `<tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>`;
+  }
+
+  document.getElementById('preview-doc').innerHTML = `
+    <h1>LOAN AGREEMENT</h1>
+    <p class="sub">(Private Borrowing Arrangement – Asset Financing Model)</p>
+    <p>This Loan Agreement (<strong>"Agreement"</strong>) is executed on the <span class="hl">${effDateTxt}</span> (<strong>"Effective Date"</strong>).</p>
+
+    <h2>Parties</h2>
+    <div class="party-block">
+      <strong>Repium Ventures LLP ("Borrower")</strong>, a Limited Liability Partnership registered under the LLP Act, 2008, having GST Number: <strong>29ABKFR2691H1ZO</strong>, UDYAM: <strong>UDYAM-KR-03-0472355</strong>, its registered office at #100, SJR Commercial Complex, Gear School Road, Bellandur, Bengaluru, Karnataka - 560103
+    </div>
+    <p style="text-align:center;margin:8px 0;font-weight:600;color:#555">AND</p>
+    <div class="party-block">
+      <strong><span class="hl">${lName}</span> ("Lender")</strong>, Having PAN: <span class="hl">${lPan}</span>, Aadhar: <span class="hl">${lAadhaar}</span>, residing at <span class="hl">${lAddr}</span>.
+    </div>
+
+    <p><strong>Definitions</strong></p>
+    <p>For the purpose of this Agreement:</p>
+    <p>• &nbsp;&nbsp;<strong>Loan Amount:</strong> The principal sum lent by the Lender to the Borrower.</p>
+    <p>• &nbsp;&nbsp;<strong>EMI:</strong> Monthly repayment consisting of principal and return.</p>
+    <p>• &nbsp;&nbsp;<strong>Assets:</strong> Tangible business assets of the Borrower hypothecated as security.</p>
+    <p>• &nbsp;&nbsp;<strong>TDS:</strong> Tax Deducted at Source under Section 194A of the Income Tax Act, 1961.</p>
+
+    <h2>1. Purpose and Structure</h2>
+    <p>The Borrower is engaged in the rental asset business. The Lender provides a private loan for asset procurement and operations. This is not a deposit or investment product.</p>
+
+    <h2>2. Loan Amount</h2>
+    <p>The Lender agrees to lend the Borrower <span class="hl">${amountFmt}</span> (Rupees <span class="hl">${amountWords}</span>).</p>
+    <p><strong>Transaction Details</strong></p>
+    <p>The Loan Amount has been transacted by the Lender to the Borrower through the following mode(s):</p>
+    <p>Date of Transfer: <span class="hl">${txnDate}</span></p>
+    <p>Amount Transferred: <span class="hl">${txnAmt}</span></p>
+    <p>Transaction ID: <span class="hl">${txnId}</span></p>
+    <p>The Borrower hereby acknowledges receipt of the above amount in full and confirms that the funds have been credited to:</p>
+    <p>Account Holder Name: <strong>REPIUM VENTURES LLP</strong><br/>
+    Account Number: <strong>7917837471</strong><br/>
+    IFSC Code: <strong>IDIB000M050</strong></p>
+
+    <h2>3. Tenure</h2>
+    <p><span class="hl">${tenure} months</span> from Effective Date.</p>
+
+    <h2>4. Return</h2>
+    <p>The repayment amount payable by the Borrower includes both principal and return components, as detailed in Annexure I.</p>
+
+    <h2>5. Repayment (EMI Structure)</h2>
+    <p>5.1 The loan shall be repaid through Equated Monthly Installments (EMIs).</p>
+    <p>5.2 Each EMI shall include both principal and return components calculated on a reducing balance basis.</p>
+    <p>5.3 EMI Amount: <span class="hl">${payoutFmt}</span></p>
+    <p>5.4 Payment schedule provided in Annexure I.</p>
+    <p>5.5 Early repayment is permitted without penalty.</p>
+    <p>5.6 All repayments shall be credited to the Lender's bank account as provided below:</p>
+    <p>Account Holder Name: <span class="hl">${bankName}</span><br/>
+    Account Number: <span class="hl">${bankAcc}</span><br/>
+    IFSC Code: <span class="hl">${bankIfsc}</span></p>
+
+    <h2>6. TDS under Section 194A</h2>
+    <p>The Borrower shall deduct TDS under Section 194A of the Income Tax Act, 1961 on return payments and provide the Lender with necessary certificates (Form 16A).</p>
+
+    <h2>7. Utilization of Funds</h2>
+    <p>Funds shall be used strictly for asset procurement and business operations.</p>
+
+    <h2>8. Events of Default</h2>
+    <p>- Non-payment of or delay in payment of more than 15 days for consecutive EMIs<br/>- Insolvency or breach of agreement</p>
+
+    <h2>9. Indemnity and Security</h2>
+    <p>Borrower indemnifies lender against losses arising from breach.<br/>The loan will be secured by hypothecation of assets.<br/>The Borrower shall provide complete details of assets hypothecated (Annexure II), including:<br/>- Asset Name<br/>- Serial Number<br/>- Asset Value</p>
+
+    <h2>10. Limitation of Liability and Termination</h2>
+    <p>Borrower liability limited to outstanding loan and agreed returns.<br/>This Agreement may be terminated:<br/>- By mutual consent of both parties.<br/>- By the Lender, if the Borrower defaults on repayment for 2 consecutive months.<br/>- By the Borrower, upon full repayment of outstanding principal and returns.</p>
+
+    <h2>11. Dispute Resolution and Miscellaneous</h2>
+    <p>Disputes shall first be resolved amicably, failing which arbitration under Arbitration and Conciliation Act, 1996 in Bangalore.<br/>Amendments must be in writing and signed by both parties.<br/>Notices shall be sent to the addresses mentioned above.<br/>This Agreement is executed in duplicate, with each party retaining one copy.</p>
+
+    <h2>12. Governing Law</h2>
+    <p>Laws of India. Jurisdiction: Bangalore, Karnataka.</p>
+
+    <hr style="margin:28px 0"/>
+    <table class="sig-tbl">
+      <tr>
+        <td style="width:33%"><strong>For:</strong></td>
+        <td style="width:34%"><strong>Repium Ventures LLP (Borrower)</strong></td>
+        <td style="width:33%"><strong>Individual (Lender)</strong></td>
+      </tr>
+      <tr>
+        <td>Name:</td>
+        <td>Akash Deep Chhabra</td>
+        <td>${lName}</td>
+      </tr>
+      <tr>
+        <td>Signature:</td>
+        <td><div class="sig-line"></div></td>
+        <td><div class="sig-line"></div></td>
+      </tr>
+      <tr>
+        <td>Date:</td>
+        <td style="height:42px"></td>
+        <td style="height:42px"></td>
+      </tr>
+    </table>
+
+    <div style="height:52px"></div>
+
+    <h2>Annexure I</h2>
+    <table>
+      <thead>
+        <tr><th>Payment #</th><th>Payment Date</th><th>Monthly Payout</th></tr>
+      </thead>
+      <tbody>${annexRows}</tbody>
+    </table>
+
+    <div style="height:52px"></div>
+
+    <h2>Annexure II</h2>
+    <p>The Borrower hereby provides details of assets hypothecated as security for the loan.</p>
+    <table style="margin-top:10px">
+      <thead><tr><th>Asset Name</th><th>Serial Number</th><th>Asset Value</th></tr></thead>
+      <tbody>${assetRows}</tbody>
+    </table>
+
+    <div style="height:32px"></div>
+  `;
+}
+
+// ── Sync signatories ──
+function syncSig() {
+  document.getElementById('s_name').value   = document.getElementById('lender_name').value;
+  document.getElementById('s_email').value  = document.getElementById('lender_email').value;
+  document.getElementById('s_mobile').value = document.getElementById('lender_mobile').value;
+}
+
+// ── Digio dispatch (simulation — replace fetch with real backend) ──
+async function sendDigio() {
+  const cid    = document.getElementById('digio_id').value.trim();
+  const secret = document.getElementById('digio_secret').value.trim();
+  const name   = document.getElementById('lender_name').value.trim();
+  const email  = document.getElementById('lender_email').value.trim();
+  const mobile = document.getElementById('lender_mobile').value.trim();
+
+  if (!cid || !secret) { setStatus('err','⚠️ Missing credentials','Enter your Digio Client ID and Secret above.'); return; }
+  if (!name || !email || !mobile) { setStatus('err','⚠️ Incomplete lender info','Go back to Step 1 and fill in name, email and mobile.'); return; }
+
+  const btn = document.getElementById('send-btn');
+  btn.disabled = true;
+  document.getElementById('send-lbl').innerHTML = '<span class="spin"></span> Uploading document…';
+  setStatus('info','Uploading agreement to Digio…','Converting to PDF and sending via REST API.');
+  await wait(1100);
+
+  document.getElementById('send-lbl').innerHTML = '<span class="spin"></span> Creating sign request…';
+  setStatus('info','Creating sign request…','Adding signatory: '+name+' ('+email+')');
+  await wait(1100);
+
+  document.getElementById('send-lbl').innerHTML = '<span class="spin"></span> Dispatching invite…';
+  setStatus('info','Dispatching invite…','Sending SMS and email to lender.');
+  await wait(900);
+
+  const docId = 'DIG-' + Math.random().toString(36).substring(2,10).toUpperCase();
+  btn.disabled = false;
+  document.getElementById('send-lbl').textContent = '✓ Sent Successfully';
+  btn.style.background = '#00cec9'; btn.style.color = '#002e2d';
+
+  setStatus('ok',
+    '✅ Agreement dispatched for e-signature',
+    `Document ID: <strong>${docId}</strong><br/>
+     Aadhaar OTP signing link sent to <strong>${email}</strong> and <strong>${mobile}</strong>.<br/>
+     You'll receive a webhook notification once all parties have signed.`
+  );
+  document.getElementById('post-send').style.display = 'block';
+  document.getElementById('sb6').classList.add('done');
+}
+
+// ── Download PDF ──
+function downloadPDF() {
+  const btn = document.getElementById('btn-pdf');
+  const preview = document.getElementById('preview-doc');
+  if (!preview.innerHTML.trim()) {
+    alert('Please generate the preview first by going through Steps 1–4.');
+    return;
+  }
+  btn.disabled = true;
+  btn.innerHTML = '<span class="dl-spin"></span> Preparing…';
+
+  // Copy HTML into print zone, then print
+  const pz = document.getElementById('print-zone');
+  pz.innerHTML = preview.innerHTML;
+
+  // Small delay so DOM settles before print dialog
+  setTimeout(() => {
+    window.print();
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Download PDF`;
+    }, 1000);
+  }, 200);
+}
+
+// ── Download DOCX (pure XML + JSZip) ──
+async function downloadDOCX() {
+  const btn = document.getElementById('btn-docx');
+  const preview = document.getElementById('preview-doc');
+  if (!preview.innerHTML.trim()) {
+    alert('Please generate the preview first by going through Steps 1–4.');
+    return;
+  }
+  if (typeof JSZip === 'undefined') {
+    alert('JSZip library not loaded. Please check your internet connection.');
+    return;
+  }
+  btn.disabled = true;
+  btn.innerHTML = '<span class="dl-spin"></span> Building DOCX…';
+  try {
+    const blob = await buildDocxBlob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    const g    = id => document.getElementById(id)?.value || '';
+    a.href     = url;
+    a.download = `Loan_Agreement_${(g('lender_name')||'Agreement').replace(/\s+/g,'_')}.docx`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch(err) {
+    console.error('DOCX error:', err);
+    alert('DOCX generation failed: ' + err.message);
+  }
+  btn.disabled = false;
+  btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Download DOCX`;
+}
+
+// ── Google Docs: open via Drive upload ──
+let gAccessToken = null;
+const GDOCS_SCOPES = 'https://www.googleapis.com/auth/drive.file';
+
+function getGClientId() {
+  return (document.getElementById('gclient_id') || {}).value?.trim()
+    || localStorage.getItem('sp_gclient_id') || '';
+}
+
+function saveGClientId() {
+  const id = document.getElementById('gclient_id').value.trim();
+  if (!id) { alert('Please enter your Google OAuth Client ID.'); return; }
+  localStorage.setItem('sp_gclient_id', id);
+  document.getElementById('gdocs-setup').style.display = 'none';
+  openInGoogleDocs();
+}
+
+async function openInGoogleDocs() {
+  const preview = document.getElementById('preview-doc');
+  if (!preview.innerHTML.trim()) {
+    alert('Please generate the preview first by going through Steps 1–4.');
+    return;
+  }
+
+  const clientId = getGClientId();
+  if (!clientId) {
+    document.getElementById('gdocs-setup').style.display = 'block';
+    document.getElementById('gdocs-setup').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    return;
+  }
+
+  const btn = document.getElementById('btn-gdocs');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="dl-spin" style="border-top-color:#0f9d58;border-color:rgba(15,157,88,.3)"></span> Connecting…';
+
+  try {
+    // Step 1: Get OAuth token (implicit grant, popup)
+    if (!gAccessToken) {
+      gAccessToken = await getGoogleToken(clientId);
+    }
+
+    btn.innerHTML = '<span class="dl-spin" style="border-top-color:#0f9d58;border-color:rgba(15,157,88,.3)"></span> Building DOCX…';
+
+    // Step 2: Build DOCX blob (reuse same logic)
+    const blob = await buildDocxBlob();
+
+    btn.innerHTML = '<span class="dl-spin" style="border-top-color:#0f9d58;border-color:rgba(15,157,88,.3)"></span> Uploading…';
+
+    // Step 3: Upload to Google Drive as Google Docs (convert on upload)
+    const g = id => document.getElementById(id)?.value || '';
+    const fname = `Loan_Agreement_${(g('lender_name')||'Draft').replace(/\s+/g,'_')}`;
+
+    const meta = JSON.stringify({
+      name: fname,
+      mimeType: 'application/vnd.google-apps.document',
+    });
+
+    const form = new FormData();
+    form.append('metadata', new Blob([meta], { type: 'application/json' }));
+    form.append('file', blob, fname + '.docx');
+
+    const res = await fetch(
+      'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',
+      {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + gAccessToken },
+        body: form,
+      }
+    );
+
+    if (!res.ok) {
+      const err = await res.json();
+      // Token may have expired — clear and retry once
+      if (res.status === 401) {
+        gAccessToken = null;
+        btn.disabled = false;
+        btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2H9L3 8v13a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1z"/><polyline points="9 2 9 8 3 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> Open in Google Docs`;
+        alert('Session expired. Please click "Open in Google Docs" again to re-authenticate.');
+        return;
+      }
+      throw new Error(err.error?.message || 'Drive upload failed');
+    }
+
+    const { id: fileId } = await res.json();
+    const docUrl = `https://docs.google.com/document/d/${fileId}/edit`;
+
+    // Step 4: Open in new tab
+    window.open(docUrl, '_blank');
+
+    btn.disabled = false;
+    btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2H9L3 8v13a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1z"/><polyline points="9 2 9 8 3 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> Open in Google Docs`;
+
+  } catch (err) {
+    console.error('Google Docs error:', err);
+    gAccessToken = null;
+    btn.disabled = false;
+    btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2H9L3 8v13a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1z"/><polyline points="9 2 9 8 3 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> Open in Google Docs`;
+    alert('Error: ' + err.message);
+  }
+}
+
+// Google OAuth2 implicit grant via popup
+function getGoogleToken(clientId) {
+  return new Promise((resolve, reject) => {
+    const w = 520, h = 620;
+    const left = Math.round(screen.width/2 - w/2);
+    const top  = Math.round(screen.height/2 - h/2);
+    const redirectUri = window.location.href.split('?')[0].split('#')[0];
+    const authUrl = 'https://accounts.google.com/o/oauth2/v2/auth?' + new URLSearchParams({
+      client_id:     clientId,
+      redirect_uri:  redirectUri,
+      response_type: 'token',
+      scope:         GDOCS_SCOPES,
+      prompt:        'consent',
+    });
+
+    const popup = window.open(authUrl, 'google_oauth', `width=${w},height=${h},left=${left},top=${top}`);
+    if (!popup) { reject(new Error('Popup blocked. Please allow popups for this page.')); return; }
+
+    const timer = setInterval(() => {
+      try {
+        const url = popup.location.href;
+        if (url.includes('access_token=')) {
+          clearInterval(timer);
+          popup.close();
+          const params = new URLSearchParams(url.split('#')[1] || url.split('?')[1] || '');
+          const token  = params.get('access_token');
+          token ? resolve(token) : reject(new Error('No access_token in response'));
+        }
+        if (url.includes('error=')) {
+          clearInterval(timer);
+          popup.close();
+          reject(new Error('OAuth denied or cancelled'));
+        }
+      } catch (_) { /* cross-origin, still loading */ }
+
+      if (popup.closed) {
+        clearInterval(timer);
+        reject(new Error('Auth popup was closed'));
+      }
+    }, 400);
+  });
+}
+
+// Shared DOCX blob builder (used by both downloadDOCX and openInGoogleDocs)
+async function buildDocxBlob() {
+  if (typeof JSZip === 'undefined') throw new Error('JSZip library not loaded');
+
+  const g = id => document.getElementById(id)?.value || '';
+  const lName    = g('lender_name')    || '[Full Name of Individual]';
+  const lPan     = g('lender_pan')     || '____________';
+  const lAadhaar = g('lender_aadhaar') || '____________';
+  const lAddr    = g('lender_address') || '[Address]';
+  const bankName = g('bank_name')      || '____________';
+  const bankAcc  = g('bank_acc')       || '____________';
+  const bankIfsc = g('bank_ifsc')      || '____________';
+  const amount   = parseFloat(g('loan_amount')) || 0;
+  const tenure   = g('tenure') || '__';
+  const payout   = parseFloat(g('monthly_payout')) || 0;
+  const dateStr  = g('effective_date');
+  const txnDate  = g('txn_date') ? fmtDate(new Date(g('txn_date'))) : '____________';
+  const txnId    = g('txn_id') || '____________';
+
+  let effDateTxt = '__ day of ______, 20__';
+  if (dateStr) {
+    const d = new Date(dateStr);
+    effDateTxt = ordinal(d.getDate()) + ' day of ' +
+      d.toLocaleDateString('en-IN', { month: 'long' }) + ', ' + d.getFullYear();
+  }
+  const amountFmt   = amount ? fmtINR(amount) + '/-' : '\u20b9[Amount]';
+  const amountWords = amount ? numWords(amount) + ' Only' : '[Amount in Words]';
+  const payoutFmt   = payout ? fmtINR(payout) + '/-' : '\u20b9____________';
+  const assets      = getAssets();
+
+  const esc = s => String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&apos;');
+
+  const run = (text, opts = {}) => {
+    const rpr = [
+      opts.bold   ? '<w:b/>' : '',
+      opts.italic ? '<w:i/>' : '',
+      opts.caps   ? '<w:caps/>' : '',
+      `<w:sz w:val="${opts.size ?? 22}"/><w:szCs w:val="${opts.size ?? 22}"/>`,
+      opts.color  ? `<w:color w:val="${opts.color}"/>` : '',
+      `<w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/>`,
+    ].join('');
+    return `<w:r><w:rPr>${rpr}</w:rPr><w:t xml:space="preserve">${esc(text)}</w:t></w:r>`;
+  };
+  const para = (children, opts = {}) => {
+    const ppr = [
+      opts.align ? `<w:jc w:val="${opts.align}"/>` : '',
+      `<w:spacing w:before="${opts.before ?? 80}" w:after="${opts.after ?? 80}"/>`,
+    ].join('');
+    return `<w:p><w:pPr>${ppr}</w:pPr>${children}</w:p>`;
+  };
+  const p    = (text, opts = {}) => para(run(text, opts), opts);
+  const pMix = (runs, opts = {}) => para(runs.map(r => run(r.text, { ...opts, ...r })).join(''), opts);
+  const h2   = t => para(run(t, { bold:true, size:22, color:'0d0d20', caps:true }), { before:220, after:80 });
+  const spacer = (pts=200) => para(run(' ', { size: Math.round(pts/10) }), { before:0, after:0 });
+  const W = 9746;
+  const tc = (children, w, shade=null) => {
+    const shd = shade ? `<w:shd w:val="clear" w:fill="${shade}" w:color="auto"/>` : '';
+    const bdr = `<w:tcBorders><w:top w:val="single" w:sz="4" w:color="CCCCCC"/><w:left w:val="single" w:sz="4" w:color="CCCCCC"/><w:bottom w:val="single" w:sz="4" w:color="CCCCCC"/><w:right w:val="single" w:sz="4" w:color="CCCCCC"/></w:tcBorders>`;
+    const mar = `<w:tcMar><w:top w:w="80" w:type="dxa"/><w:left w:w="120" w:type="dxa"/><w:bottom w:w="80" w:type="dxa"/><w:right w:w="120" w:type="dxa"/></w:tcMar>`;
+    return `<w:tc><w:tcPr><w:tcW w:w="${w}" w:type="dxa"/>${bdr}${shd}${mar}</w:tcPr>${Array.isArray(children)?children.join(''):children}</w:tc>`;
+  };
+  const tr  = cells => `<w:tr>${cells.join('')}</w:tr>`;
+  const tbl = (rows, cws) => `<w:tbl><w:tblPr><w:tblW w:w="${cws.reduce((a,b)=>a+b,0)}" w:type="dxa"/><w:tblLayout w:type="fixed"/></w:tblPr><w:tblGrid>${cws.map(w=>`<w:gridCol w:w="${w}"/>`).join('')}</w:tblGrid>${rows.join('')}</w:tbl>`;
+
+  // Annexure I
+  const aw1=Math.round(W*.12), aw2=Math.round(W*.44), aw3=W-aw1-aw2;
+  const amortHdr = tr([tc(p('Payment #',{bold:true,size:20}),aw1,'F0F0F8'),tc(p('Payment Date',{bold:true,size:20}),aw2,'F0F0F8'),tc(p('Monthly Payout',{bold:true,size:20}),aw3,'F0F0F8')]);
+  const amortRws = amortData.map(r=>tr([tc(p(String(r.num),{size:20}),aw1),tc(p(r.date,{size:20}),aw2),tc(p(fmtINR(r.payout),{size:20}),aw3)]));
+  if(amortData.length){const tot=amortData.reduce((s,r)=>s+r.payout,0);amortRws.push(tr([tc(p('',{size:20}),aw1,'F0F0F8'),tc(p('Total',{bold:true,size:20}),aw2,'F0F0F8'),tc(p(fmtINR(tot),{bold:true,size:20}),aw3,'F0F0F8')]));}
+
+  // Annexure II
+  const bw1=Math.round(W*.4), bw2=Math.round(W*.3), bw3=W-bw1-bw2;
+  const assetHdr = tr([tc(p('Asset Name',{bold:true,size:20}),bw1,'F0F0F8'),tc(p('Serial Number',{bold:true,size:20}),bw2,'F0F0F8'),tc(p('Asset Value',{bold:true,size:20}),bw3,'F0F0F8')]);
+  const aList = assets.length ? [...assets] : [{name:'',serial:'',value:''}];
+  while(aList.length<4) aList.push({name:'',serial:'',value:''});
+  const assetRws = aList.map(a=>tr([tc(p(a.name||' ',{size:20}),bw1),tc(p(a.serial||' ',{size:20}),bw2),tc(p(a.value?fmtINR(parseFloat(a.value)):' ',{size:20}),bw3)]));
+
+  // Sig table
+  const s1=Math.round(W*.2), s2=Math.round(W*.4), s3=W-s1-s2;
+
+  const body = [
+    para(run('LOAN AGREEMENT',{bold:true,size:36,color:'0d0d20',caps:true}),{align:'center',before:0,after:60}),
+    para(run('(Private Borrowing Arrangement \u2013 Asset Financing Model)',{italic:true,size:20,color:'666666'}),{align:'center',before:0,after:240}),
+    pMix([{text:'This Loan Agreement ('},{text:'\u201CAgreement\u201D',bold:true},{text:') is executed on the '},{text:effDateTxt,bold:true},{text:' (\u201CEffective Date\u201D).'}],{before:0,after:160}),
+    h2('Parties'),
+    tbl([tr([tc([p('Repium Ventures LLP (\u201CBorrower\u201D)',{bold:true,size:21}),p('A Limited Liability Partnership registered under the LLP Act, 2008',{size:20}),p('GST: 29ABKFR2691H1ZO  |  UDYAM: UDYAM-KR-03-0472355',{size:20}),p('#100, SJR Commercial Complex, Gear School Road, Bellandur, Bengaluru, Karnataka \u2013 560103',{size:20})],W,'F6F6FC')])],[W]),
+    p('AND',{align:'center',bold:true,before:120,after:120}),
+    tbl([tr([tc([pMix([{text:`${lName} (\u201CLender\u201D)`,bold:true,size:21}],{size:21}),pMix([{text:'PAN: '},{text:lPan,bold:true},{text:'   Aadhaar: '},{text:lAadhaar,bold:true}],{size:20}),p(lAddr,{size:20})],W,'F6F6FC')])],[W]),
+    spacer(240),
+    p('Definitions',{bold:true,before:160,after:60}),
+    p('For the purpose of this Agreement:',{before:0,after:40}),
+    p('\u2022   Loan Amount: The principal sum lent by the Lender to the Borrower.',{before:0,after:30}),
+    p('\u2022   EMI: Monthly repayment consisting of principal and return.',{before:0,after:30}),
+    p('\u2022   Assets: Tangible business assets of the Borrower hypothecated as security.',{before:0,after:30}),
+    p('\u2022   TDS: Tax Deducted at Source under Section 194A of the Income Tax Act, 1961.',{before:0,after:160}),
+    h2('1. Purpose and Structure'),
+    p('The Borrower is engaged in the rental asset business. The Lender provides a private loan for asset procurement and operations. This is not a deposit or investment product.'),
+    h2('2. Loan Amount'),
+    pMix([{text:'The Lender agrees to lend the Borrower '},{text:amountFmt,bold:true},{text:' (Rupees '},{text:amountWords,bold:true},{text:').'}]),
+    p('Transaction Details',{bold:true,before:120,after:60}),
+    p('The Loan Amount has been transacted by the Lender to the Borrower through the following mode(s):',{before:0,after:60}),
+    pMix([{text:'Date of Transfer: '},{text:txnDate,bold:true}],{before:0,after:40}),
+    pMix([{text:'Amount Transferred: '},{text:amount?fmtINR(amount)+'/\u2013':'\u20b9____________',bold:true}],{before:0,after:40}),
+    pMix([{text:'Transaction ID: '},{text:txnId,bold:true}],{before:0,after:80}),
+    p('The Borrower hereby acknowledges receipt of the above amount in full and confirms that the funds have been credited to:',{before:0,after:60}),
+    pMix([{text:'Account Holder: '},{text:'REPIUM VENTURES LLP',bold:true},{text:'   Acc No: '},{text:'7917837471',bold:true},{text:'   IFSC: '},{text:'IDIB000M050',bold:true}],{before:0,after:160}),
+    h2('3. Tenure'),
+    pMix([{text:tenure+' months',bold:true},{text:' from Effective Date.'}]),
+    h2('4. Return'),
+    p('The repayment amount payable by the Borrower includes both principal and return components, as detailed in Annexure I.'),
+    h2('5. Repayment (EMI Structure)'),
+    p('5.1 The loan shall be repaid through Equated Monthly Installments (EMIs).'),
+    p('5.2 Each EMI shall include both principal and return components calculated on a reducing balance basis.'),
+    pMix([{text:'5.3 EMI Amount: '},{text:payoutFmt,bold:true}]),
+    p('5.4 Payment schedule provided in Annexure I.'),
+    p('5.5 Early repayment is permitted without penalty.'),
+    p('5.6 All repayments shall be credited to the Lender\u2019s bank account as provided below:'),
+    pMix([{text:'Account Holder: '},{text:bankName,bold:true}],{before:40,after:20}),
+    pMix([{text:'Account Number: '},{text:bankAcc,bold:true}],{before:0,after:20}),
+    pMix([{text:'IFSC Code: '},{text:bankIfsc,bold:true}],{before:0,after:80}),
+    h2('6. TDS under Section 194A'),
+    p('The Borrower shall deduct TDS under Section 194A of the Income Tax Act, 1961 on return payments and provide the Lender with necessary certificates (Form 16A).'),
+    h2('7. Utilization of Funds'),
+    p('Funds shall be used strictly for asset procurement and business operations.'),
+    h2('8. Events of Default'),
+    p('\u2013 Non-payment or delay in payment of more than 15 days for consecutive EMIs'),
+    p('\u2013 Insolvency or breach of agreement'),
+    h2('9. Indemnity and Security'),
+    p('Borrower indemnifies lender against losses arising from breach. The loan will be secured by hypothecation of assets. The Borrower shall provide complete details of assets hypothecated (Annexure II), including Asset Name, Serial Number, and Asset Value.'),
+    h2('10. Limitation of Liability and Termination'),
+    p('Borrower liability limited to outstanding loan and agreed returns. This Agreement may be terminated by mutual consent; by Lender on 2 consecutive months default; or by Borrower upon full repayment.'),
+    h2('11. Dispute Resolution and Miscellaneous'),
+    p('Disputes shall first be resolved amicably, failing which arbitration under the Arbitration and Conciliation Act, 1996 in Bangalore. Amendments must be in writing and signed by both parties.'),
+    h2('12. Governing Law'),
+    p('Laws of India. Jurisdiction: Bangalore, Karnataka.'),
+    spacer(400),
+    tbl([
+      tr([tc(p('For:',{bold:true,size:20}),s1),tc(p('Repium Ventures LLP (Borrower)',{bold:true,size:20}),s2,'F7F7F7'),tc(p('Individual (Lender)',{bold:true,size:20}),s3,'F7F7F7')]),
+      tr([tc(p('Name:',{size:20}),s1),tc(p('Akash Deep Chhabra',{size:20}),s2),tc(p(lName,{size:20}),s3)]),
+      tr([tc(p('Signature:',{size:20}),s1),tc([p(' ',{size:20}),p(' ',{size:20}),p(' ',{size:20})],s2),tc([p(' ',{size:20}),p(' ',{size:20}),p(' ',{size:20})],s3)]),
+      tr([tc(p('Date:',{size:20}),s1),tc(p(' ',{size:20}),s2),tc(p(' ',{size:20}),s3)]),
+    ],[s1,s2,s3]),
+    spacer(600),
+    para(run('Annexure I',{bold:true,size:28,color:'0d0d20'}),{before:0,after:100}),
+    tbl([amortHdr,...amortRws],[aw1,aw2,aw3]),
+    spacer(600),
+    para(run('Annexure II',{bold:true,size:28,color:'0d0d20'}),{before:0,after:80}),
+    p('The Borrower hereby provides details of assets hypothecated as security for the loan.',{before:0,after:120}),
+    tbl([assetHdr,...assetRws],[bw1,bw2,bw3]),
+    spacer(200),
+  ].join('\n');
+
+  const docXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:wpc="http://schemas.microsoft.com/office/word/2010/wordprocessingCanvas" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml" xmlns:w15="http://schemas.microsoft.com/office/word/2012/wordml" mc:Ignorable="w14 w15">
+<w:body>
+${body}
+<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1080" w:right="1080" w:bottom="1080" w:left="1080" w:header="720" w:footer="720" w:gutter="0"/></w:sectPr>
+</w:body></w:document>`;
+
+  const zip = new JSZip();
+  zip.file('[Content_Types].xml',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/settings.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml"/></Types>`);
+  zip.file('_rels/.rels',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`);
+  zip.file('word/_rels/document.xml.rels',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/settings" Target="settings.xml"/></Relationships>`);
+  zip.file('word/settings.xml',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:settings xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:defaultTabStop w:val="720"/><w:compat><w:compatSetting w:name="compatibilityMode" w:uri="http://schemas.microsoft.com/office/word" w:val="15"/></w:compat></w:settings>`);
+  zip.file('word/document.xml', docXml);
+
+  return zip.generateAsync({ type:'blob', mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+}
+
+function setStatus(type, title, body) {
+  document.getElementById('digio-status').innerHTML =
+    `<div class="status-box ${type}">
+      <span class="status-icon">${type==='ok'?'✅':type==='err'?'❌':'🔄'}</span>
+      <div class="status-text"><strong>${title}</strong>${body}</div>
+    </div>`;
+}
+function wait(ms){return new Promise(r=>setTimeout(r,ms))}
+
+// ── Init ──
+window.addEventListener('DOMContentLoaded', () => {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('effective_date').value = today;
+  document.getElementById('txn_date').value = today;
+  // Start with one blank asset row
+  addAssetRow();
+});
+</script>
+</body>
+</html>
