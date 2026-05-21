@@ -6,42 +6,7 @@
 <title>SharePal — Agreement Generator</title>
 <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&family=Inter:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<style id="print-style">
-@media print {
-  html, body {
-    margin: 0 !important;
-    padding: 0 !important;
-    background: #fff !important;
-  }
-  body > * { display: none !important; }
-  #print-zone {
-    display: block !important;
-    position: static !important;
-    width: 100% !important;
-    background: #fff !important;
-    padding: 24px 48px !important;
-    font-family: 'Inter', sans-serif !important;
-    font-size: 12.5px !important;
-    color: #111 !important;
-    line-height: 1.7 !important;
-  }
-  #print-zone h1 { font-family: 'Ubuntu', sans-serif !important; font-size: 19px !important; text-align: center !important; margin-bottom: 2px !important; }
-  #print-zone .sub { text-align: center !important; font-size: 11px !important; color: #666 !important; font-style: italic !important; margin-bottom: 18px !important; }
-  #print-zone h2 { font-family: 'Ubuntu', sans-serif !important; font-size: 11.5px !important; font-weight: 700 !important; text-transform: uppercase !important; letter-spacing: 0.05em !important; margin: 16px 0 4px !important; color: #0d0d20 !important; }
-  #print-zone p { margin: 4px 0 !important; }
-  #print-zone .party-block { border-left: 3px solid #6c5ce7 !important; padding: 9px 14px !important; background: #f7f7fc !important; margin: 10px 0 !important; font-size: 12px !important; }
-  #print-zone .hl { font-weight: 600 !important; color: #4a3fbe !important; }
-  #print-zone hr { border: none !important; border-top: 1px solid #ccc !important; margin: 14px 0 !important; }
-  #print-zone table { width: 100% !important; border-collapse: collapse !important; font-size: 11px !important; margin: 8px 0 !important; page-break-inside: auto !important; }
-  #print-zone thead { display: table-header-group !important; }
-  #print-zone th { background: #f0f0f8 !important; padding: 6px 10px !important; border: 1px solid #ccc !important; text-align: left !important; font-size: 10.5px !important; }
-  #print-zone td { padding: 5px 10px !important; border: 1px solid #ddd !important; page-break-inside: avoid !important; }
-  #print-zone .sig-tbl td { padding: 12px 14px !important; vertical-align: top !important; border: 1px solid #bbb !important; }
-  #print-zone .sig-line { border-bottom: 1px solid #555 !important; height: 26px !important; margin-top: 18px !important; }
-  #print-zone .tot-row td { background: #f0f0f8 !important; font-weight: 600 !important; }
-  @page { margin: 16mm 14mm; size: A4; }
-}
-</style>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
 :root {
   --bg: #0b0b12;
@@ -653,11 +618,10 @@ tr:hover td{background:rgba(108,92,231,0.03)}
   <!-- Google OAuth config note (shown only before first auth) -->
   <div id="gdocs-setup" style="display:none;margin-bottom:16px">
     <div class="digio-note" style="margin-bottom:0">
-      <strong style="color:var(--text)">Google Docs setup required</strong><br/>
-      To open in Google Docs, enter your Google OAuth Client ID below. 
-      <a href="https://console.cloud.google.com/apis/credentials" target="_blank">Get one from Google Cloud Console →</a>
-      (enable Google Drive API, create OAuth 2.0 Client ID with this page's origin as an allowed JavaScript origin).
-      <div style="display:flex;gap:10px;margin-top:12px;align-items:center;flex-wrap:wrap">
+      <strong style="color:var(--text)">One-time Google setup</strong><br/>
+      Create a free OAuth Client ID at <a href="https://console.cloud.google.com/apis/credentials" target="_blank">Google Cloud Console →</a><br/>
+      Steps: <strong>Enable Google Drive API</strong> → Create Credentials → OAuth 2.0 Client ID → Application type: <strong>Web application</strong> → Add <code style="background:rgba(255,255,255,0.08);padding:1px 6px;border-radius:4px;font-size:11px">https://sharepal-asset-partner.vercel.app</code> as an <strong>Authorised JavaScript origin</strong> (no redirect URI needed).<br/><br/>
+      <div style="display:flex;gap:10px;margin-top:10px;align-items:center;flex-wrap:wrap">
         <input type="text" id="gclient_id" placeholder="xxxx.apps.googleusercontent.com"
           style="flex:1;min-width:220px;background:var(--surface);border:1px solid var(--border);border-radius:8px;
           color:var(--text);font-family:'Inter',sans-serif;font-size:13px;padding:9px 12px;outline:none"/>
@@ -669,8 +633,7 @@ tr:hover td{background:rgba(108,92,231,0.03)}
   <!-- Preview document (also used as print zone) -->
   <div class="preview-wrap" id="preview-doc"></div>
 
-  <!-- Hidden print zone — populated on PDF trigger -->
-  <div id="print-zone" style="display:none"></div>
+  <!-- Hidden print zone removed — PDF uses new window approach -->
 
   <div class="btn-row">
     <button class="btn btn-ghost" onclick="goStep(4)">← Edit Details</button>
@@ -1156,7 +1119,7 @@ async function sendDigio() {
   document.getElementById('sb6').classList.add('done');
 }
 
-// ── Download PDF ──
+// ── Download PDF — opens a clean print window ──
 function downloadPDF() {
   const btn = document.getElementById('btn-pdf');
   const preview = document.getElementById('preview-doc');
@@ -1164,21 +1127,123 @@ function downloadPDF() {
     alert('Please generate the preview first by going through Steps 1–4.');
     return;
   }
+
   btn.disabled = true;
-  btn.innerHTML = '<span class="dl-spin"></span> Preparing…';
+  btn.innerHTML = '<span class="dl-spin"></span> Opening…';
 
-  // Copy HTML into print zone, then print
-  const pz = document.getElementById('print-zone');
-  pz.innerHTML = preview.innerHTML;
+  // Build a self-contained HTML page with only the agreement + clean print styles
+  const content = preview.innerHTML;
+  const printHTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Loan Agreement</title>
+<link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  @page { size: A4; margin: 16mm 14mm; }
+  body {
+    font-family: 'Inter', sans-serif;
+    font-size: 12.5px;
+    line-height: 1.75;
+    color: #111;
+    background: #fff;
+    padding: 0;
+  }
+  h1 {
+    font-family: 'Ubuntu', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    text-align: center;
+    color: #0d0d20;
+    margin-bottom: 4px;
+    letter-spacing: -0.01em;
+  }
+  .sub {
+    text-align: center;
+    font-size: 11px;
+    color: #777;
+    font-style: italic;
+    margin-bottom: 20px;
+  }
+  h2 {
+    font-family: 'Ubuntu', sans-serif;
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #0d0d20;
+    margin: 18px 0 4px;
+    page-break-after: avoid;
+  }
+  p { margin: 3px 0 6px; }
+  .party-block {
+    border-left: 3px solid #6c5ce7;
+    padding: 10px 14px;
+    background: #f7f7fc;
+    margin: 10px 0;
+    font-size: 12px;
+    border-radius: 0 6px 6px 0;
+  }
+  .hl { font-weight: 600; color: #4a3fbe; }
+  hr { border: none; border-top: 1px solid #ccc; margin: 16px 0; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11.5px;
+    margin: 8px 0;
+    page-break-inside: auto;
+  }
+  thead { display: table-header-group; }
+  th {
+    background: #f0f0f8;
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    text-align: left;
+    font-size: 10.5px;
+    letter-spacing: 0.03em;
+  }
+  td {
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    page-break-inside: avoid;
+  }
+  .sig-tbl { margin-top: 24px; page-break-inside: avoid; }
+  .sig-tbl td { padding: 12px 14px; vertical-align: top; border: 1px solid #bbb; }
+  .sig-line { border-bottom: 1px solid #555; height: 28px; margin-top: 20px; }
+  .tot-row td { background: #f0f0f8; font-weight: 600; }
+  div[style*="height:52px"] { height: 24px !important; }
+  div[style*="height:32px"] { height: 16px !important; }
+</style>
+</head>
+<body>
+${content}
+<script>
+  // Auto-print once fonts load, then close
+  window.onload = function() {
+    setTimeout(function() {
+      window.focus();
+      window.print();
+      setTimeout(function() { window.close(); }, 500);
+    }, 600);
+  };
+<\/script>
+</body>
+</html>`;
 
-  // Small delay so DOM settles before print dialog
-  setTimeout(() => {
-    window.print();
-    setTimeout(() => {
-      btn.disabled = false;
-      btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Download PDF`;
-    }, 1000);
-  }, 200);
+  const pw = window.open('', '_blank', 'width=900,height=700');
+  if (!pw) {
+    btn.disabled = false;
+    btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Download PDF`;
+    alert('Popup was blocked. Please allow popups for this page and try again.');
+    return;
+  }
+  pw.document.write(printHTML);
+  pw.document.close();
+
+  btn.disabled = false;
+  btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Download PDF`;
 }
 
 // ── Download DOCX (pure XML + JSZip) ──
@@ -1214,12 +1279,15 @@ async function downloadDOCX() {
   btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Download DOCX`;
 }
 
-// ── Google Docs: open via Drive upload ──
-let gAccessToken = null;
-const GDOCS_SCOPES = 'https://www.googleapis.com/auth/drive.file';
+// ── Google Docs: open via Drive upload (GIS token client — no redirect URI needed) ──
+let gTokenClient  = null;
+let gAccessToken  = null;
+let gTokenExpiry  = 0;
+let gPendingResolve = null;
+let gPendingReject  = null;
 
 function getGClientId() {
-  return (document.getElementById('gclient_id') || {}).value?.trim()
+  return document.getElementById('gclient_id')?.value?.trim()
     || localStorage.getItem('sp_gclient_id') || '';
 }
 
@@ -1228,7 +1296,58 @@ function saveGClientId() {
   if (!id) { alert('Please enter your Google OAuth Client ID.'); return; }
   localStorage.setItem('sp_gclient_id', id);
   document.getElementById('gdocs-setup').style.display = 'none';
+  gTokenClient = null; // reset so it reinitialises with new ID
   openInGoogleDocs();
+}
+
+// Request a fresh token using GIS — no redirect URI, uses postMessage under the hood
+function requestGISToken(clientId) {
+  return new Promise((resolve, reject) => {
+    if (!window.google?.accounts?.oauth2) {
+      reject(new Error('Google Identity Services not loaded. Check your internet connection.'));
+      return;
+    }
+    gPendingResolve = resolve;
+    gPendingReject  = reject;
+
+    if (!gTokenClient || gTokenClient._clientId !== clientId) {
+      gTokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: clientId,
+        scope: 'https://www.googleapis.com/auth/drive.file',
+        callback: (resp) => {
+          if (resp.error) {
+            gAccessToken = null;
+            gTokenExpiry = 0;
+            if (gPendingReject) gPendingReject(new Error('Google auth failed: ' + resp.error));
+          } else {
+            gAccessToken = resp.access_token;
+            gTokenExpiry = Date.now() + (parseInt(resp.expires_in) - 60) * 1000;
+            if (gPendingResolve) gPendingResolve(gAccessToken);
+          }
+          gPendingResolve = null;
+          gPendingReject  = null;
+        },
+        error_callback: (err) => {
+          gAccessToken = null;
+          if (gPendingReject) gPendingReject(new Error(err.message || 'Auth cancelled'));
+          gPendingResolve = null;
+          gPendingReject  = null;
+        }
+      });
+      gTokenClient._clientId = clientId;
+    }
+
+    // If we have a valid cached token, use it immediately
+    if (gAccessToken && Date.now() < gTokenExpiry) {
+      gPendingResolve = null;
+      gPendingReject  = null;
+      resolve(gAccessToken);
+      return;
+    }
+
+    // Request new token — shows Google consent popup if needed
+    gTokenClient.requestAccessToken({ prompt: gAccessToken ? '' : 'consent' });
+  });
 }
 
 async function openInGoogleDocs() {
@@ -1241,28 +1360,26 @@ async function openInGoogleDocs() {
   const clientId = getGClientId();
   if (!clientId) {
     document.getElementById('gdocs-setup').style.display = 'block';
-    document.getElementById('gdocs-setup').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    document.getElementById('gdocs-setup').scrollIntoView({ behavior:'smooth', block:'nearest' });
     return;
   }
 
   const btn = document.getElementById('btn-gdocs');
   btn.disabled = true;
-  btn.innerHTML = '<span class="dl-spin" style="border-top-color:#0f9d58;border-color:rgba(15,157,88,.3)"></span> Connecting…';
+  btn.innerHTML = '<span class="dl-spin" style="border-top-color:#0f9d58;border-color:rgba(15,157,88,.25)"></span> Connecting…';
 
   try {
-    // Step 1: Get OAuth token (implicit grant, popup)
-    if (!gAccessToken) {
-      gAccessToken = await getGoogleToken(clientId);
-    }
+    // Step 1: Get access token via GIS (no popup blocker, no redirect URI)
+    const token = await requestGISToken(clientId);
 
-    btn.innerHTML = '<span class="dl-spin" style="border-top-color:#0f9d58;border-color:rgba(15,157,88,.3)"></span> Building DOCX…';
+    btn.innerHTML = '<span class="dl-spin" style="border-top-color:#0f9d58;border-color:rgba(15,157,88,.25)"></span> Building…';
 
-    // Step 2: Build DOCX blob (reuse same logic)
+    // Step 2: Build DOCX blob
     const blob = await buildDocxBlob();
 
-    btn.innerHTML = '<span class="dl-spin" style="border-top-color:#0f9d58;border-color:rgba(15,157,88,.3)"></span> Uploading…';
+    btn.innerHTML = '<span class="dl-spin" style="border-top-color:#0f9d58;border-color:rgba(15,157,88,.25)"></span> Uploading…';
 
-    // Step 3: Upload to Google Drive as Google Docs (convert on upload)
+    // Step 3: Upload to Google Drive, converting to Google Docs format on the fly
     const g = id => document.getElementById(id)?.value || '';
     const fname = `Loan_Agreement_${(g('lender_name')||'Draft').replace(/\s+/g,'_')}`;
 
@@ -1279,83 +1396,30 @@ async function openInGoogleDocs() {
       'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',
       {
         method: 'POST',
-        headers: { Authorization: 'Bearer ' + gAccessToken },
+        headers: { Authorization: 'Bearer ' + token },
         body: form,
       }
     );
 
     if (!res.ok) {
-      const err = await res.json();
-      // Token may have expired — clear and retry once
+      const err = await res.json().catch(() => ({}));
       if (res.status === 401) {
-        gAccessToken = null;
-        btn.disabled = false;
-        btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2H9L3 8v13a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1z"/><polyline points="9 2 9 8 3 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> Open in Google Docs`;
-        alert('Session expired. Please click "Open in Google Docs" again to re-authenticate.');
-        return;
+        gAccessToken = null; gTokenExpiry = 0;
+        throw new Error('Token expired. Please click the button again to re-authenticate.');
       }
-      throw new Error(err.error?.message || 'Drive upload failed');
+      throw new Error(err?.error?.message || `Drive upload failed (${res.status})`);
     }
 
     const { id: fileId } = await res.json();
-    const docUrl = `https://docs.google.com/document/d/${fileId}/edit`;
+    window.open(`https://docs.google.com/document/d/${fileId}/edit`, '_blank');
 
-    // Step 4: Open in new tab
-    window.open(docUrl, '_blank');
-
-    btn.disabled = false;
-    btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2H9L3 8v13a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1z"/><polyline points="9 2 9 8 3 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> Open in Google Docs`;
-
-  } catch (err) {
+  } catch(err) {
     console.error('Google Docs error:', err);
-    gAccessToken = null;
-    btn.disabled = false;
-    btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2H9L3 8v13a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1z"/><polyline points="9 2 9 8 3 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> Open in Google Docs`;
     alert('Error: ' + err.message);
   }
-}
 
-// Google OAuth2 implicit grant via popup
-function getGoogleToken(clientId) {
-  return new Promise((resolve, reject) => {
-    const w = 520, h = 620;
-    const left = Math.round(screen.width/2 - w/2);
-    const top  = Math.round(screen.height/2 - h/2);
-    const redirectUri = window.location.href.split('?')[0].split('#')[0];
-    const authUrl = 'https://accounts.google.com/o/oauth2/v2/auth?' + new URLSearchParams({
-      client_id:     clientId,
-      redirect_uri:  redirectUri,
-      response_type: 'token',
-      scope:         GDOCS_SCOPES,
-      prompt:        'consent',
-    });
-
-    const popup = window.open(authUrl, 'google_oauth', `width=${w},height=${h},left=${left},top=${top}`);
-    if (!popup) { reject(new Error('Popup blocked. Please allow popups for this page.')); return; }
-
-    const timer = setInterval(() => {
-      try {
-        const url = popup.location.href;
-        if (url.includes('access_token=')) {
-          clearInterval(timer);
-          popup.close();
-          const params = new URLSearchParams(url.split('#')[1] || url.split('?')[1] || '');
-          const token  = params.get('access_token');
-          token ? resolve(token) : reject(new Error('No access_token in response'));
-        }
-        if (url.includes('error=')) {
-          clearInterval(timer);
-          popup.close();
-          reject(new Error('OAuth denied or cancelled'));
-        }
-      } catch (_) { /* cross-origin, still loading */ }
-
-      if (popup.closed) {
-        clearInterval(timer);
-        reject(new Error('Auth popup was closed'));
-      }
-    }, 400);
-  });
+  btn.disabled = false;
+  btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2H9L3 8v13a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1z"/><polyline points="9 2 9 8 3 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> Open in Google Docs`;
 }
 
 // Shared DOCX blob builder (used by both downloadDOCX and openInGoogleDocs)
