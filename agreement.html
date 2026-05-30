@@ -193,7 +193,7 @@ tr:hover td{background:rgba(108,92,231,0.03)}
 .preview-wrap .sig-tbl td{padding:14px 18px;vertical-align:top;border:1px solid #ddd}
 .preview-wrap .sig-line{border-bottom:1px solid #aaa;height:30px;margin-top:22px}
 
-/* ── Digio section ── */
+/* ── Digio section (repurposed as share section) ── */
 .digio-note{
   background:linear-gradient(135deg,rgba(108,92,231,0.07),rgba(0,206,201,0.06));
   border:1px solid rgba(108,92,231,0.18);border-radius:12px;padding:18px 22px;margin-bottom:18px;
@@ -201,6 +201,40 @@ tr:hover td{background:rgba(108,92,231,0.03)}
 }
 .digio-note a{color:var(--accent-lt);text-decoration:none}
 .digio-note a:hover{text-decoration:underline}
+
+/* ── Share cards ── */
+.share-grid{display:flex;flex-direction:column;gap:14px}
+.share-card{
+  display:flex;align-items:center;gap:18px;
+  background:var(--surface);border:1px solid var(--border);border-radius:13px;
+  padding:18px 22px;transition:border-color .15s;
+}
+.share-card:hover{border-color:var(--border-hi)}
+.share-card.wa{border-color:rgba(37,211,102,0.2);background:rgba(37,211,102,0.03)}
+.share-card.em{border-color:rgba(234,67,53,0.18);background:rgba(234,67,53,0.03)}
+.share-card.dl{border-color:rgba(108,92,231,0.18);background:rgba(108,92,231,0.03)}
+.share-card-icon{flex-shrink:0;width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:#25d366}
+.share-card-body{flex:1;min-width:0}
+.share-card-title{font-family:'Ubuntu',sans-serif;font-size:15px;font-weight:700;color:var(--text);margin-bottom:3px}
+.share-card-sub{font-size:12px;color:var(--muted);line-height:1.5}
+.share-card-actions{flex-shrink:0}
+.btn-share{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:10px 20px;border-radius:9px;border:none;
+  font-family:'Inter',sans-serif;font-size:13px;font-weight:600;
+  cursor:pointer;transition:all .16s;white-space:nowrap;
+}
+.wa-btn{background:#25d366;color:#fff}
+.wa-btn:hover{background:#1fb954;transform:translateY(-1px);box-shadow:0 4px 16px rgba(37,211,102,0.3)}
+.em-btn{background:#ea4335;color:#fff}
+.em-btn:hover{background:#d33828;transform:translateY(-1px);box-shadow:0 4px 16px rgba(234,67,53,0.3)}
+.dl-btn{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+.dl-btn:hover{background:var(--border);border-color:var(--border-hi)}
+@media(max-width:600px){
+  .share-card{flex-direction:column;align-items:flex-start;gap:12px}
+  .share-card-actions{width:100%;display:flex;gap:8px}
+  .btn-share{flex:1;justify-content:center}
+}
 .status-box{border-radius:10px;padding:14px 18px;display:flex;align-items:flex-start;gap:12px;margin-bottom:14px;border:1px solid}
 .status-box.info{background:rgba(108,92,231,0.07);border-color:rgba(108,92,231,0.2)}
 .status-box.ok{background:rgba(0,206,201,0.07);border-color:rgba(0,206,201,0.22)}
@@ -407,6 +441,54 @@ tr:hover td{background:rgba(108,92,231,0.03)}
 @media(max-width:680px){
   .hist-drawer{width:100vw}
 }
+
+/* ── Agreement type selector ── */
+.type-selector{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.type-card{
+  background:var(--surface2);border:1.5px solid var(--border-hi);border-radius:12px;
+  padding:20px 18px 16px;cursor:pointer;transition:all .18s;
+  display:flex;flex-direction:column;gap:8px;position:relative;overflow:hidden;
+}
+.type-card:hover{
+  border-color:var(--accent);transform:translateY(-2px);
+  box-shadow:0 6px 24px rgba(108,92,231,0.15);
+}
+.type-card.selected{
+  border-color:var(--accent);background:rgba(108,92,231,0.1);
+  box-shadow:0 0 0 3px rgba(108,92,231,0.15),0 6px 24px rgba(108,92,231,0.12);
+}
+.type-card.selected .type-select-btn{background:var(--accent);color:#fff;border-color:var(--accent)}
+.type-icon{font-size:24px;margin-bottom:2px}
+.type-name{font-family:'Ubuntu',sans-serif;font-size:15px;font-weight:700;color:var(--text);line-height:1.3}
+.type-desc{font-size:12px;color:var(--muted);line-height:1.55;flex:1}
+.type-card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:6px;gap:8px}
+.type-badge{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.06em;padding:3px 8px;border-radius:6px}
+.type-badge.emi{background:rgba(108,92,231,0.12);color:var(--accent-lt)}
+.type-badge.flat_monthly{background:rgba(0,206,201,0.1);color:var(--accent2)}
+.type-badge.flat_yearly{background:rgba(253,203,110,0.1);color:var(--accent3)}
+.type-select-btn{
+  font-family:'Inter',sans-serif;font-size:12px;font-weight:600;
+  padding:7px 16px;border-radius:8px;
+  background:var(--surface);color:var(--accent-lt);
+  border:1.5px solid rgba(108,92,231,0.3);
+  transition:all .16s;white-space:nowrap;cursor:pointer;
+}
+.type-card:hover .type-select-btn{background:rgba(108,92,231,0.12);border-color:var(--accent)}
+.agree-type-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.07em;text-transform:uppercase;
+  padding:5px 12px;border-radius:20px;cursor:pointer;transition:all .16s;
+  border:1px solid rgba(108,92,231,0.25);background:rgba(108,92,231,0.1);color:var(--accent-lt);
+}
+.agree-type-pill:hover{background:rgba(108,92,231,0.18);border-color:rgba(108,92,231,0.4)}
+.rate-badge{
+  display:inline-flex;align-items:center;
+  font-family:'DM Mono',monospace;font-size:12px;font-weight:500;
+  color:var(--accent2);background:rgba(0,206,201,0.08);
+  border:1px solid rgba(0,206,201,0.2);border-radius:6px;
+  padding:4px 10px;margin-top:4px;
+}
+@media(max-width:680px){.type-selector{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -421,7 +503,9 @@ tr:hover td{background:rgba(108,92,231,0.03)}
       <div class="logo-tag">Agreement Generator</div>
     </div>
   </div>
-  <div class="pill">AFP · Monthly Agreement</div>
+  <div class="agree-type-pill" onclick="goStep(0)" id="agree-type-pill" title="Click to change agreement type">
+    ✦ <span id="agree-type-label">Select Agreement Type</span>
+  </div>
   <button class="hist-btn" onclick="openHistory()">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
     History
@@ -449,8 +533,45 @@ tr:hover td{background:rgba(108,92,231,0.03)}
   <span id="prog-pct">17%</span>
 </div>
 
+<!-- ════════════════════ STEP 0: Agreement Type ════════════════════ -->
+<div class="panel active" id="panel0">
+  <div class="sec-head" style="margin-bottom:28px">
+    <h2>Select Agreement Type</h2>
+    <p>Choose the payout structure for this agreement — you can change it anytime during filling</p>
+  </div>
+  <div class="type-selector">
+    <div class="type-card" id="type-emi" onclick="selectAgreeType('emi')">
+      <div class="type-icon">⚖️</div>
+      <div class="type-name">EMI Payout</div>
+      <div class="type-desc">Reducing balance — each EMI includes principal + return. Equal monthly installments throughout tenure.</div>
+      <div class="type-card-footer">
+        <span class="type-badge emi">Reducing Balance</span>
+        <button class="type-select-btn">Select →</button>
+      </div>
+    </div>
+    <div class="type-card" id="type-flat_monthly" onclick="selectAgreeType('flat_monthly')">
+      <div class="type-icon">📅</div>
+      <div class="type-name">Flat Monthly Payout</div>
+      <div class="type-desc">Fixed monthly return only. Principal repaid as lump sum at end of tenure.</div>
+      <div class="type-card-footer">
+        <span class="type-badge flat_monthly">Monthly Return</span>
+        <button class="type-select-btn">Select →</button>
+      </div>
+    </div>
+    <div class="type-card" id="type-flat_yearly" onclick="selectAgreeType('flat_yearly')">
+      <div class="type-icon">📆</div>
+      <div class="type-name">Flat Yearly Payout</div>
+      <div class="type-desc">Fixed yearly return only. Principal repaid as lump sum at end of tenure.</div>
+      <div class="type-card-footer">
+        <span class="type-badge flat_yearly">Yearly Return</span>
+        <button class="type-select-btn">Select →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ════════════════════ STEP 1 ════════════════════ -->
-<div class="panel active" id="panel1">
+<div class="panel" id="panel1">
   <div class="sec-head">
     <h2>Lender Information</h2>
     <p>Personal details, contact info and bank account for EMI credits</p>
@@ -461,7 +582,7 @@ tr:hover td{background:rgba(108,92,231,0.03)}
     <div class="fg">
       <div class="field s2">
         <label>Full Name <span class="req">*</span></label>
-        <input type="text" id="lender_name" placeholder="e.g. Shreehari U"/>
+        <input type="text" id="lender_name" placeholder="e.g. Shreehari U" oninput="autoFillBankName(this.value)"/>
       </div>
       <div class="field">
         <label>PAN Number <span class="req">*</span></label>
@@ -517,7 +638,7 @@ tr:hover td{background:rgba(108,92,231,0.03)}
 <div class="panel" id="panel2">
   <div class="sec-head">
     <h2>Loan Terms</h2>
-    <p>Set amount, tenure and monthly payout — schedule auto-calculates</p>
+    <p id="step2-sub">Set amount, tenure and payout — schedule auto-calculates</p>
   </div>
 
   <div class="card">
@@ -529,11 +650,11 @@ tr:hover td{background:rgba(108,92,231,0.03)}
       </div>
       <div class="field">
         <label>Effective Date <span class="req">*</span></label>
-        <input type="date" id="effective_date" oninput="calcEMI()"/>
+        <input type="date" id="effective_date" oninput="onEffectiveDateChange()"/>
       </div>
       <div class="field">
         <label>Tenure <span class="req">*</span></label>
-        <div class="pills">
+        <div class="pills" id="tenure-pills">
           <div class="pill-opt" id="t12" onclick="selectTenure(12,this)">12 mo</div>
           <div class="pill-opt" id="t24" onclick="selectTenure(24,this)">24 mo</div>
           <div class="pill-opt" id="t36" onclick="selectTenure(36,this)">36 mo</div>
@@ -541,18 +662,17 @@ tr:hover td{background:rgba(108,92,231,0.03)}
         <input type="hidden" id="tenure"/>
       </div>
       <div class="field">
-        <label>Monthly Payout (₹) <span class="req">*</span>
-          <span class="tip" data-tip="Fixed EMI amount per month — enter directly or let the system calculate">?</span>
-        </label>
+        <label id="payout-label">Payout Amount (₹) <span class="req">*</span></label>
         <input type="number" id="monthly_payout" placeholder="e.g. 6876" min="100" step="1" oninput="calcEMI()"/>
+        <div class="rate-badge" id="rate-badge" style="display:none">—</div>
       </div>
     </div>
   </div>
 
-  <!-- Computed boxes -->
+  <!-- Computed summary -->
   <div class="sum-grid" id="sum-grid" style="display:none">
     <div class="sum-box">
-      <div class="lbl">Monthly Payout</div>
+      <div class="lbl" id="sum-lbl-payout">Payout</div>
       <div class="val" id="c_emi">₹—</div>
     </div>
     <div class="sum-box">
@@ -560,21 +680,21 @@ tr:hover td{background:rgba(108,92,231,0.03)}
       <div class="val" id="c_total">₹—</div>
     </div>
     <div class="sum-box">
-      <div class="lbl">Effective IRR (approx.)</div>
+      <div class="lbl" id="sum-lbl-extra">Interest Rate</div>
       <div class="val sm" id="c_irr">—</div>
     </div>
   </div>
 
-  <!-- Amortization -->
+  <!-- Schedule table -->
   <div class="card" id="amort-card" style="display:none">
     <div class="card-label">Payment Schedule — Annexure I</div>
     <div class="tbl-wrap">
       <table id="amort-tbl">
-        <thead>
+        <thead id="amort-head">
           <tr>
             <th>Payment #</th>
             <th>Payment Date</th>
-            <th>Monthly Payout</th>
+            <th id="amort-col-payout">Payout</th>
           </tr>
         </thead>
         <tbody id="amort-body"></tbody>
@@ -583,7 +703,7 @@ tr:hover td{background:rgba(108,92,231,0.03)}
   </div>
 
   <div class="btn-row">
-    <button class="btn btn-ghost" onclick="goStep(1)">← Back</button>
+    <button class="btn btn-ghost" onclick="goStep(0)">← Change Type</button>
     <button class="btn btn-primary" onclick="goStep(3)">Continue → Transaction</button>
   </div>
 </div>
@@ -604,7 +724,7 @@ tr:hover td{background:rgba(108,92,231,0.03)}
       </div>
       <div class="field">
         <label>Amount Transferred (₹) <span class="req">*</span></label>
-        <input type="number" id="txn_amount" placeholder="Same as loan amount"/>
+        <input type="number" id="txn_amount" placeholder="Auto-filled from loan amount (editable)"/>
       </div>
       <div class="field s2">
         <label>Transaction ID <span class="req">*</span>
@@ -723,98 +843,155 @@ tr:hover td{background:rgba(108,92,231,0.03)}
   </div>
 </div>
 
-<!-- ════════════════════ STEP 6: E-Sign ════════════════════ -->
+<!-- ════════════════════ STEP 6: Share ════════════════════ -->
 <div class="panel" id="panel6">
   <div class="sec-head">
-    <h2>Send for E-Signature via Digio</h2>
-    <p>Enter API credentials and dispatch the signed agreement to the lender</p>
+    <h2>Send for E-Signature</h2>
+    <p>Aadhaar OTP e-sign via Digio — lender signs digitally from their phone</p>
   </div>
 
-  <div class="digio-note">
-    <strong style="color:var(--text)">How it works:</strong> The filled agreement is uploaded to Digio and the lender receives an SMS + email with an Aadhaar OTP signing link. Once both parties sign, a certified copy is auto-emailed and stored in your Digio vault.<br/>
-    No credentials yet? <a href="https://app.digio.in" target="_blank">Log in to Digio →</a> and copy your Client ID + Secret from the Developer section.
-  </div>
-
+  <!-- Meon eSign config -->
   <div class="card">
-    <div class="card-label">Digio API Credentials</div>
+    <div class="card-label">Meon eSign Configuration</div>
+    <div style="background:rgba(108,92,231,0.07);border:1px solid rgba(108,92,231,0.18);border-radius:10px;padding:14px 18px;margin-bottom:16px;font-size:13px;color:var(--muted);line-height:1.6">
+      <strong style="color:var(--text)">Your Vercel backend handles the Meon API key securely.</strong><br/>
+      Set <code style="background:rgba(255,255,255,0.08);padding:1px 6px;border-radius:4px;font-size:11px">MEON_USERNAME</code> and <code style="background:rgba(255,255,255,0.08);padding:1px 6px;border-radius:4px;font-size:11px">MEON_PASSWORD</code> in your Vercel project's Environment Variables — your credentials never touch the browser.<br/>
+      Get your API key from <a href="https://app.meon.co.in" target="_blank" style="color:var(--accent-lt)">app.meon.co.in →</a>
+    </div>
     <div class="fg">
-      <div class="field">
-        <label>Client ID <span class="req">*</span></label>
-        <input type="text" id="digio_id" placeholder="DIG-XXXXXXXX"/>
+      <div class="field s2">
+        <label>Vercel API Endpoint <span class="req">*</span></label>
+        <input type="text" id="meon_endpoint" placeholder="https://sharepal-asset-partner.vercel.app/api/esign"/>
       </div>
       <div class="field">
-        <label>Client Secret <span class="req">*</span></label>
-        <input type="password" id="digio_secret" placeholder="your-digio-secret"/>
-      </div>
-      <div class="field">
-        <label>Signing Method</label>
-        <select id="sign_type">
-          <option value="aadhaar">Aadhaar OTP (recommended)</option>
-          <option value="electronic">Electronic — click to sign</option>
-          <option value="dsc">DSC</option>
+        <label>Signing Type</label>
+        <select id="digio_sign_type">
+          <option value="AADHAAR" selected>Aadhaar OTP (recommended)</option>
+          <option value="ELECTRONIC">Electronic (click to sign)</option>
         </select>
       </div>
       <div class="field">
-        <label>Signing Deadline</label>
-        <select id="sign_days">
+        <label>Expire After</label>
+        <select id="digio_expire_days">
           <option value="3">3 days</option>
           <option value="5" selected>5 days</option>
           <option value="7">7 days</option>
-          <option value="14">14 days</option>
+          <option value="15">15 days</option>
         </select>
       </div>
     </div>
+    <div style="margin-top:12px">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--muted)">
+        <input type="checkbox" id="digio_save_creds" style="accent-color:var(--accent);width:15px;height:15px"/>
+        Remember this endpoint
+      </label>
+    </div>
   </div>
 
+  <!-- Signatories -->
   <div class="card">
     <div class="card-label">Signatories</div>
     <div class="fg">
       <div class="field">
-        <label>Lender name</label>
+        <label>Lender Name</label>
         <input type="text" id="s_name" readonly/>
       </div>
       <div class="field">
-        <label>Lender email</label>
+        <label>Lender Email <span class="req">*</span></label>
         <input type="email" id="s_email" readonly/>
       </div>
       <div class="field">
-        <label>Lender mobile</label>
+        <label>Lender Mobile <span class="req">*</span></label>
         <input type="tel" id="s_mobile" readonly/>
       </div>
       <div class="field" style="display:flex;flex-direction:column;justify-content:flex-end">
-        <div style="background:rgba(0,206,201,0.07);border:1px solid rgba(0,206,201,0.18);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--accent2)">
-          ✓ Repium Ventures LLP signs via Digio dashboard
+        <div style="background:rgba(0,206,201,0.07);border:1px solid rgba(0,206,201,0.18);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--accent2);line-height:1.5">
+          ✓ Borrower (Repium Ventures LLP) signs via Digio dashboard after lender
         </div>
       </div>
     </div>
   </div>
 
+  <!-- Status area -->
   <div id="digio-status"></div>
 
   <div class="btn-row">
     <button class="btn btn-ghost" onclick="goStep(5)">← Back to Preview</button>
-    <button class="btn btn-go" id="send-btn" onclick="sendDigio()">
-      <span id="send-lbl">Send for E-Signature</span>
+    <button class="btn btn-go" id="digio-send-btn" onclick="sendDigio()">
+      <span id="digio-send-lbl">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Send Aadhaar E-Sign Request
+      </span>
     </button>
   </div>
 
-  <div id="post-send" style="display:none">
+  <!-- Post send success -->
+  <div id="post-send" style="display:none;margin-top:28px">
     <hr class="divider"/>
+    <div style="background:rgba(0,206,201,0.07);border:1px solid rgba(0,206,201,0.18);border-radius:10px;padding:14px 18px;margin-bottom:18px;font-size:13px;color:var(--text)">
+      Request ID: <strong id="esign-req-id" style="font-family:'DM Mono',monospace;color:var(--accent-lt)">—</strong>
+      <span style="color:var(--muted);margin-left:8px;font-size:11px">(saved locally)</span>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px">
+      <button class="btn btn-secondary" id="btn-check-status" onclick="checkESignStatus()" style="font-size:13px">↻ Check Status</button>
+      <button class="btn btn-go" id="btn-download-signed" onclick="downloadSignedPDF()" style="font-size:13px;display:none">⬇ Download Signed PDF</button>
+    </div>
     <div class="sec-head"><h2 style="color:var(--accent2)">What happens next</h2></div>
     <div class="next-steps">
       <div class="ns-item">
         <div class="ns-num">Step 1</div>
-        <div class="ns-txt">Lender gets SMS + email with Digio Aadhaar OTP signing link</div>
+        <div class="ns-txt">Lender receives SMS + email from Meon with an Aadhaar OTP signing link — signs in under 60 seconds</div>
       </div>
       <div class="ns-item">
         <div class="ns-num">Step 2</div>
-        <div class="ns-txt">Repium team countersigns via Digio dashboard — agreement is legally executed</div>
+        <div class="ns-txt">Click "Check Status" above to see if signing is complete. Once done, download the Aadhaar-stamped signed PDF</div>
       </div>
       <div class="ns-item">
         <div class="ns-num">Step 3</div>
-        <div class="ns-txt">Signed PDF auto-emailed to both parties and stored in your Digio vault</div>
+        <div class="ns-txt">Repium countersigns the document — both parties keep a legally valid Aadhaar-verified copy</div>
       </div>
     </div>
+  </div>
+
+  <hr class="divider" style="margin-top:32px"/>
+
+  <!-- WhatsApp/Email fallback -->
+  <div class="sec-head" style="margin-top:0;margin-bottom:16px">
+    <h2 style="font-size:15px">Or share manually</h2>
+    <p>Send the filled agreement via WhatsApp or Email as a backup</p>
+  </div>
+
+  <div class="share-grid">
+    <div class="share-card wa">
+      <div class="share-card-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      </div>
+      <div class="share-card-body">
+        <div class="share-card-title">WhatsApp</div>
+        <div class="share-card-sub">Opens WhatsApp with message pre-filled. Attach the PDF manually.</div>
+      </div>
+      <div class="share-card-actions">
+        <button class="btn-share wa-btn" onclick="shareWhatsApp()">Open WhatsApp</button>
+      </div>
+    </div>
+    <div class="share-card em">
+      <div class="share-card-icon" style="color:#ea4335">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      </div>
+      <div class="share-card-body">
+        <div class="share-card-title">Email</div>
+        <div class="share-card-sub">Opens your default mail client with subject and body pre-filled.</div>
+      </div>
+      <div class="share-card-actions">
+        <button class="btn-share em-btn" onclick="shareEmail()">Open Email</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="share-status" style="margin-top:14px"></div>
+
+  <div class="btn-row" style="margin-top:20px">
+    <button class="btn btn-ghost" onclick="goStep(5)">← Back to Preview</button>
   </div>
 </div>
 
@@ -836,23 +1013,29 @@ tr:hover td{background:rgba(108,92,231,0.03)}
 
 <script>
 // ── State ──
-let cur = 1;
+let cur = 0;  // 0 = type selector
 const TOTAL = 6;
+let agreeType = 'emi'; // 'emi' | 'flat_monthly' | 'flat_yearly'
 let amortData = [];
 let tenureVal = 0;
 let payoutVal = 0;
 
 // ── Navigation ──
 function goStep(n) {
+  // panel0 has no step button — handle separately
+  if (cur >= 1) {
+    document.getElementById('sb' + cur)?.classList.remove('active');
+  }
   document.getElementById('panel' + cur).classList.remove('active');
-  document.getElementById('sb' + cur).classList.remove('active');
   cur = n;
   document.getElementById('panel' + n).classList.add('active');
-  document.getElementById('sb' + n).classList.add('active');
-  const pct = Math.round(n / TOTAL * 100);
+  if (n >= 1) {
+    document.getElementById('sb' + n)?.classList.add('active');
+  }
+  const pct = n === 0 ? 0 : Math.round(n / TOTAL * 100);
   document.getElementById('prog-fill').style.width = pct + '%';
-  document.getElementById('prog-pct').textContent = pct + '%';
-  document.getElementById('prog-lbl').textContent = 'Step ' + n + ' of ' + TOTAL;
+  document.getElementById('prog-pct').textContent = n === 0 ? '0%' : pct + '%';
+  document.getElementById('prog-lbl').textContent = n === 0 ? 'Select type' : 'Step ' + n + ' of ' + TOTAL;
   window.scrollTo({top:0,behavior:'smooth'});
   if (n === 6) syncSig();
 }
@@ -886,64 +1069,247 @@ function numWords(n) {
   return r.trim();
 }
 
-// ── Pill selectors ──
+// ── Agreement type selector ─────────────────────────────────────────────────
+function selectAgreeType(type) {
+  agreeType = type;
+
+  // Highlight selected card
+  ['emi','flat_monthly','flat_yearly'].forEach(t => {
+    document.getElementById('type-' + t).classList.toggle('selected', t === type);
+  });
+
+  // Update header pill
+  const labels = { emi:'EMI Payout', flat_monthly:'Flat Monthly Payout', flat_yearly:'Flat Yearly Payout' };
+  document.getElementById('agree-type-label').textContent = labels[type];
+
+  // Update Step 2 UI for this type
+  updateStep2UI();
+
+  // Recalculate if data already entered
+  calcEMI();
+
+  // Move to Step 1
+  goStep(1);
+}
+
+function updateStep2UI() {
+  const isYearly  = agreeType === 'flat_yearly';
+  const isEMI     = agreeType === 'emi';
+  const isMonthly = agreeType === 'flat_monthly';
+
+  // Payout label
+  const payoutLabel = document.getElementById('payout-label');
+  if (isEMI)     payoutLabel.innerHTML = 'EMI Amount (₹) <span class="req">*</span>';
+  if (isMonthly) payoutLabel.innerHTML = 'Monthly Payout (₹) <span class="req">*</span>';
+  if (isYearly)  payoutLabel.innerHTML = 'Yearly Payout (₹) <span class="req">*</span>';
+
+  // Tenure pills — months for EMI/monthly, years for yearly
+  const tp = document.getElementById('tenure-pills');
+  if (isYearly) {
+    tp.innerHTML = `
+      <div class="pill-opt" id="t12" onclick="selectTenure(12,this)">1 yr</div>
+      <div class="pill-opt" id="t24" onclick="selectTenure(24,this)">2 yr</div>
+      <div class="pill-opt" id="t36" onclick="selectTenure(36,this)">3 yr</div>`;
+  } else {
+    tp.innerHTML = `
+      <div class="pill-opt" id="t12" onclick="selectTenure(12,this)">12 mo</div>
+      <div class="pill-opt" id="t24" onclick="selectTenure(24,this)">24 mo</div>
+      <div class="pill-opt" id="t36" onclick="selectTenure(36,this)">36 mo</div>`;
+  }
+
+  // Re-apply selected state
+  const curTenure = document.getElementById('tenure').value;
+  if (curTenure) {
+    const pill = document.getElementById('t' + curTenure);
+    if (pill) pill.classList.add('sel-ten');
+  }
+
+  // Summary labels
+  const sumLbl = document.getElementById('sum-lbl-payout');
+  if (sumLbl) {
+    sumLbl.textContent = isEMI ? 'Monthly EMI' : isMonthly ? 'Monthly Payout' : 'Yearly Payout';
+  }
+
+  // Table header
+  const amortCol = document.getElementById('amort-col-payout');
+  if (amortCol) {
+    amortCol.textContent = isYearly ? 'Yearly Payout' : 'Monthly Payout';
+  }
+
+  // Show/hide remarks column header
+  updateRemarksHeader();
+}
+
+function updateRemarksHeader() {
+  const thead = document.getElementById('amort-head');
+  if (!thead) return;
+  const needRemarks = agreeType !== 'emi';
+  const existing = thead.querySelector('th.remarks-col');
+  if (needRemarks && !existing) {
+    const th = document.createElement('th');
+    th.textContent = 'Remarks'; th.className = 'remarks-col';
+    thead.querySelector('tr').appendChild(th);
+  } else if (!needRemarks && existing) {
+    existing.remove();
+  }
+}
+
+// ── Tenure pill selector ──────────────────────────────────────────────────────
 function selectTenure(v, el) {
-  document.querySelectorAll('.pill-opt[id^="t"]').forEach(p=>p.classList.remove('sel-ten'));
+  document.querySelectorAll('#tenure-pills .pill-opt').forEach(p=>p.classList.remove('sel-ten'));
   el.classList.add('sel-ten');
   document.getElementById('tenure').value = v;
   tenureVal = v;
   calcEMI();
 }
 
-// ── EMI Calculation ──
-function calcEMI() {
-  const P = parseFloat(document.getElementById('loan_amount').value);
-  const n = parseInt(document.getElementById('tenure').value);
-  const emi = parseFloat(document.getElementById('monthly_payout').value);
+// ── Effective date change → autofill txn_date ─────────────────────────────────
+function onEffectiveDateChange() {
   const dateStr = document.getElementById('effective_date').value;
-  if (!P || !n || !emi || !dateStr) return;
+  // Auto-fill txn_date only if it's empty or was the same as effective_date before
+  const txnDate = document.getElementById('txn_date');
+  if (!txnDate.value || txnDate.dataset.autoFilled === 'true') {
+    txnDate.value = dateStr;
+    txnDate.dataset.autoFilled = 'true';
+  }
+  calcEMI();
+}
 
-  payoutVal = emi;
+// ── Auto-fill bank account holder name from lender name ──────────────────────
+function autoFillBankName(val) {
+  const bankName = document.getElementById('bank_name');
+  if (!bankName.value || bankName.dataset.autoFilled === 'true') {
+    bankName.value = val;
+    bankName.dataset.autoFilled = 'true';
+  }
+}
+
+// ── Auto-fill txn_amount from loan_amount ─────────────────────────────────────
+function autoFillTxnAmount() {
+  const loanAmt = document.getElementById('loan_amount').value;
+  const txnAmt  = document.getElementById('txn_amount');
+  if (!txnAmt.value || txnAmt.dataset.autoFilled === 'true') {
+    txnAmt.value = loanAmt;
+    txnAmt.dataset.autoFilled = 'true';
+  }
+}
+
+// ── Main calculation — handles all 3 agreement types ─────────────────────────
+function calcEMI() {
+  const P       = parseFloat(document.getElementById('loan_amount').value);
+  const n       = parseInt(document.getElementById('tenure').value);
+  const payout  = parseFloat(document.getElementById('monthly_payout').value);
+  const dateStr = document.getElementById('effective_date').value;
+  if (!P || !n || !payout || !dateStr) {
+    // Hide rate badge if inputs incomplete
+    const rb = document.getElementById('rate-badge');
+    if (rb) rb.style.display = 'none';
+    return;
+  }
+
+  // Auto-fill txn_amount when loan_amount is set
+  autoFillTxnAmount();
+
+  payoutVal = payout;
   const startDate = new Date(dateStr);
-
   amortData = [];
-  let totalPayout = 0;
-  for (let i = 1; i <= n; i++) {
-    const pd = new Date(startDate);
-    pd.setMonth(startDate.getMonth() + i);
-    amortData.push({num:i, date:fmtDate(pd), payout:emi});
-    totalPayout += emi;
+
+  if (agreeType === 'emi') {
+    // ── EMI: reducing balance, equal monthly payments ──
+    let totalPayout = 0;
+    for (let i = 1; i <= n; i++) {
+      const pd = new Date(startDate);
+      pd.setMonth(startDate.getMonth() + i);
+      amortData.push({num:i, date:fmtDate(pd), payout, remarks:''});
+      totalPayout += payout;
+    }
+
+    // Back-calculate IRR (reducing balance)
+    let r = 0.015;
+    for (let iter = 0; iter < 200; iter++) {
+      const f  = payout * (1 - Math.pow(1+r,-n)) / r - P;
+      const df = payout * (n * Math.pow(1+r,-n-1) / r - (1 - Math.pow(1+r,-n)) / (r*r));
+      const rn = r - f/df;
+      if (Math.abs(rn - r) < 1e-9) { r = rn; break; }
+      r = rn;
+    }
+    const ratePct = (r * 12 * 100).toFixed(2);
+
+    renderSummary(fmtINR(payout), fmtINR(totalPayout), ratePct + '% p.a.');
+    renderSchedule(false);
+
+  } else if (agreeType === 'flat_monthly') {
+    // ── Flat Monthly: return only each month, principal at end ──
+    let totalPayout = 0;
+    for (let i = 1; i <= n; i++) {
+      const pd = new Date(startDate);
+      pd.setMonth(startDate.getMonth() + i);
+      const isLast   = i === n;
+      const rowPayout = isLast ? payout + P : payout;
+      const remarks   = isLast ? 'Return + Principal' : 'Return only';
+      amortData.push({num:i, date:fmtDate(pd), payout:rowPayout, remarks});
+      totalPayout += rowPayout;
+    }
+
+    // Rate = monthly payout (return only) / principal * 12 * 100
+    const ratePct = ((payout / P) * 12 * 100).toFixed(2);
+    renderSummary(fmtINR(payout), fmtINR(totalPayout), ratePct + '% p.a.');
+    renderSchedule(true);
+
+  } else if (agreeType === 'flat_yearly') {
+    // ── Flat Yearly: 1 row per year, return only, principal at end ──
+    const years = n / 12; // n is stored as months (12=1yr, 24=2yr, 36=3yr)
+    let totalPayout = 0;
+    for (let i = 1; i <= years; i++) {
+      const pd = new Date(startDate);
+      pd.setFullYear(startDate.getFullYear() + i);
+      const isLast    = i === years;
+      const rowPayout = isLast ? payout + P : payout;
+      const remarks   = isLast ? 'Return + Principal' : 'Return only';
+      amortData.push({num:i, date:fmtDate(pd), payout:rowPayout, remarks});
+      totalPayout += rowPayout;
+    }
+
+    // Rate = yearly payout (return only) / principal * 100
+    const ratePct = ((payout / P) * 100).toFixed(2);
+    renderSummary(fmtINR(payout), fmtINR(totalPayout), ratePct + '% p.a.');
+    renderSchedule(true);
   }
-
-  // Back-calculate IRR
-  let r = 0.015;
-  for (let iter = 0; iter < 200; iter++) {
-    const f = emi * (1 - Math.pow(1+r,-n)) / r - P;
-    const df = emi * (n * Math.pow(1+r,-n-1) / r - (1 - Math.pow(1+r,-n)) / (r*r));
-    const rn = r - f/df;
-    if (Math.abs(rn - r) < 1e-9) { r = rn; break; }
-    r = rn;
-  }
-  const irrAnnual = (r * 12 * 100).toFixed(2);
-
-  document.getElementById('sum-grid').style.display = 'grid';
-  document.getElementById('c_emi').textContent = fmtINR(emi);
-  document.getElementById('c_total').textContent = fmtINR(totalPayout);
-  document.getElementById('c_irr').textContent = irrAnnual + '% p.a.';
-
-  const tbody = document.getElementById('amort-body');
-  tbody.innerHTML = '';
-  amortData.forEach(r => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${r.num}</td><td>${r.date}</td><td>${fmtINR(r.payout)}</td>`;
-    tbody.appendChild(tr);
-  });
-  const tot = document.createElement('tr');
-  tot.className = 'tot';
-  tot.innerHTML = `<td colspan="2" style="text-align:right;font-weight:500">Total</td><td>${fmtINR(totalPayout)}</td>`;
-  tbody.appendChild(tot);
 
   document.getElementById('amort-card').style.display = 'block';
+}
+
+function renderSummary(payoutStr, totalStr, rateStr) {
+  document.getElementById('sum-grid').style.display = 'grid';
+  document.getElementById('c_emi').textContent   = payoutStr;
+  document.getElementById('c_total').textContent = totalStr;
+  document.getElementById('c_irr').textContent   = rateStr;
+
+  // Rate badge next to payout input
+  const rb = document.getElementById('rate-badge');
+  if (rb) { rb.textContent = '≈ ' + rateStr; rb.style.display = 'inline-flex'; }
+}
+
+function renderSchedule(showRemarks) {
+  updateRemarksHeader();
+  const tbody = document.getElementById('amort-body');
+  tbody.innerHTML = '';
+
+  amortData.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${r.num}</td><td>${r.date}</td><td>${fmtINR(r.payout)}</td>`
+      + (showRemarks ? `<td style="font-size:11px;color:var(--muted)">${r.remarks}</td>` : '');
+    tbody.appendChild(tr);
+  });
+
+  // Total row
+  const grand = amortData.reduce((s,r) => s + r.payout, 0);
+  const tot   = document.createElement('tr');
+  tot.className = 'tot';
+  const colspan = showRemarks ? 2 : 2;
+  tot.innerHTML = `<td colspan="${colspan}" style="text-align:right;font-weight:500">Total</td><td>${fmtINR(grand)}</td>`
+    + (showRemarks ? '<td></td>' : '');
+  tbody.appendChild(tot);
 }
 
 // ── Asset row management ──
@@ -990,7 +1356,7 @@ function getAssets() {
 
 // ── Build preview ──
 function buildPreview() {
-  const g = id => document.getElementById(id).value;
+  const g = id => document.getElementById(id)?.value || '';
   const lName    = g('lender_name')    || '[Full Name of Individual]';
   const lPan     = g('lender_pan')     || '____________';
   const lAadhaar = g('lender_aadhaar') || '____________';
@@ -1019,16 +1385,84 @@ function buildPreview() {
   const amountFmt   = amount ? fmtINR(amount) + '/-' : '₹[Amount]';
   const payoutFmt   = payout ? fmtINR(payout) + '/-' : '₹____________';
 
-  // Annexure I rows
+  // Tenure display string
+  const isYearly   = agreeType === 'flat_yearly';
+  const tenureDisplay = isYearly
+    ? (tenure === '12' ? '1 Year' : tenure === '24' ? '2 Years' : tenure === '36' ? '3 Years' : tenure + ' months')
+    : tenure + ' months';
+
+  // Agreement type names
+  const typeNames = { emi:'EMI Payout', flat_monthly:'Flat Monthly Payout', flat_yearly:'Flat Yearly Payout' };
+  const typeName  = typeNames[agreeType] || 'EMI Payout';
+  const typeSubtitle = agreeType === 'emi'
+    ? '(Private Borrowing Arrangement – Asset Financing Model)'
+    : '(Private Borrowing Arrangement – Monthly Payout Model)';
+
+  // ── Sections 4 & 5 — differ by type ──
+  let section4and5 = '';
+  if (agreeType === 'emi') {
+    section4and5 = `
+    <h2>4. Return</h2>
+    <p>The repayment amount payable by the Borrower includes both principal and return components, as detailed in Annexure I.</p>
+    <h2>5. Repayment (EMI Structure)</h2>
+    <p>5.1 The loan shall be repaid through Equated Monthly Installments (EMIs).</p>
+    <p>5.2 Each EMI shall include both principal and return components calculated on a reducing balance basis.</p>
+    <p>5.3 EMI Amount: <span class="hl">${payoutFmt}</span></p>
+    <p>5.4 Payment schedule provided in Annexure I.</p>
+    <p>5.5 Early repayment is permitted without penalty.</p>
+    <p>5.6 All repayments shall be credited to the Lender's bank account as provided below:</p>
+    <p>Account Holder Name: <span class="hl">${bankName}</span><br/>Account Number: <span class="hl">${bankAcc}</span><br/>IFSC Code: <span class="hl">${bankIfsc}</span></p>`;
+  } else if (agreeType === 'flat_monthly') {
+    section4and5 = `
+    <h2>4. Return</h2>
+    <p>The Borrower shall pay the agreed return to the Lender as per the schedule detailed in Annexure I. The principal shall be repaid in full at the end of the tenure.</p>
+    <h2>5. Repayment Structure</h2>
+    <p>5.1 The Borrower shall pay the agreed monthly payout to the Lender as per the schedule in Annexure I.</p>
+    <p>5.2 Principal Repayment: The entire Loan Amount shall be repaid by the Borrower to the Lender in a single payment at the end of the agreed tenure.</p>
+    <p>5.3 Payment schedule is provided in Annexure I.</p>
+    <p>5.4 Early repayment of principal is permitted without penalty.</p>
+    <p>5.5 All repayments shall be credited to the Lender's bank account as provided below:</p>
+    <p>Account Holder Name: <span class="hl">${bankName}</span><br/>Account Number: <span class="hl">${bankAcc}</span><br/>IFSC Code: <span class="hl">${bankIfsc}</span></p>`;
+  } else {
+    section4and5 = `
+    <h2>4. Return</h2>
+    <p>The Borrower shall pay the agreed return to the Lender as per the schedule detailed in Annexure I. The principal shall be repaid in full at the end of the tenure.</p>
+    <h2>5. Repayment Structure</h2>
+    <p>5.1 The Borrower shall pay the agreed yearly payout to the Lender as per the schedule in Annexure I.</p>
+    <p>5.2 Principal Repayment: The entire Loan Amount shall be repaid by the Borrower to the Lender in a single payment at the end of the agreed tenure.</p>
+    <p>5.3 Payment schedule is provided in Annexure I.</p>
+    <p>5.4 Early repayment of principal is permitted without penalty.</p>
+    <p>5.5 All repayments shall be credited to the Lender's bank account as provided below:</p>
+    <p>Account Holder Name: <span class="hl">${bankName}</span><br/>Account Number: <span class="hl">${bankAcc}</span><br/>IFSC Code: <span class="hl">${bankIfsc}</span></p>`;
+  }
+
+  // ── Events of default — differs by type ──
+  const eventsOfDefault = agreeType === 'emi'
+    ? '<p>- Non-payment of or delay in payment of more than 15 days for consecutive EMIs<br/>- Insolvency or breach of agreement</p>'
+    : agreeType === 'flat_monthly'
+      ? '<p>- Non-payment or delay in monthly payout by more than 15 days from due date for 2 consecutive months<br/>- Non-repayment of principal at end of tenure<br/>- Insolvency or breach of agreement</p>'
+      : '<p>- Non-payment or delay in yearly payout by more than 30 days from due date<br/>- Non-repayment of principal at end of tenure<br/>- Insolvency or breach of agreement</p>';
+
+  // ── Annexure I — differs by type ──
+  const showRemarks  = agreeType !== 'emi';
+  const payoutColHdr = isYearly ? 'Yearly Payout' : 'Monthly Payout';
+  const remarksHdr   = showRemarks ? '<th>Remarks</th>' : '';
+
   let annexRows = '';
   if (amortData.length) {
     amortData.forEach(r => {
-      annexRows += `<tr><td>${r.num}</td><td>${r.date}</td><td>${fmtINR(r.payout)}</td></tr>`;
+      annexRows += `<tr><td>${r.num}</td><td>${r.date}</td><td>${fmtINR(r.payout)}</td>`
+        + (showRemarks ? `<td style="font-size:11px">${r.remarks || ''}</td>` : '')
+        + `</tr>`;
     });
-    const tot = amortData.reduce((s,r)=>s+r.payout,0);
-    annexRows += `<tr class="tot-row"><td colspan="2" style="text-align:right;font-weight:600">Total</td><td>${fmtINR(tot)}</td></tr>`;
+    const grand = amortData.reduce((s,r) => s + r.payout, 0);
+    annexRows += `<tr class="tot-row"><td colspan="2" style="text-align:right;font-weight:600">Total</td><td>${fmtINR(grand)}</td>`
+      + (showRemarks ? '<td></td>' : '') + '</tr>';
   } else {
-    for(let i=1;i<=24;i++) annexRows+=`<tr><td>${i}</td><td></td><td></td></tr>`;
+    for(let i=1;i<=3;i++) {
+      annexRows += `<tr><td>${i}</td><td></td><td></td>`
+        + (showRemarks ? '<td></td>' : '') + '</tr>';
+    }
   }
 
   // Annexure II rows from Step 4
@@ -1043,13 +1477,13 @@ function buildPreview() {
       </tr>`;
     });
   } else {
-    // 4 blank rows if nothing entered
-    for(let i=0;i<4;i++) assetRows += `<tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>`;
+    // 1 blank row minimum if nothing entered
+    assetRows += `<tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>`;
   }
 
   document.getElementById('preview-doc').innerHTML = `
     <h1>LOAN AGREEMENT</h1>
-    <p class="sub">(Private Borrowing Arrangement – Asset Financing Model)</p>
+    <p class="sub" style="padding:0 4px">${typeSubtitle}</p>
     <p>This Loan Agreement (<strong>"Agreement"</strong>) is executed on the <span class="hl">${effDateTxt}</span> (<strong>"Effective Date"</strong>).</p>
 
     <h2>Parties</h2>
@@ -1064,7 +1498,7 @@ function buildPreview() {
     <p><strong>Definitions</strong></p>
     <p>For the purpose of this Agreement:</p>
     <p>• &nbsp;&nbsp;<strong>Loan Amount:</strong> The principal sum lent by the Lender to the Borrower.</p>
-    <p>• &nbsp;&nbsp;<strong>EMI:</strong> Monthly repayment consisting of principal and return.</p>
+    ${agreeType === 'emi' ? '<p>• &nbsp;&nbsp;<strong>EMI:</strong> Monthly repayment consisting of principal and return.</p>' : '<p>• &nbsp;&nbsp;<strong>Payout:</strong> The agreed return amount payable by the Borrower to the Lender as per Annexure I.</p>'}
     <p>• &nbsp;&nbsp;<strong>Assets:</strong> Tangible business assets of the Borrower hypothecated as security.</p>
     <p>• &nbsp;&nbsp;<strong>TDS:</strong> Tax Deducted at Source under Section 194A of the Income Tax Act, 1961.</p>
 
@@ -1078,27 +1512,12 @@ function buildPreview() {
     <p>Date of Transfer: <span class="hl">${txnDate}</span></p>
     <p>Amount Transferred: <span class="hl">${txnAmt}</span></p>
     <p>Transaction ID: <span class="hl">${txnId}</span></p>
-    <p>The Borrower hereby acknowledges receipt of the above amount in full and confirms that the funds have been credited to:</p>
-    <p>Account Holder Name: <strong>REPIUM VENTURES LLP</strong><br/>
-    Account Number: <strong>7917837471</strong><br/>
-    IFSC Code: <strong>IDIB000M050</strong></p>
+    <p>The Borrower hereby acknowledges receipt of the above amount in full and confirms that the funds have been credited.</p>
 
     <h2>3. Tenure</h2>
-    <p><span class="hl">${tenure} months</span> from Effective Date.</p>
+    <p><span class="hl">${tenureDisplay}</span> from Effective Date.</p>
 
-    <h2>4. Return</h2>
-    <p>The repayment amount payable by the Borrower includes both principal and return components, as detailed in Annexure I.</p>
-
-    <h2>5. Repayment (EMI Structure)</h2>
-    <p>5.1 The loan shall be repaid through Equated Monthly Installments (EMIs).</p>
-    <p>5.2 Each EMI shall include both principal and return components calculated on a reducing balance basis.</p>
-    <p>5.3 EMI Amount: <span class="hl">${payoutFmt}</span></p>
-    <p>5.4 Payment schedule provided in Annexure I.</p>
-    <p>5.5 Early repayment is permitted without penalty.</p>
-    <p>5.6 All repayments shall be credited to the Lender's bank account as provided below:</p>
-    <p>Account Holder Name: <span class="hl">${bankName}</span><br/>
-    Account Number: <span class="hl">${bankAcc}</span><br/>
-    IFSC Code: <span class="hl">${bankIfsc}</span></p>
+    ${section4and5}
 
     <h2>6. TDS under Section 194A</h2>
     <p>The Borrower shall deduct TDS under Section 194A of the Income Tax Act, 1961 on return payments and provide the Lender with necessary certificates (Form 16A).</p>
@@ -1107,13 +1526,13 @@ function buildPreview() {
     <p>Funds shall be used strictly for asset procurement and business operations.</p>
 
     <h2>8. Events of Default</h2>
-    <p>- Non-payment of or delay in payment of more than 15 days for consecutive EMIs<br/>- Insolvency or breach of agreement</p>
+    ${eventsOfDefault}
 
     <h2>9. Indemnity and Security</h2>
     <p>Borrower indemnifies lender against losses arising from breach.<br/>The loan will be secured by hypothecation of assets.<br/>The Borrower shall provide complete details of assets hypothecated (Annexure II), including:<br/>- Asset Name<br/>- Serial Number<br/>- Asset Value</p>
 
     <h2>10. Limitation of Liability and Termination</h2>
-    <p>Borrower liability limited to outstanding loan and agreed returns.<br/>This Agreement may be terminated:<br/>- By mutual consent of both parties.<br/>- By the Lender, if the Borrower defaults on repayment for 2 consecutive months.<br/>- By the Borrower, upon full repayment of outstanding principal and returns.</p>
+    <p>Borrower liability limited to outstanding loan and agreed returns.<br/>This Agreement may be terminated:<br/>- By mutual consent of both parties.<br/>${agreeType === 'emi' ? '- By the Lender, if the Borrower defaults on repayment for 2 consecutive months.' : agreeType === 'flat_monthly' ? '- By the Lender, upon default in 2 consecutive monthly payout obligations.' : '- By the Lender, upon default in 2 consecutive yearly payout obligations.'}<br/>- By the Borrower, upon full repayment of outstanding principal and returns.</p>
 
     <h2>11. Dispute Resolution and Miscellaneous</h2>
     <p>Disputes shall first be resolved amicably, failing which arbitration under Arbitration and Conciliation Act, 1996 in Bangalore.<br/>Amendments must be in writing and signed by both parties.<br/>Notices shall be sent to the addresses mentioned above.<br/>This Agreement is executed in duplicate, with each party retaining one copy.</p>
@@ -1125,8 +1544,8 @@ function buildPreview() {
     <table class="sig-tbl">
       <tr>
         <td style="width:33%"><strong>For:</strong></td>
-        <td style="width:34%"><strong>Repium Ventures LLP (Borrower)</strong></td>
-        <td style="width:33%"><strong>Individual (Lender)</strong></td>
+        <td style="width:34%"><strong>Repium&nbsp;Ventures&nbsp;LLP&nbsp;(Borrower)</strong></td>
+        <td style="width:33%"><strong>Individual&nbsp;(Lender)</strong></td>
       </tr>
       <tr>
         <td>Name:</td>
@@ -1138,19 +1557,16 @@ function buildPreview() {
         <td><div class="sig-line"></div></td>
         <td><div class="sig-line"></div></td>
       </tr>
-      <tr>
-        <td>Date:</td>
-        <td style="height:42px"></td>
-        <td style="height:42px"></td>
-      </tr>
+
     </table>
 
     <div style="height:52px"></div>
 
     <h2>Annexure I</h2>
+    ${agreeType !== 'emi' ? '<p style="font-size:11px;color:#888;margin-bottom:6px">The principal shall be repaid in full at the end of the tenure. ' + (agreeType === 'flat_yearly' ? 'Yearly payouts shown below.' : 'Monthly payouts shown below.') + '</p>' : ''}
     <table>
       <thead>
-        <tr><th>Payment #</th><th>Payment Date</th><th>Monthly Payout</th></tr>
+        <tr><th>Payment #</th><th>Payment Date</th><th>${payoutColHdr}</th>${remarksHdr}</tr>
       </thead>
       <tbody>${annexRows}</tbody>
     </table>
@@ -1166,55 +1582,393 @@ function buildPreview() {
 
     <div style="height:32px"></div>
   `;
+  // Deduplicate any h2 headings that appear more than once (safety guard)
+  const previewEl = document.getElementById('preview-doc');
+  const allH2 = previewEl.querySelectorAll('h2');
+  const seenH2 = new Set();
+  allH2.forEach(el => {
+    const txt = el.textContent.trim();
+    if (seenH2.has(txt)) {
+      el.remove(); // remove duplicate
+    } else {
+      seenH2.add(txt);
+    }
+  });
+
   // Auto-save to history every time preview is generated
   saveToHistory();
 }
 
-// ── Sync signatories ──
+// ── Sync lender contact + load saved endpoint into Step 6 ──
 function syncSig() {
-  document.getElementById('s_name').value   = document.getElementById('lender_name').value;
-  document.getElementById('s_email').value  = document.getElementById('lender_email').value;
-  document.getElementById('s_mobile').value = document.getElementById('lender_mobile').value;
+  const g = id => document.getElementById(id)?.value || '';
+  document.getElementById('s_name').value   = g('lender_name');
+  document.getElementById('s_email').value  = g('lender_email');
+  document.getElementById('s_mobile').value = g('lender_mobile');
+  // Load saved endpoint
+  const savedEndpoint = localStorage.getItem('sp_meon_endpoint') || '';
+  if (savedEndpoint) document.getElementById('meon_endpoint').value = savedEndpoint;
+  if (savedEndpoint) document.getElementById('digio_save_creds').checked = true;
+  buildShareMsg();
 }
 
-// ── Digio dispatch (simulation — replace fetch with real backend) ──
+// ── Meon Aadhaar eSign via Vercel serverless ──
 async function sendDigio() {
-  const cid    = document.getElementById('digio_id').value.trim();
-  const secret = document.getElementById('digio_secret').value.trim();
-  const name   = document.getElementById('lender_name').value.trim();
-  const email  = document.getElementById('lender_email').value.trim();
-  const mobile = document.getElementById('lender_mobile').value.trim();
+  const endpoint  = document.getElementById('meon_endpoint').value.trim().replace(/\/$/, '');
+  const signType  = document.getElementById('digio_sign_type').value;
+  const expireDays= parseInt(document.getElementById('digio_expire_days').value);
+  const lName     = document.getElementById('s_name').value.trim();
+  const lEmail    = document.getElementById('s_email').value.trim();
+  const lMobile   = document.getElementById('s_mobile').value.trim();
+  const save      = document.getElementById('digio_save_creds').checked;
 
-  if (!cid || !secret) { setStatus('err','⚠️ Missing credentials','Enter your Digio Client ID and Secret above.'); return; }
-  if (!name || !email || !mobile) { setStatus('err','⚠️ Incomplete lender info','Go back to Step 1 and fill in name, email and mobile.'); return; }
+  // Validate
+  if (!endpoint) {
+    setDigioStatus('err', '⚠️ Missing endpoint', 'Enter your Vercel API endpoint above (e.g. https://your-app.vercel.app/api/esign).');
+    return;
+  }
+  if (!lEmail && !lMobile) {
+    setDigioStatus('err', '⚠️ Missing lender contact', 'Go back to Step 1 and fill in the lender\'s email or mobile number.');
+    return;
+  }
 
-  const btn = document.getElementById('send-btn');
+  // Save endpoint if checked
+  if (save) localStorage.setItem('sp_meon_endpoint', endpoint);
+  else localStorage.removeItem('sp_meon_endpoint');
+
+  const btn = document.getElementById('digio-send-btn');
   btn.disabled = true;
-  document.getElementById('send-lbl').innerHTML = '<span class="spin"></span> Uploading document…';
-  setStatus('info','Uploading agreement to Digio…','Converting to PDF and sending via REST API.');
-  await wait(1100);
+  document.getElementById('digio-send-lbl').innerHTML = '<span class="spin"></span> Building document…';
+  setDigioStatus('info', 'Preparing…', 'Building DOCX and encoding for upload.');
 
-  document.getElementById('send-lbl').innerHTML = '<span class="spin"></span> Creating sign request…';
-  setStatus('info','Creating sign request…','Adding signatory: '+name+' ('+email+')');
-  await wait(1100);
+  try {
+    // Step 1: Generate PDF blob from the preview HTML (Meon only accepts PDF)
+    const g       = id => document.getElementById(id)?.value || '';
+    const fname   = `Loan_Agreement_${(g('lender_name')||'Lender').replace(/\s+/g,'_')}.pdf`;
 
-  document.getElementById('send-lbl').innerHTML = '<span class="spin"></span> Dispatching invite…';
-  setStatus('info','Dispatching invite…','Sending SMS and email to lender.');
-  await wait(900);
+    document.getElementById('digio-send-lbl').innerHTML = '<span class="spin"></span> Generating PDF…';
+    setDigioStatus('info', 'Generating PDF…', 'Converting agreement to PDF for Meon upload.');
 
-  const docId = 'DIG-' + Math.random().toString(36).substring(2,10).toUpperCase();
-  btn.disabled = false;
-  document.getElementById('send-lbl').textContent = '✓ Sent Successfully';
-  btn.style.background = '#00cec9'; btn.style.color = '#002e2d';
+    const b64 = await generatePDFBase64();
+    if (!b64) throw new Error('PDF generation failed — please try again.');
 
-  setStatus('ok',
-    '✅ Agreement dispatched for e-signature',
-    `Document ID: <strong>${docId}</strong><br/>
-     Aadhaar OTP signing link sent to <strong>${email}</strong> and <strong>${mobile}</strong>.<br/>
-     You'll receive a webhook notification once all parties have signed.`
-  );
-  document.getElementById('post-send').style.display = 'block';
-  document.getElementById('sb6').classList.add('done');
+    document.getElementById('digio-send-lbl').innerHTML = '<span class="spin"></span> Sending to Meon…';
+    setDigioStatus('info', 'Sending to Meon…', 'Uploading PDF to Meon Aadhaar eSign API via Vercel.');
+
+    // Step 2: POST to Vercel serverless function
+    const res = await fetch(`${endpoint}?action=create`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        documentBase64: b64,
+        documentName:   fname,
+        signerName:     lName,
+        signerEmail:    lEmail  || undefined,
+        signerMobile:   lMobile || undefined,
+        expireDays,
+      }),
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      throw new Error(data.error || `Server error (${res.status})`);
+    }
+
+    // Success
+    const token    = data.token    || '—';
+    const esignUrl = data.esign_url || '';
+
+    btn.disabled = false;
+    document.getElementById('digio-send-lbl').innerHTML =
+      `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>✓ Link Created`;
+    btn.style.background = '#00cec9';
+    btn.style.color = '#002e2d';
+
+    // Also check raw response for any field names Meon actually used
+    const rawData = data.raw || {};
+    const rawInfo = Object.keys(rawData).length
+      ? `<br/><br/><details style="cursor:pointer"><summary style="color:var(--muted);font-size:11px">Debug: full Meon response</summary>
+         <pre style="font-size:10px;color:var(--muted);white-space:pre-wrap;margin-top:6px">${JSON.stringify(rawData, null, 2)}</pre></details>`
+      : '';
+
+    setDigioStatus('ok', '✅ Aadhaar eSign link created via Meon!',
+      `Token: <strong style="font-family:'DM Mono',monospace">${token || '(check debug below)'}</strong><br/>
+       ${esignUrl
+         ? `<br/>Signing link for lender:<br/><a href="${esignUrl}" target="_blank" style="color:var(--accent-lt);word-break:break-all;font-size:12px">${esignUrl}</a><br/>
+            <br/>Lender opens this link → enters Aadhaar number → gets OTP on mobile → signs ✓`
+         : '<br/>⚠️ No signing URL in response yet — expand debug below to see what Meon returned.'}
+      ${rawInfo}`
+    );
+
+    // Store token for status polling
+    localStorage.setItem('sp_last_esign_token', token);
+    localStorage.setItem('sp_last_esign_endpoint', endpoint);
+
+    // Show status + download buttons
+    document.getElementById('post-send').style.display = 'block';
+    document.getElementById('esign-req-id').textContent = token;
+    document.getElementById('sb6').classList.add('done');
+
+  } catch(err) {
+    console.error('Meon eSign error:', err);
+    btn.disabled = false;
+    document.getElementById('digio-send-lbl').innerHTML =
+      `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Send Aadhaar E-Sign Request`;
+    btn.style.background = '';
+    btn.style.color = '';
+    setDigioStatus('err', '❌ Failed', err.message);
+  }
+}
+
+// Check signing status
+// Check status = try to get signed PDF (Meon's way — call get_pdf_url, if it returns a URL, signing is done)
+async function checkESignStatus() {
+  const token    = localStorage.getItem('sp_last_esign_token');
+  const endpoint = localStorage.getItem('sp_last_esign_endpoint')
+    || document.getElementById('meon_endpoint').value.trim().replace(/\/$/,'');
+  const mobile   = document.getElementById('s_mobile')?.value?.replace(/\D/g,'')?.slice(-10) || '';
+
+  if (!token || !endpoint) { alert('No active sign request found.'); return; }
+
+  const btn = document.getElementById('btn-check-status');
+  btn.disabled = true; btn.textContent = 'Checking…';
+
+  try {
+    const res  = await fetch(`${endpoint}?action=download`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ token, mobile }),
+    });
+    const data = await res.json().catch(()=>({}));
+
+    if (!res.ok || !data.success) {
+      // Not signed yet
+      setDigioStatus('info', '⏳ Not signed yet',
+        `Token: <strong>${token}</strong><br/>
+         The lender has not completed Aadhaar signing yet. Ask them to check their SMS/email from Meon and complete the signing.`
+      );
+    } else {
+      // Signed! Show download link
+      const pdfUrl = data.pdf_url;
+      setDigioStatus('ok', '✅ Document signed!',
+        `Token: <strong>${token}</strong><br/>
+         The lender has completed Aadhaar eSign.<br/>
+         <a href="${pdfUrl}" target="_blank" style="color:var(--accent-lt);font-weight:600">⬇ Open Signed PDF →</a>`
+      );
+      document.getElementById('btn-download-signed').style.display = 'inline-flex';
+      document.getElementById('btn-download-signed').setAttribute('data-pdf-url', pdfUrl);
+    }
+  } catch(e) {
+    setDigioStatus('err', '❌ Check failed', e.message);
+  }
+  btn.disabled = false; btn.textContent = '↻ Check Status';
+}
+
+// Open signed PDF in new tab (Meon returns a direct URL, no streaming needed)
+async function downloadSignedPDF() {
+  const btn    = document.getElementById('btn-download-signed');
+  const pdfUrl = btn.getAttribute('data-pdf-url');
+  if (pdfUrl) {
+    window.open(pdfUrl, '_blank');
+  } else {
+    // Re-fetch if URL not cached
+    await checkESignStatus();
+  }
+}
+
+// Generate PDF from preview HTML using html2pdf.js and return base64 string
+async function generatePDFBase64() {
+  const preview = document.getElementById('preview-doc');
+  if (!preview || !preview.innerHTML.trim()) return null;
+
+  // Build clean HTML page identical to print window
+  const printHTML = `<!DOCTYPE html><html><head><meta charset="UTF-8"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;font-size:12px;line-height:1.7;color:#111;background:#fff;padding:20mm 20mm 20mm 20mm;overflow:visible}
+h1{font-size:18px;font-weight:700;text-align:center;color:#0d0d20;margin-bottom:4px}
+.sub{text-align:center;font-size:11px;color:#777;font-style:italic;margin-bottom:18px}
+h2{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#0d0d20;margin:16px 0 4px}
+p{margin:3px 0 5px}
+.party-block{border-left:3px solid #6c5ce7;padding:8px 12px;background:#f7f7fc;margin:8px 0;font-size:11px}
+.hl{font-weight:600;color:#4a3fbe}
+hr{border:none;border-top:1px solid #ccc;margin:14px 0}
+table{width:100%;border-collapse:collapse;font-size:11px;margin:6px 0}
+th{background:#f0f0f8;padding:5px 8px;border:1px solid #ccc;text-align:left;font-size:10px}
+td{padding:5px 8px;border:1px solid #ddd}
+.sig-tbl td{padding:10px 12px;vertical-align:top;border:1px solid #bbb}
+.sig-line{border-bottom:1px solid #555;height:26px;margin-top:18px}
+.tot-row td{background:#f0f0f8;font-weight:600}
+div[style*="height:52px"]{height:20px!important}
+div[style*="height:32px"]{height:12px!important}
+</style></head><body>${preview.innerHTML}</body></html>`;
+
+  return new Promise((resolve) => {
+    // Open hidden iframe, load the HTML, use html canvas approach via print
+    // We use a Blob URL + fetch trick to get a printable PDF base64
+    const iframe = document.createElement('iframe');
+    iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:210mm;height:297mm;border:none';
+    document.body.appendChild(iframe);
+
+    iframe.onload = async () => {
+      try {
+        // Use the iframe's print function to get a PDF via browser
+        // Since we can't intercept print to PDF directly, we use html2canvas + jsPDF approach
+        // Load jsPDF + html2canvas from CDN dynamically
+        await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+        await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+
+        const iDoc = iframe.contentDocument || iframe.contentWindow.document;
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({ unit:'mm', format:'a4', orientation:'portrait' });
+
+        const pageWidth  = 210;
+        const pageHeight = 297;
+        const margin     = 10;
+        const contentW   = pageWidth - margin * 2;
+
+        // Split body into canvas chunks (one per A4 page height)
+        const body   = iDoc.body;
+        const totalH = body.scrollHeight;
+        const pxPerMm = 3.7795;
+        const pageHpx = (pageHeight - margin * 2) * pxPerMm;
+
+        let offsetY = 0;
+        let pageNum = 0;
+
+        while (offsetY < totalH) {
+          const canvas = await html2canvas(body, {
+            scale:       2,
+            useCORS:     true,
+            windowWidth: contentW * pxPerMm,
+            y:           offsetY,
+            height:      Math.min(pageHpx, totalH - offsetY),
+            scrollY:     -offsetY,
+            backgroundColor: '#ffffff',
+          });
+
+          const imgData = canvas.toDataURL('image/jpeg', 0.92);
+          const imgH    = (canvas.height * contentW) / canvas.width;
+
+          if (pageNum > 0) pdf.addPage();
+          pdf.addImage(imgData, 'JPEG', margin, margin, contentW, imgH);
+
+          offsetY += pageHpx;
+          pageNum++;
+        }
+
+        const b64 = pdf.output('datauristring').split(',')[1];
+        document.body.removeChild(iframe);
+        resolve(b64);
+      } catch(e) {
+        console.error('PDF generation error:', e);
+        document.body.removeChild(iframe);
+        resolve(null);
+      }
+    };
+
+    iframe.srcdoc = printHTML;
+  });
+}
+
+// Dynamically load a script only once
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = src; s.onload = resolve; s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+// Blob → base64 helper
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload  = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+function setDigioStatus(type, title, body) {
+  document.getElementById('digio-status').innerHTML =
+    `<div class="status-box ${type==='ok'?'ok':type==='err'?'err':'info'}" style="margin-top:16px">
+      <span class="status-icon">${type==='ok'?'✅':type==='err'?'❌':'🔄'}</span>
+      <div class="status-text"><strong>${title}</strong><br/>${body}</div>
+    </div>`;
+}
+
+// ── WhatsApp share ──
+function buildShareMsg() {
+  const g = id => document.getElementById(id)?.value || '';
+  const name   = g('lender_name') || 'Sir/Ma\'am';
+  const amount = parseFloat(g('loan_amount'));
+  const tenure = g('tenure');
+  const payout = parseFloat(g('monthly_payout'));
+  const msg =
+`Dear ${name},
+
+Greetings from SharePal (Repium Ventures LLP)!
+
+Please find attached your Loan Agreement for the Asset Financing Partnership.
+
+Agreement Details:
+• Loan Amount: ${amount ? fmtINR(amount) : '[Amount]'}
+• Tenure: ${tenure || '__'} months
+• Monthly Payout: ${payout ? fmtINR(payout) : '[EMI]'}/month
+
+Kindly review and sign the agreement at the Digio link sent to your registered mobile/email. For any queries, please reach out to us.
+
+Warm regards,
+Repium Ventures LLP
+SharePal — Asset Financing Partner`;
+  const el = document.getElementById('share_msg');
+  if (el) el.value = msg;
+}
+
+function resetShareMsg() { buildShareMsg(); }
+
+function copyMsg() {
+  const msg = document.getElementById('share_msg')?.value || '';
+  navigator.clipboard.writeText(msg).then(() => {
+    showShareStatus('ok','📋 Message copied to clipboard!');
+  }).catch(() => {
+    const ta = document.getElementById('share_msg');
+    if(ta){ta.select();document.execCommand('copy');}
+    showShareStatus('ok','📋 Message copied!');
+  });
+}
+
+function shareWhatsApp() {
+  const mobile  = document.getElementById('s_mobile').value.trim();
+  const msg     = document.getElementById('share_msg')?.value?.trim() || '';
+  let num = mobile.replace(/\D/g,'');
+  if (num.startsWith('0')) num = '91' + num.slice(1);
+  if (num.length === 10)   num = '91' + num;
+  const url = num
+    ? `https://wa.me/${num}?text=${encodeURIComponent(msg)}`
+    : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+  window.open(url, '_blank');
+  showShareStatus('ok','✅ WhatsApp opened! Attach the PDF before sending.');
+}
+
+function shareEmail() {
+  const email   = document.getElementById('s_email').value.trim();
+  const msg     = document.getElementById('share_msg')?.value?.trim() || '';
+  const g       = id => document.getElementById(id)?.value || '';
+  const amount  = parseFloat(g('loan_amount'));
+  const subject = encodeURIComponent(`Loan Agreement – SharePal | ${amount ? fmtINR(amount) : 'Agreement'}`);
+  window.location.href = `mailto:${email}?subject=${subject}&body=${encodeURIComponent(msg)}`;
+  showShareStatus('ok','✅ Email client opened! Attach the PDF before sending.');
+}
+
+function showShareStatus(type, text) {
+  document.getElementById('share-status').innerHTML =
+    `<div class="status-box ${type==='ok'?'ok':'err'}" style="margin-top:0">
+      <span class="status-icon">${type==='ok'?'✅':'❌'}</span>
+      <div class="status-text"><strong>${text}</strong></div>
+    </div>`;
 }
 
 // ── Download PDF — opens a clean print window ──
@@ -1586,17 +2340,48 @@ async function buildDocxBlob() {
   const tr  = cells => `<w:tr>${cells.join('')}</w:tr>`;
   const tbl = (rows, cws) => `<w:tbl><w:tblPr><w:tblW w:w="${cws.reduce((a,b)=>a+b,0)}" w:type="dxa"/><w:tblLayout w:type="fixed"/></w:tblPr><w:tblGrid>${cws.map(w=>`<w:gridCol w:w="${w}"/>`).join('')}</w:tblGrid>${rows.join('')}</w:tbl>`;
 
-  // Annexure I
-  const aw1=Math.round(W*.12), aw2=Math.round(W*.44), aw3=W-aw1-aw2;
-  const amortHdr = tr([tc(p('Payment #',{bold:true,size:20}),aw1,'F0F0F8'),tc(p('Payment Date',{bold:true,size:20}),aw2,'F0F0F8'),tc(p('Monthly Payout',{bold:true,size:20}),aw3,'F0F0F8')]);
-  const amortRws = amortData.map(r=>tr([tc(p(String(r.num),{size:20}),aw1),tc(p(r.date,{size:20}),aw2),tc(p(fmtINR(r.payout),{size:20}),aw3)]));
-  if(amortData.length){const tot=amortData.reduce((s,r)=>s+r.payout,0);amortRws.push(tr([tc(p('',{size:20}),aw1,'F0F0F8'),tc(p('Total',{bold:true,size:20}),aw2,'F0F0F8'),tc(p(fmtINR(tot),{bold:true,size:20}),aw3,'F0F0F8')]));}
+  // Annexure I — type-aware columns
+  const showDocxRemarks = agreeType !== 'emi';
+  const payoutColLabel  = agreeType === 'flat_yearly' ? 'Yearly Payout' : 'Monthly Payout';
+  // Widths: with remarks 4 cols, without 3 cols
+  const aw1 = Math.round(W*.10);
+  const aw2 = showDocxRemarks ? Math.round(W*.36) : Math.round(W*.44);
+  const aw3 = showDocxRemarks ? Math.round(W*.30) : W-aw1-aw2;
+  const aw4 = showDocxRemarks ? W-aw1-aw2-aw3 : 0;
+
+  const amortHdrCells = [
+    tc(p('Payment #',   {bold:true,size:20}), aw1, 'F0F0F8'),
+    tc(p('Payment Date',{bold:true,size:20}), aw2, 'F0F0F8'),
+    tc(p(payoutColLabel,{bold:true,size:20}), aw3, 'F0F0F8'),
+    ...(showDocxRemarks ? [tc(p('Remarks',{bold:true,size:20}), aw4, 'F0F0F8')] : []),
+  ];
+  const amortHdr = tr(amortHdrCells);
+
+  const amortRws = amortData.map(r => {
+    const cells = [
+      tc(p(String(r.num),    {size:20}), aw1),
+      tc(p(r.date,           {size:20}), aw2),
+      tc(p(fmtINR(r.payout), {size:20}), aw3),
+      ...(showDocxRemarks ? [tc(p(r.remarks||'', {size:20}), aw4)] : []),
+    ];
+    return tr(cells);
+  });
+
+  if (amortData.length) {
+    const tot = amortData.reduce((s,r) => s+r.payout, 0);
+    amortRws.push(tr([
+      tc(p('',     {size:20}), aw1, 'F0F0F8'),
+      tc(p('Total',{bold:true,size:20}), aw2, 'F0F0F8'),
+      tc(p(fmtINR(tot),{bold:true,size:20}), aw3, 'F0F0F8'),
+      ...(showDocxRemarks ? [tc(p('',{size:20}), aw4, 'F0F0F8')] : []),
+    ]));
+  }
 
   // Annexure II
   const bw1=Math.round(W*.4), bw2=Math.round(W*.3), bw3=W-bw1-bw2;
   const assetHdr = tr([tc(p('Asset Name',{bold:true,size:20}),bw1,'F0F0F8'),tc(p('Serial Number',{bold:true,size:20}),bw2,'F0F0F8'),tc(p('Asset Value',{bold:true,size:20}),bw3,'F0F0F8')]);
   const aList = assets.length ? [...assets] : [{name:'',serial:'',value:''}];
-  while(aList.length<4) aList.push({name:'',serial:'',value:''});
+  if(aList.length === 0) aList.push({name:'',serial:'',value:''});
   const assetRws = aList.map(a=>tr([tc(p(a.name||' ',{size:20}),bw1),tc(p(a.serial||' ',{size:20}),bw2),tc(p(a.value?fmtINR(parseFloat(a.value)):' ',{size:20}),bw3)]));
 
   // Sig table
@@ -1604,7 +2389,7 @@ async function buildDocxBlob() {
 
   const body = [
     para(run('LOAN AGREEMENT',{bold:true,size:36,color:'0d0d20',caps:true}),{align:'center',before:0,after:60}),
-    para(run('(Private Borrowing Arrangement \u2013 Asset Financing Model)',{italic:true,size:20,color:'666666'}),{align:'center',before:0,after:240}),
+    para(run(agreeType==='emi'?'(Private Borrowing Arrangement \u2013 Asset Financing Model)':'(Private Borrowing Arrangement \u2013 Monthly Payout Model)',{italic:true,size:20,color:'666666'}),{align:'center',before:0,after:240}),
     pMix([{text:'This Loan Agreement ('},{text:'\u201CAgreement\u201D',bold:true},{text:') is executed on the '},{text:effDateTxt,bold:true},{text:' (\u201CEffective Date\u201D).'}],{before:0,after:160}),
     h2('Parties'),
     tbl([tr([tc([p('Repium Ventures LLP (\u201CBorrower\u201D)',{bold:true,size:21}),p('A Limited Liability Partnership registered under the LLP Act, 2008',{size:20}),p('GST: 29ABKFR2691H1ZO  |  UDYAM: UDYAM-KR-03-0472355',{size:20}),p('#100, SJR Commercial Complex, Gear School Road, Bellandur, Bengaluru, Karnataka \u2013 560103',{size:20})],W,'F6F6FC')])],[W]),
@@ -1614,7 +2399,9 @@ async function buildDocxBlob() {
     p('Definitions',{bold:true,before:160,after:60}),
     p('For the purpose of this Agreement:',{before:0,after:40}),
     p('\u2022   Loan Amount: The principal sum lent by the Lender to the Borrower.',{before:0,after:30}),
-    p('\u2022   EMI: Monthly repayment consisting of principal and return.',{before:0,after:30}),
+    ...(agreeType === 'emi'
+      ? [p('\u2022   EMI: Monthly repayment consisting of principal and return.',{before:0,after:30})]
+      : [p('\u2022   Payout: The agreed return amount payable by the Borrower to the Lender as per Annexure I.',{before:0,after:30})]),
     p('\u2022   Assets: Tangible business assets of the Borrower hypothecated as security.',{before:0,after:30}),
     p('\u2022   TDS: Tax Deducted at Source under Section 194A of the Income Tax Act, 1961.',{before:0,after:160}),
     h2('1. Purpose and Structure'),
@@ -1626,35 +2413,89 @@ async function buildDocxBlob() {
     pMix([{text:'Date of Transfer: '},{text:txnDate,bold:true}],{before:0,after:40}),
     pMix([{text:'Amount Transferred: '},{text:amount?fmtINR(amount)+'/\u2013':'\u20b9____________',bold:true}],{before:0,after:40}),
     pMix([{text:'Transaction ID: '},{text:txnId,bold:true}],{before:0,after:80}),
-    p('The Borrower hereby acknowledges receipt of the above amount in full and confirms that the funds have been credited to:',{before:0,after:60}),
-    pMix([{text:'Account Holder: '},{text:'REPIUM VENTURES LLP',bold:true},{text:'   Acc No: '},{text:'7917837471',bold:true},{text:'   IFSC: '},{text:'IDIB000M050',bold:true}],{before:0,after:160}),
+    p('The Borrower hereby acknowledges receipt of the above amount in full and confirms that the funds have been credited.',{before:0,after:160}),
     h2('3. Tenure'),
-    pMix([{text:tenure+' months',bold:true},{text:' from Effective Date.'}]),
-    h2('4. Return'),
-    p('The repayment amount payable by the Borrower includes both principal and return components, as detailed in Annexure I.'),
-    h2('5. Repayment (EMI Structure)'),
-    p('5.1 The loan shall be repaid through Equated Monthly Installments (EMIs).'),
-    p('5.2 Each EMI shall include both principal and return components calculated on a reducing balance basis.'),
-    pMix([{text:'5.3 EMI Amount: '},{text:payoutFmt,bold:true}]),
-    p('5.4 Payment schedule provided in Annexure I.'),
-    p('5.5 Early repayment is permitted without penalty.'),
-    p('5.6 All repayments shall be credited to the Lender\u2019s bank account as provided below:'),
-    pMix([{text:'Account Holder: '},{text:bankName,bold:true}],{before:40,after:20}),
-    pMix([{text:'Account Number: '},{text:bankAcc,bold:true}],{before:0,after:20}),
-    pMix([{text:'IFSC Code: '},{text:bankIfsc,bold:true}],{before:0,after:80}),
+    pMix([{text:(agreeType==='flat_yearly'?(tenure==='12'?'1 Year':tenure==='24'?'2 Years':'3 Years'):tenure+' months'),bold:true},{text:' from Effective Date.'}]),
+    // ── Sections 4 & 5: type-aware ──
+    ...(agreeType === 'emi' ? [
+      h2('4. Return'),
+      p('The repayment amount payable by the Borrower includes both principal and return components, as detailed in Annexure I.'),
+      h2('5. Repayment (EMI Structure)'),
+      p('5.1 The loan shall be repaid through Equated Monthly Installments (EMIs).'),
+      p('5.2 Each EMI shall include both principal and return components calculated on a reducing balance basis.'),
+      pMix([{text:'5.3 EMI Amount: '},{text:payoutFmt,bold:true}]),
+      p('5.4 Payment schedule provided in Annexure I.'),
+      p('5.5 Early repayment is permitted without penalty.'),
+      p('5.6 All repayments shall be credited to the Lender\u2019s bank account as provided below:'),
+      pMix([{text:'Account Holder: '},{text:bankName,bold:true}],{before:40,after:20}),
+      pMix([{text:'Account Number: '},{text:bankAcc,bold:true}],{before:0,after:20}),
+      pMix([{text:'IFSC Code: '},{text:bankIfsc,bold:true}],{before:0,after:80}),
+    ] : agreeType === 'flat_monthly' ? [
+      h2('4. Return'),
+      p('The Borrower shall pay the agreed return to the Lender as per the schedule detailed in Annexure I. The principal shall be repaid in full at the end of the tenure.'),
+      h2('5. Repayment Structure'),
+      p('5.1 The Borrower shall pay the agreed monthly payout to the Lender as per the schedule in Annexure I.'),
+      p('5.2 Principal Repayment: The entire Loan Amount shall be repaid by the Borrower to the Lender in a single payment at the end of the agreed tenure.'),
+      p('5.3 Payment schedule is provided in Annexure I.'),
+      p('5.4 Early repayment of principal is permitted without penalty.'),
+      p('5.5 All repayments shall be credited to the Lender\u2019s bank account as provided below:'),
+      pMix([{text:'Account Holder: '},{text:bankName,bold:true}],{before:40,after:20}),
+      pMix([{text:'Account Number: '},{text:bankAcc,bold:true}],{before:0,after:20}),
+      pMix([{text:'IFSC Code: '},{text:bankIfsc,bold:true}],{before:0,after:80}),
+    ] : [
+      h2('4. Return'),
+      p('The Borrower shall pay the agreed return to the Lender as per the schedule detailed in Annexure I. The principal shall be repaid in full at the end of the tenure.'),
+      h2('5. Repayment Structure'),
+      p('5.1 The Borrower shall pay the agreed yearly payout to the Lender as per the schedule in Annexure I.'),
+      p('5.2 Principal Repayment: The entire Loan Amount shall be repaid by the Borrower to the Lender in a single payment at the end of the agreed tenure.'),
+      p('5.3 Payment schedule is provided in Annexure I.'),
+      p('5.4 Early repayment of principal is permitted without penalty.'),
+      p('5.5 All repayments shall be credited to the Lender\u2019s bank account as provided below:'),
+      pMix([{text:'Account Holder: '},{text:bankName,bold:true}],{before:40,after:20}),
+      pMix([{text:'Account Number: '},{text:bankAcc,bold:true}],{before:0,after:20}),
+      pMix([{text:'IFSC Code: '},{text:bankIfsc,bold:true}],{before:0,after:80}),
+    ]),
     h2('6. TDS under Section 194A'),
     p('The Borrower shall deduct TDS under Section 194A of the Income Tax Act, 1961 on return payments and provide the Lender with necessary certificates (Form 16A).'),
     h2('7. Utilization of Funds'),
     p('Funds shall be used strictly for asset procurement and business operations.'),
     h2('8. Events of Default'),
-    p('\u2013 Non-payment or delay in payment of more than 15 days for consecutive EMIs'),
-    p('\u2013 Insolvency or breach of agreement'),
+    ...(agreeType === 'emi' ? [
+      p('\u2013 Non-payment of or delay in payment of more than 15 days for consecutive EMIs'),
+      p('\u2013 Insolvency or breach of agreement'),
+    ] : agreeType === 'flat_monthly' ? [
+      p('\u2013 Non-payment or delay in monthly payout by more than 15 days from due date for 2 consecutive months'),
+      p('\u2013 Non-repayment of principal at end of tenure'),
+      p('\u2013 Insolvency or breach of agreement'),
+    ] : [
+      p('\u2013 Non-payment or delay in yearly payout by more than 30 days from due date'),
+      p('\u2013 Non-repayment of principal at end of tenure'),
+      p('\u2013 Insolvency or breach of agreement'),
+    ]),
     h2('9. Indemnity and Security'),
-    p('Borrower indemnifies lender against losses arising from breach. The loan will be secured by hypothecation of assets. The Borrower shall provide complete details of assets hypothecated (Annexure II), including Asset Name, Serial Number, and Asset Value.'),
+    p('Borrower indemnifies lender against losses arising from breach.'),
+    p('The loan will be secured by hypothecation of assets.'),
+    p('The Borrower shall provide complete details of assets hypothecated (Annexure II), including:'),
+    p('\u2013 Asset Name'),
+    p('\u2013 Serial Number'),
+    p('\u2013 Asset Value'),
     h2('10. Limitation of Liability and Termination'),
-    p('Borrower liability limited to outstanding loan and agreed returns. This Agreement may be terminated by mutual consent; by Lender on 2 consecutive months default; or by Borrower upon full repayment.'),
+    p('Borrower liability limited to outstanding loan and agreed returns.'),
+    p('This Agreement may be terminated:'),
+    p('\u2013 By mutual consent of both parties.'),
+    ...(agreeType === 'emi' ? [
+      p('\u2013 By the Lender, if the Borrower defaults on repayment for 2 consecutive months.'),
+    ] : agreeType === 'flat_monthly' ? [
+      p('\u2013 By the Lender, upon default in 2 consecutive monthly payout obligations.'),
+    ] : [
+      p('\u2013 By the Lender, upon default in 2 consecutive yearly payout obligations.'),
+    ]),
+    p('\u2013 By the Borrower, upon full repayment of outstanding principal and returns.'),
     h2('11. Dispute Resolution and Miscellaneous'),
-    p('Disputes shall first be resolved amicably, failing which arbitration under the Arbitration and Conciliation Act, 1996 in Bangalore. Amendments must be in writing and signed by both parties.'),
+    p('Disputes shall first be resolved amicably, failing which arbitration under the Arbitration and Conciliation Act, 1996 in Bangalore.'),
+    p('Amendments must be in writing and signed by both parties.'),
+    p('Notices shall be sent to the addresses mentioned above.'),
+    p('This Agreement is executed in duplicate, with each party retaining one copy.'),
     h2('12. Governing Law'),
     p('Laws of India. Jurisdiction: Bangalore, Karnataka.'),
     spacer(400),
@@ -1662,11 +2503,11 @@ async function buildDocxBlob() {
       tr([tc(p('For:',{bold:true,size:20}),s1),tc(p('Repium Ventures LLP (Borrower)',{bold:true,size:20}),s2,'F7F7F7'),tc(p('Individual (Lender)',{bold:true,size:20}),s3,'F7F7F7')]),
       tr([tc(p('Name:',{size:20}),s1),tc(p('Akash Deep Chhabra',{size:20}),s2),tc(p(lName,{size:20}),s3)]),
       tr([tc(p('Signature:',{size:20}),s1),tc([p(' ',{size:20}),p(' ',{size:20}),p(' ',{size:20})],s2),tc([p(' ',{size:20}),p(' ',{size:20}),p(' ',{size:20})],s3)]),
-      tr([tc(p('Date:',{size:20}),s1),tc(p(' ',{size:20}),s2),tc(p(' ',{size:20}),s3)]),
+      // Date row removed
     ],[s1,s2,s3]),
     spacer(600),
     para(run('Annexure I',{bold:true,size:28,color:'0d0d20'}),{before:0,after:100}),
-    tbl([amortHdr,...amortRws],[aw1,aw2,aw3]),
+    tbl([amortHdr,...amortRws], showDocxRemarks ? [aw1,aw2,aw3,aw4] : [aw1,aw2,aw3]),
     spacer(600),
     para(run('Annexure II',{bold:true,size:28,color:'0d0d20'}),{before:0,after:80}),
     p('The Borrower hereby provides details of assets hypothecated as security for the loan.',{before:0,after:120}),
@@ -1711,6 +2552,7 @@ function saveToHistory() {
   const record = {
     id:           Date.now(),
     savedAt:      new Date().toISOString(),
+    agreeType:    agreeType,
     lender_name:  g('lender_name'),
     lender_pan:   g('lender_pan'),
     lender_aadhaar: g('lender_aadhaar'),
@@ -1763,6 +2605,16 @@ function restoreFromHistory(id) {
   s('txn_date',       rec.txn_date);
   s('txn_amount',     rec.txn_amount);
   s('txn_id',         rec.txn_id);
+
+  // Restore agreement type
+  if (rec.agreeType) {
+    agreeType = rec.agreeType;
+    const tc = document.getElementById('type-' + rec.agreeType);
+    if (tc) { ['emi','flat_monthly','flat_yearly'].forEach(t => document.getElementById('type-'+t)?.classList.remove('selected')); tc.classList.add('selected'); }
+    const labels = { emi:'EMI Payout', flat_monthly:'Flat Monthly Payout', flat_yearly:'Flat Yearly Payout' };
+    document.getElementById('agree-type-label').textContent = labels[rec.agreeType] || 'EMI Payout';
+    updateStep2UI();
+  }
 
   // Restore tenure pill highlight
   if (rec.tenure) {
@@ -1982,6 +2834,7 @@ function renderHistList() {
         <span class="hist-tag yellow">${tenure}</span>
         <span class="hist-tag green">${payout}</span>
         ${rec.lender_pan ? `<span class="hist-tag">PAN: ${rec.lender_pan}</span>` : ''}
+        <span class="hist-tag" style="background:rgba(108,92,231,0.08);color:var(--accent-lt)">${{emi:'EMI',flat_monthly:'Flat Monthly',flat_yearly:'Flat Yearly'}[rec.agreeType]||'EMI'}</span>
       </div>
       <div class="hist-divider"></div>
       <div class="hist-actions">
@@ -2005,22 +2858,18 @@ function renderHistList() {
   }).join('');
 }
 
-function setStatus(type, title, body) {
-  document.getElementById('digio-status').innerHTML =
-    `<div class="status-box ${type}">
-      <span class="status-icon">${type==='ok'?'✅':type==='err'?'❌':'🔄'}</span>
-      <div class="status-text"><strong>${title}</strong>${body}</div>
-    </div>`;
-}
-function wait(ms){return new Promise(r=>setTimeout(r,ms))}
-
 // ── Init ──
 window.addEventListener('DOMContentLoaded', () => {
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('effective_date').value = today;
   document.getElementById('txn_date').value = today;
+  document.getElementById('txn_date').dataset.autoFilled = 'true';
   addAssetRow();
   updateHistCount();
+  // Start at step 0 — type selection
+  cur = 0;
+  document.getElementById('panel0').classList.add('active');
+  document.getElementById('panel1').classList.remove('active');
 });
 </script>
 </body>
