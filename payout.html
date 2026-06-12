@@ -292,7 +292,7 @@ tbody tr:hover td { background: #f9faff; }
     <!-- SETUP BANNER — shown until SCRIPT_URL is configured -->
     <div class="setup-banner" id="setup-banner" style="display:none">
       <strong>⚙️ Apps Script not connected yet</strong>
-      Open this file in a text editor and replace <code>YOUR_APPS_SCRIPT_URL_HERE</code> with your deployed Apps Script web app URL. See the included <code>sharepal_apps_script.js</code> for setup instructions.
+      Open this file in a text editor and replace <code>YOUR_APPS_SCRIPT_URL_HERE</code> with your deployed Apps Script web app URL, and update <code>DEMO_ADMIN_PIN</code> / <code>DEMO_FINANCE_PIN</code> to match your Apps Script PINs. See the included <code>sharepal_apps_script.js</code> for setup instructions.
     </div>
 
     <!-- TABS -->
@@ -362,7 +362,12 @@ tbody tr:hover td { background: #f9faff; }
 // ─────────────────────────────────────────────
 // CONFIGURATION — replace with your deployed URL
 // ─────────────────────────────────────────────
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzTDfyCMvOxXMMUeZwED0mDwIq563ZuUt6NEUJKD5IxbSdyJZxtLUHkA8fam1Qx55Ld/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxoPvmAN_dg9aLBZOKKsGSVLk_nifhR0Pt_dYzR5Gwg3-Mck7OucQrRVmSynZi7paV8IQ/exec";
+
+// Demo-mode PINs — only used when SCRIPT_URL is not configured
+// Change these before sharing the file, same as the Apps Script PINs
+const DEMO_ADMIN_PIN   = "1234";
+const DEMO_FINANCE_PIN = "9999";
 
 // ── STATE ──
 let ROLE = null;
@@ -411,16 +416,17 @@ async function doLogin() {
   const err = document.getElementById("login-error");
   if (!pin) { err.textContent = "Enter your PIN."; return; }
 
-  if (SCRIPT_URL === "https://script.google.com/macros/s/AKfycbzTDfyCMvOxXMMUeZwED0mDwIq563ZuUt6NEUJKD5IxbSdyJZxtLUHkA8fam1Qx55Ld/exec") {
-    // demo mode — accept any PIN for UI preview
-    ROLE = "finance"; PIN = pin;
-    bootApp();
+  if (SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
+    // demo mode — still enforce PINs
+    if (pin === DEMO_ADMIN_PIN)        { ROLE = "admin";   PIN = pin; bootApp(); }
+    else if (pin === DEMO_FINANCE_PIN) { ROLE = "finance"; PIN = pin; bootApp(); }
+    else { err.textContent = "Wrong PIN. Try again."; }
     return;
   }
 
   setLoading(true, "Verifying PIN…");
   try {
-    const res = await api("POST", { action: "verifyPin", pin });
+    const res = await fetch(SCRIPT_URL + "?action=verifyPin&pin=" + encodeURIComponent(pin)).then(r=>r.json());
     if (res.ok) {
       ROLE = res.role; PIN = pin;
       bootApp();
@@ -441,17 +447,10 @@ function doLogout() {
   document.getElementById("login-error").textContent = "";
 }
 
-// ── API ──
-async function api(method, body) {
-  if (method === "GET") {
-    const url = SCRIPT_URL + "?action=" + (body.action || "");
-    const res = await fetch(url);
-    return res.json();
-  }
-  const res = await fetch(SCRIPT_URL, {
-    method: "POST",
-    body: JSON.stringify({ ...body, pin: PIN }),
-  });
+// ── API — everything via GET params to avoid CORS ──
+async function api(params) {
+  const qs = new URLSearchParams({ ...params, pin: PIN }).toString();
+  const res = await fetch(SCRIPT_URL + "?" + qs);
   return res.json();
 }
 
@@ -482,7 +481,7 @@ async function bootApp() {
 async function refreshData() {
   setLoading(true, "Loading payout data…");
   try {
-    const res = await api("GET", { action: "getAll" });
+    const res = await api({ action: "getAll" });
     if (res.ok) {
       ALL_PARTNERS = res.partners;
       ALL_PAYOUTS  = res.payouts;
@@ -653,7 +652,7 @@ async function submitProcessed(key) {
   }
 
   try {
-    const res = await api("POST", {
+    const res = await api({
       action: "markProcessed",
       payoutKey: key,
       transactionId: txnId,
@@ -731,7 +730,7 @@ async function doUndo(key) {
     return;
   }
   setLoading(true, "Undoing…");
-  const res = await api("POST", { action: "undoPayout", payoutKey: key });
+  const res = await api({ action: "undoPayout", payoutKey: key });
   setLoading(false);
   if (res.ok) { showToast("Payout undone"); await refreshData(); }
   else showToast(res.error || "Failed", "error");
