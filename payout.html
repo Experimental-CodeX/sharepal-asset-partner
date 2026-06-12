@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SharePal — Payout Tracker</title>
+<title>SharePal — Asset Partner Internal Tool</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@300;400;500;600;700&family=Bricolage+Grotesque:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -68,7 +68,8 @@ a { text-decoration: none; color: inherit; }
   padding: 4px 12px; border-radius: 100px;
 }
 .role-badge.finance { background: rgba(159,254,2,0.15); color: var(--lime); }
-.role-badge.admin { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.8); }
+.role-badge.admin  { background: rgba(159,254,2,0.15); color: var(--lime); }
+.role-badge.viewer { background: rgba(159,254,2,0.15); color: var(--lime); }
 .btn-logout {
   font-size: 12px; color: rgba(255,255,255,0.5); background: none; border: none;
   cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: color 0.2s;
@@ -267,12 +268,16 @@ tbody tr:hover td { background: #f9faff; }
 <div id="login-screen">
   <div class="login-card">
     <div class="login-logo">Share<span>Pal</span></div>
-    <div class="login-sub">Payout Tracker · Internal Tool</div>
-    <label class="form-label" for="pin-input">Enter your PIN</label>
-    <input class="form-input" type="password" id="pin-input" placeholder="••••" maxlength="8" onkeydown="if(event.key==='Enter')doLogin()" autofocus />
+    <div class="login-sub">Asset Partner Internal Tool</div>
+    <label class="form-label" for="username-input">Select user</label>
+    <select class="form-input" id="username-input" style="margin-bottom:14px;cursor:pointer">
+      <option value="">— Select your name —</option>
+    </select>
+    <label class="form-label" for="pin-input">PIN</label>
+    <input class="form-input" type="password" id="pin-input" placeholder="••••" maxlength="8" onkeydown="if(event.key==='Enter')doLogin()" />
     <div id="login-error" class="login-error"></div>
     <button class="btn-login" onclick="doLogin()">Sign In</button>
-    <div style="margin-top:20px;font-size:11px;color:#aab4c8;text-align:center">SharePal · Repium Ventures LLP</div>
+    
   </div>
 </div>
 
@@ -304,7 +309,7 @@ tbody tr:hover td { background: #f9faff; }
         ☰ All payouts <span class="tab-badge zero" id="badge-all">0</span>
       </button>
       <button class="tab" id="tab-partners" onclick="switchTab('partners')">
-        👥 Partners
+        👥 Deals
       </button>
     </div>
 
@@ -318,10 +323,21 @@ tbody tr:hover td { background: #f9faff; }
 
     <!-- ── ALL PAYOUTS TAB ── -->
     <div class="section" id="section-all">
-      <div class="filter-row">
-        <select id="filter-month" onchange="renderAll()">
-          <option value="">All months</option>
+      <div class="filter-row" style="align-items:center">
+        <select id="filter-range" onchange="handleRangeChange()">
+          <option value="">All time</option>
+          <option value="today">Today</option>
+          <option value="week">This week</option>
+          <option value="month">This month</option>
+          <option value="prev_month">Previous month</option>
+          <option value="three_months">Last 3 months</option>
+          <option value="custom">Custom range…</option>
         </select>
+        <div id="custom-range-wrap" style="display:none;display:none;gap:6px;align-items:center">
+          <input type="date" id="filter-date-from" onchange="renderAll()" style="padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;color:var(--ink)">
+          <span style="font-size:12px;color:var(--muted)">to</span>
+          <input type="date" id="filter-date-to" onchange="renderAll()" style="padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;color:var(--ink)">
+        </div>
         <select id="filter-status" onchange="renderAll()">
           <option value="">All statuses</option>
           <option value="overdue">Overdue</option>
@@ -341,6 +357,7 @@ tbody tr:hover td { background: #f9faff; }
               <th>Amount</th>
               <th>Status</th>
               <th>Transaction ID</th>
+              <th>Processed on</th>
               <th>Marked by</th>
               <th id="all-action-col">Action</th>
             </tr>
@@ -350,9 +367,76 @@ tbody tr:hover td { background: #f9faff; }
       </div>
     </div>
 
-    <!-- ── PARTNERS TAB ── -->
+    <!-- ── DEALS TAB ── -->
     <div class="section" id="section-partners">
+      <div class="stats-row" id="deals-summary" style="margin-bottom:20px"></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px" id="deals-summary-row2"></div>
+      <div class="filter-row" style="margin-bottom:16px;align-items:center">
+        <input type="text" id="partner-search" placeholder="Search name or ID…" oninput="renderPartners()" style="min-width:200px">
+        <select id="partner-date-range" onchange="handlePartnerRangeChange()">
+          <option value="">All start dates</option>
+          <option value="today">Started today</option>
+          <option value="week">This week</option>
+          <option value="month">This month</option>
+          <option value="prev_month">Previous month</option>
+          <option value="three_months">Last 3 months</option>
+          <option value="custom">Custom range…</option>
+        </select>
+        <div id="partner-custom-range-wrap" style="display:none;gap:6px;align-items:center">
+          <input type="date" id="partner-date-from" onchange="renderPartners()" style="padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;color:var(--ink)">
+          <span style="font-size:12px;color:var(--muted)">to</span>
+          <input type="date" id="partner-date-to" onchange="renderPartners()" style="padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;color:var(--ink)">
+        </div>
+        <select id="partner-filter-status" onchange="renderPartners()">
+          <option value="">All statuses</option>
+          <option value="overdue">Has overdue</option>
+          <option value="active">Active</option>
+          <option value="completed">Completed</option>
+        </select>
+        <select id="partner-sort" onchange="renderPartners()">
+          <option value="date">Sort: Start date (latest)</option>
+          <option value="name">Sort: Name</option>
+          <option value="invested">Sort: Amount</option>
+          <option value="overdue">Sort: Overdue first</option>
+        </select>
+      </div>
       <div class="partner-grid" id="partner-grid"></div>
+    </div>
+
+    <!-- ── PARTNER PAYOUT MODAL ── -->
+    <div id="partner-modal-bg" style="display:none;position:fixed;inset:0;background:rgba(3,13,49,0.55);z-index:100;overflow-y:auto;padding:32px 16px" onclick="closePartnerModal(event)">
+      <div id="partner-modal" style="background:#fff;border-radius:18px;max-width:760px;margin:0 auto;overflow:hidden;position:relative">
+        <div id="modal-head" style="padding:22px 24px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px">
+          <div id="modal-avatar" style="width:46px;height:46px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-size:14px;font-weight:800;color:#fff;flex-shrink:0"></div>
+          <div style="flex:1;min-width:0">
+            <div id="modal-name" style="font-size:16px;font-weight:700;color:var(--ink)"></div>
+            <div id="modal-meta" style="font-size:12px;color:var(--muted);margin-top:2px;font-family:'JetBrains Mono',monospace"></div>
+          </div>
+          <button onclick="closePartnerModal()" style="background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;padding:4px 8px;border-radius:6px;line-height:1">×</button>
+        </div>
+        <!-- Admin-only contact info -->
+        <div id="modal-contact" style="display:none;padding:14px 24px;background:#fafbff;border-bottom:1px solid var(--border);gap:24px;flex-wrap:wrap;align-items:center"></div>
+        <div id="modal-stats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-bottom:1px solid var(--border)"></div>
+        <div style="padding:20px 24px">
+          <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Payout Schedule</div>
+          <div style="overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse">
+              <thead>
+                <tr>
+                  <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;background:var(--mist);border-bottom:1px solid var(--border);white-space:nowrap">#</th>
+                  <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;background:var(--mist);border-bottom:1px solid var(--border);white-space:nowrap">Due date</th>
+                  <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;background:var(--mist);border-bottom:1px solid var(--border);white-space:nowrap">Amount</th>
+                  <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;background:var(--mist);border-bottom:1px solid var(--border);white-space:nowrap">Status</th>
+                  <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;background:var(--mist);border-bottom:1px solid var(--border);white-space:nowrap">Transaction ID</th>
+                  <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;background:var(--mist);border-bottom:1px solid var(--border);white-space:nowrap">Processed on</th>
+                  <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;background:var(--mist);border-bottom:1px solid var(--border);white-space:nowrap">Marked by</th>
+                </tr>
+              </thead>
+              <tbody id="modal-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
 
   </div>
@@ -364,14 +448,17 @@ tbody tr:hover td { background: #f9faff; }
 // ─────────────────────────────────────────────
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxoPvmAN_dg9aLBZOKKsGSVLk_nifhR0Pt_dYzR5Gwg3-Mck7OucQrRVmSynZi7paV8IQ/exec";
 
-// Demo-mode PINs — only used when SCRIPT_URL is not configured
-// Change these before sharing the file, same as the Apps Script PINs
-const DEMO_ADMIN_PIN   = "1234";
-const DEMO_FINANCE_PIN = "9999";
+// Demo-mode users — only used when SCRIPT_URL is not configured
+// Mirror these to the USERS array in Apps Script
+const DEMO_USERS = [
+  { username: "Deep",    pin: "1234", role: "admin"   },
+  { username: "Finance", pin: "9999", role: "finance" },
+];
 
 // ── STATE ──
-let ROLE = null;
-let PIN  = null;
+let ROLE     = null;
+let PIN      = null;
+let USERNAME = null;
 let ALL_PAYOUTS   = [];
 let ALL_PARTNERS  = [];
 const TODAY = new Date();
@@ -398,6 +485,7 @@ function getComputedStatus(p) {
   const diff = daysDiff(p.dueDate);
   if (diff > 0)  return "overdue";
   if (diff === 0) return "due";
+  if (diff === -1) return "due";   // allow processing 1 day prior
   return "upcoming";
 }
 function showToast(msg, type = "success") {
@@ -412,26 +500,31 @@ function setLoading(show, msg = "Loading…") {
 
 // ── AUTH ──
 async function doLogin() {
-  const pin = document.getElementById("pin-input").value.trim();
-  const err = document.getElementById("login-error");
-  if (!pin) { err.textContent = "Enter your PIN."; return; }
+  const usernameInput = document.getElementById("username-input");
+  const pinInput      = document.getElementById("pin-input");
+  const err           = document.getElementById("login-error");
+  const username      = usernameInput.value.trim();
+  const pin           = pinInput.value.trim();
+
+  if (!username) { err.textContent = "Select your name."; usernameInput.focus(); return; }
+  if (!pin)      { err.textContent = "Enter your PIN.";  pinInput.focus();      return; }
 
   if (SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
-    // demo mode — still enforce PINs
-    if (pin === DEMO_ADMIN_PIN)        { ROLE = "admin";   PIN = pin; bootApp(); }
-    else if (pin === DEMO_FINANCE_PIN) { ROLE = "finance"; PIN = pin; bootApp(); }
-    else { err.textContent = "Wrong PIN. Try again."; }
+    // demo mode — check against demo users
+    const demoUser = DEMO_USERS.find(u => u.username.toLowerCase() === username.toLowerCase() && u.pin === pin);
+    if (demoUser) { ROLE = demoUser.role; PIN = pin; USERNAME = demoUser.username; bootApp(); }
+    else { err.textContent = "Wrong name or PIN. Try again."; }
     return;
   }
 
-  setLoading(true, "Verifying PIN…");
+  setLoading(true, "Signing in…");
   try {
-    const res = await fetch(SCRIPT_URL + "?action=verifyPin&pin=" + encodeURIComponent(pin)).then(r=>r.json());
+    const res = await fetch(SCRIPT_URL + "?action=verifyPin&username=" + encodeURIComponent(username) + "&pin=" + encodeURIComponent(pin)).then(r=>r.json());
     if (res.ok) {
-      ROLE = res.role; PIN = pin;
+      ROLE = res.role; PIN = pin; USERNAME = res.username;
       bootApp();
     } else {
-      err.textContent = res.error || "Wrong PIN. Try again.";
+      err.textContent = res.error || "Wrong name or PIN. Try again.";
     }
   } catch (e) {
     err.textContent = "Connection error. Check Apps Script URL.";
@@ -440,9 +533,10 @@ async function doLogin() {
 }
 
 function doLogout() {
-  ROLE = null; PIN = null; ALL_PAYOUTS = []; ALL_PARTNERS = [];
+  ROLE = null; PIN = null; USERNAME = null; ALL_PAYOUTS = []; ALL_PARTNERS = [];
   document.getElementById("app").style.display = "none";
   document.getElementById("login-screen").style.display = "flex";
+  document.getElementById("username-input").value = "";
   document.getElementById("pin-input").value = "";
   document.getElementById("login-error").textContent = "";
 }
@@ -459,14 +553,35 @@ async function bootApp() {
   document.getElementById("login-screen").style.display = "none";
   document.getElementById("app").style.display = "block";
 
-  // Set role badge
+  // Set role badge with username
   const rb = document.getElementById("role-badge");
-  rb.textContent = ROLE === "admin" ? "Admin" : "Finance";
+  rb.textContent = USERNAME || "User";
   rb.className = "role-badge " + ROLE;
 
   // Date
   document.getElementById("topbar-date").textContent =
     TODAY.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
+
+  // Reorder tabs based on role
+  // viewer: Deals → All payouts → Action needed
+  // finance/admin: Action needed → All payouts → Deals (default)
+  const tabsEl = document.querySelector(".tabs");
+  const tAction   = document.getElementById("tab-action");
+  const tAll      = document.getElementById("tab-all");
+  const tPartners = document.getElementById("tab-partners");
+  // Detach all first (avoids innerHTML wipe destroying references)
+  [tAction, tAll, tPartners].forEach(t => tabsEl.removeChild(t));
+  if (ROLE === "viewer") {
+    tabsEl.appendChild(tPartners);
+    tabsEl.appendChild(tAll);
+    tabsEl.appendChild(tAction);
+    switchTab("partners");
+  } else {
+    tabsEl.appendChild(tAction);
+    tabsEl.appendChild(tAll);
+    tabsEl.appendChild(tPartners);
+    switchTab("action");
+  }
 
   // Show setup banner if not configured
   if (SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
@@ -481,8 +596,15 @@ async function bootApp() {
 async function refreshData() {
   setLoading(true, "Loading payout data…");
   try {
-    const res = await api({ action: "getAll" });
+    const res = await api({ action: "getAll", username: USERNAME || "" });
     if (res.ok) {
+      // Update username from server response in case it wasn't set at login
+      if (res.username) USERNAME = res.username;
+      if (res.role)     ROLE     = res.role;
+      // Re-render topbar with confirmed username
+      const rb = document.getElementById("role-badge");
+      if (rb) rb.textContent = USERNAME || "User";
+      if (rb) rb.className = "role-badge " + ROLE;
       ALL_PARTNERS = res.partners;
       ALL_PAYOUTS  = res.payouts;
       renderAll();
@@ -490,7 +612,6 @@ async function refreshData() {
       renderStats();
       renderPartners();
       updateBadges();
-      populateMonthFilter();
     } else {
       showToast("Failed to load data: " + res.error, "error");
     }
@@ -500,29 +621,65 @@ async function refreshData() {
   setLoading(false);
 }
 
+// ── CLIENT-SIDE PAYOUT SCHEDULE BUILDER ──
+// Used for demo data; real data comes pre-built from Apps Script
+function buildClientPayouts(partners) {
+  const payouts = [];
+  partners.forEach(p => {
+    if (!p.investDate) return;
+    const base     = new Date(p.investDate);
+    const isFlat   = p.payType && p.payType.toLowerCase().includes("flat");
+    const isYearly = p.model  && p.model.toLowerCase().includes("yearly");
+
+    if (isYearly) {
+      const numPayouts = Math.round(p.tenure / 12);
+      for (let i = 1; i <= numPayouts; i++) {
+        const due    = new Date(base); due.setMonth(due.getMonth() + (i * 12));
+        const isLast = i === numPayouts;
+        const amount = Math.round(p.monthly) + (isFlat && isLast ? Math.round(p.invested) : 0);
+        payouts.push({
+          key: p.id+"-"+i, partnerId: p.id, afpId: p.afpId||"", partnerName: p.name,
+          payoutNum: i, tenure: p.tenure, totalPayouts: numPayouts,
+          dueDate: due.toISOString(), amount,
+          isLastPayout: isLast, includesPrincipal: isFlat && isLast, payoutModel: "Yearly",
+        });
+      }
+    } else {
+      for (let i = 1; i <= p.tenure; i++) {
+        const due    = new Date(base); due.setMonth(due.getMonth() + i);
+        const isLast = i === p.tenure;
+        const amount = Math.round(p.monthly) + (isFlat && isLast ? Math.round(p.invested) : 0);
+        payouts.push({
+          key: p.id+"-"+i, partnerId: p.id, afpId: p.afpId||"", partnerName: p.name,
+          payoutNum: i, tenure: p.tenure, totalPayouts: p.tenure,
+          dueDate: due.toISOString(), amount,
+          isLastPayout: isLast, includesPrincipal: isFlat && isLast, payoutModel: "Monthly",
+        });
+      }
+    }
+  });
+  return payouts;
+}
+
 // ── DEMO DATA (when Apps Script not set up) ──
 function loadDemoData() {
   const raw = [
-    {name:"TEST Name 1",id:"AFP1779464024805F23",invested:15000,tenure:12,monthly:1360,investDate:"2026-06-06"},
-    {name:"TEST Name 2",id:"AFP1779464024805F-5",invested:139500,tenure:24,monthly:6876,investDate:"2026-05-11"},
-    {name:"TEST Name 3",id:"AFP1779464024805F-2",invested:16000,tenure:24,monthly:789,investDate:"2026-05-14"},
-    {name:"TEST Name 4",id:"AFP1779464024805F24",invested:57500,tenure:12,monthly:5213,investDate:"2026-05-19"},
-    {name:"TEST Name 5",id:"AFP1779464024805F-0",invested:16000,tenure:24,monthly:789,investDate:"2026-05-19"},
-    {name:"TEST Name 6",id:"AFP1779464024805F-3",invested:134500,tenure:12,monthly:12193,investDate:"2026-05-22"},
-    {name:"TEST Name 7",id:"AFP1779464024805F25",invested:54500,tenure:36,monthly:2195,investDate:"2026-05-21"},
-    {name:"TEST Name 8",id:"AFP1779464024805F-4",invested:269000,tenure:12,monthly:25555,investDate:"2026-05-30"},
-    {name:"TEST Name 9",id:"AFP1779464024805F-6",invested:57500,tenure:12,monthly:671,investDate:"2026-06-07"},
+    {name:"DEEPAK KUMAR JANGIR",   id:"AFP1778050867782F",  invested:15000,  tenure:12, monthly:1360,  investDate:"2026-05-06", model:"Monthly", payType:"EMI"},
+    {name:"SHREEHARI U",           id:"AFP1778526668985F",  invested:139500, tenure:24, monthly:6876,  investDate:"2026-05-11", model:"Monthly", payType:"EMI"},
+    {name:"Preeti Jain",           id:"NO-ID-THEPREETIJAIN",invested:125000, tenure:12, monthly:17500, investDate:"2026-05-13", model:"Yearly",  payType:"Flat fixed interest"},
+    {name:"Paras Mehta",           id:"AFP1778768385988F",  invested:16000,  tenure:24, monthly:789,   investDate:"2026-05-14", model:"Monthly", payType:"EMI"},
+    {name:"Jakir Hussain",         id:"AFP1779192231156F",  invested:57500,  tenure:12, monthly:5213,  investDate:"2026-05-19", model:"Monthly", payType:"EMI"},
+    {name:"Jakir Hussain",         id:"AFP1779196920191F",  invested:16000,  tenure:24, monthly:789,   investDate:"2026-05-19", model:"Monthly", payType:"EMI"},
+    {name:"Vandan Kumbhat",        id:"NO-ID-VANDANN79",    invested:125000, tenure:12, monthly:17500, investDate:"2026-05-19", model:"Yearly",  payType:"Flat fixed interest"},
+    {name:"RAMYA NARAYANAMURTHY",  id:"AFP1779464024805F",  invested:134500, tenure:12, monthly:12193, investDate:"2026-05-22", model:"Monthly", payType:"EMI"},
+    {name:"Chilukuri Sri Sneha Priya",id:"AFP1779544069782F",invested:54500, tenure:36, monthly:681,   investDate:"2026-05-23", model:"Monthly", payType:"Flat fixed interest"},
+    {name:"Kunal Agarwal",         id:"NO-ID-MRSHUBHAMAGARWAL",invested:125000,tenure:12,monthly:17500,investDate:"2026-05-29",model:"Yearly", payType:"Flat fixed interest"},
+    {name:"RAMYA NARAYANAMURTHY",  id:"AFP1780137016779F",  invested:269000, tenure:12, monthly:3138,  investDate:"2026-05-30", model:"Monthly", payType:"Flat fixed interest"},
+    {name:"Jaikrishna Sharma",     id:"AFP1780809035128F",  invested:57500,  tenure:12, monthly:671,   investDate:"2026-06-07", model:"Monthly", payType:"Flat fixed interest"},
   ];
-  ALL_PARTNERS = raw.map(p => ({ ...p, email: "test@gmail.com", phone: "—", model: "Monthly", payType: "EMI" }));
-  ALL_PAYOUTS = [];
-  raw.forEach(p => {
-    const base = new Date(p.investDate);
-    for (let i = 1; i <= p.tenure; i++) {
-      const due = new Date(base); due.setMonth(due.getMonth() + i);
-      ALL_PAYOUTS.push({ key: p.id+"-"+i, partnerId: p.id, partnerName: p.name, payoutNum: i, tenure: p.tenure, dueDate: due.toISOString(), amount: p.monthly });
-    }
-  });
-  renderAll(); renderAction(); renderStats(); renderPartners(); updateBadges(); populateMonthFilter();
+  ALL_PARTNERS = raw.map(p => ({ ...p, email: "—", phone: "—" }));
+  ALL_PAYOUTS = buildClientPayouts(ALL_PARTNERS);
+  renderAll(); renderAction(); renderStats(); renderPartners(); updateBadges();
 }
 
 // ── STATS ──
@@ -594,7 +751,7 @@ function renderAction() {
         <div class="ac-avatar">${initials(p.partnerName)}</div>
         <div class="ac-info">
           <div class="ac-name">${p.partnerName}</div>
-          <div class="ac-meta">${p.partnerId} &nbsp;·&nbsp; Payout #${p.payoutNum} of ${p.tenure} &nbsp;·&nbsp; Due ${fmtDate(p.dueDate)}</div>
+          <div class="ac-meta">${p.afpId||p.partnerId||"No AFP ID"} &nbsp;·&nbsp; Payout #${p.payoutNum} of ${p.totalPayouts||p.tenure} &nbsp;·&nbsp; ${p.payoutModel==="Yearly"?"Yearly":"Monthly"} &nbsp;·&nbsp; Due ${fmtDate(p.dueDate)}${p.includesPrincipal ? " &nbsp;·&nbsp; <strong style='color:#1d4ed8'>Includes principal return</strong>" : ""}</div>
         </div>
         <div class="ac-right">
           <div class="ac-amount">${fmtINR(p.amount)}</div>
@@ -613,7 +770,7 @@ function renderAction() {
           <input type="text" id="note-${p.key}" placeholder="e.g. via NEFT" />
         </div>
         <button class="btn-process" onclick="submitProcessed('${p.key}')">✓ Mark Processed</button>
-      </div>` : `<div style="padding:12px 18px;font-size:12px;color:var(--muted)">Admin view — contact finance to process.</div>`}
+      </div>` : `<div style="padding:12px 18px;font-size:12px;color:var(--muted)">Contact Divakar to process the payout.</div>`}
     </div>`;
   }).join("");
 }
@@ -643,7 +800,7 @@ async function submitProcessed(key) {
     if (payout) {
       payout.status = "Processed";
       payout.transactionId = txnId;
-      payout.markedBy = ROLE;
+      payout.markedBy = USERNAME || ROLE;
       payout.markedAt = new Date().toISOString();
     }
     renderAction(); renderStats(); renderAll(); renderPartners(); updateBadges();
@@ -657,6 +814,7 @@ async function submitProcessed(key) {
       payoutKey: key,
       transactionId: txnId,
       note: noteInput ? noteInput.value.trim() : "",
+      username: USERNAME || "",
     });
     if (res.ok) {
       showToast("Payout marked as processed ✓");
@@ -673,17 +831,61 @@ async function submitProcessed(key) {
   }
 }
 
+// ── RANGE FILTER HELPERS ──
+function handleRangeChange() {
+  const val = document.getElementById("filter-range").value;
+  const wrap = document.getElementById("custom-range-wrap");
+  wrap.style.display = val === "custom" ? "flex" : "none";
+  renderAll();
+}
+
+function getRangeBounds() {
+  const val = document.getElementById("filter-range").value;
+  const t = new Date(TODAY);
+  if (!val) return null;
+  if (val === "today") {
+    return { from: new Date(t), to: new Date(t) };
+  }
+  if (val === "week") {
+    const day = t.getDay(); // 0=Sun
+    const mon = new Date(t); mon.setDate(t.getDate() - (day === 0 ? 6 : day - 1));
+    const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+    return { from: mon, to: sun };
+  }
+  if (val === "month") {
+    return { from: new Date(t.getFullYear(), t.getMonth(), 1), to: new Date(t.getFullYear(), t.getMonth()+1, 0) };
+  }
+  if (val === "prev_month") {
+    return { from: new Date(t.getFullYear(), t.getMonth()-1, 1), to: new Date(t.getFullYear(), t.getMonth(), 0) };
+  }
+  if (val === "three_months") {
+    const from = new Date(t.getFullYear(), t.getMonth()-2, 1);
+    return { from, to: new Date(t.getFullYear(), t.getMonth()+1, 0) };
+  }
+  if (val === "custom") {
+    const fromVal = document.getElementById("filter-date-from").value;
+    const toVal   = document.getElementById("filter-date-to").value;
+    if (!fromVal && !toVal) return null;
+    const from = fromVal ? new Date(fromVal) : null;
+    const to   = toVal   ? new Date(toVal)   : null;
+    return { from, to };
+  }
+  return null;
+}
+
 // ── ALL PAYOUTS TABLE ──
 function renderAll() {
-  const month  = document.getElementById("filter-month").value;
+  const range  = getRangeBounds();
   const status = document.getElementById("filter-status").value;
   const search = document.getElementById("filter-search").value.toLowerCase();
 
   let items = ALL_PAYOUTS.filter(p => {
     const s = getComputedStatus(p);
-    const d = new Date(p.dueDate);
-    const mKey = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0");
-    if (month && mKey !== month) return false;
+    const d = new Date(p.dueDate); d.setHours(0,0,0,0);
+    if (range) {
+      if (range.from && d < range.from) return false;
+      if (range.to   && d > range.to)   return false;
+    }
     if (status && s !== status) return false;
     if (search && !p.partnerName.toLowerCase().includes(search) && !p.partnerId.toLowerCase().includes(search)) return false;
     return true;
@@ -701,6 +903,7 @@ function renderAll() {
   tbody.innerHTML = items.map(p => {
     const s = getComputedStatus(p);
     const txn = p.transactionId ? `<span class="txn-code">${p.transactionId}</span>` : `<span style="color:#ccc">—</span>`;
+    const processedOn = p.markedAt ? `<span style="font-size:12px;color:var(--muted)">${fmtDate(p.markedAt)}</span>` : `<span style="color:#ccc">—</span>`;
     const markedBy = p.markedBy ? `<span style="font-size:11px;color:var(--muted)">${p.markedBy}</span>` : `<span style="color:#ccc">—</span>`;
     let action = "";
     if (s === "processed" && ROLE === "admin") {
@@ -709,12 +912,13 @@ function renderAll() {
       action = `<button class="btn-undo" style="color:var(--blue);border-color:var(--border)" onclick="switchTab('action');setTimeout(()=>{const el=document.getElementById('txn-${p.key}');if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.focus();}},200)">Process →</button>`;
     }
     return `<tr>
-      <td><div style="font-weight:600">${p.partnerName}</div><div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace">${p.partnerId}</div></td>
-      <td>#${p.payoutNum}/${p.tenure}</td>
+      <td><div style="font-weight:600">${p.partnerName}</div><div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace">${p.afpId||p.partnerId||"No AFP ID"}</div></td>
+      <td>#${p.payoutNum}/${p.totalPayouts||p.tenure}${p.payoutModel==="Yearly"?'<span style="font-size:10px;font-weight:700;background:#f5f3ff;color:#6d28d9;border:1px solid #ddd6fe;border-radius:4px;padding:1px 5px;margin-left:5px">Yearly</span>':""}</td>
       <td>${fmtDate(p.dueDate)}</td>
-      <td style="font-weight:600">${fmtINR(p.amount)}</td>
+      <td style="font-weight:600">${fmtINR(p.amount)}${p.includesPrincipal ? `<span style="font-size:10px;font-weight:700;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:4px;padding:1px 6px;margin-left:6px;vertical-align:middle">+Principal</span>` : ""}</td>
       <td><span class="status-pill ${pillMap[s]}">${pillLabel[s]}</span></td>
       <td>${txn}</td>
+      <td>${processedOn}</td>
       <td>${markedBy}</td>
       <td>${action}</td>
     </tr>`;
@@ -730,43 +934,263 @@ async function doUndo(key) {
     return;
   }
   setLoading(true, "Undoing…");
-  const res = await api({ action: "undoPayout", payoutKey: key });
+  const res = await api({ action: "undoPayout", payoutKey: key, username: USERNAME || "" });
   setLoading(false);
   if (res.ok) { showToast("Payout undone"); await refreshData(); }
   else showToast(res.error || "Failed", "error");
 }
 
-// ── PARTNERS ──
+// ── PARTNER RANGE FILTER ──
+function handlePartnerRangeChange() {
+  const val = document.getElementById("partner-date-range").value;
+  const wrap = document.getElementById("partner-custom-range-wrap");
+  wrap.style.display = val === "custom" ? "flex" : "none";
+  renderPartners();
+}
+
+function getPartnerRangeBounds() {
+  const val = document.getElementById("partner-date-range")?.value || "";
+  const t = new Date(TODAY);
+  if (!val) return null;
+  if (val === "today") return { from: new Date(t), to: new Date(t) };
+  if (val === "week") {
+    const day = t.getDay();
+    const mon = new Date(t); mon.setDate(t.getDate() - (day === 0 ? 6 : day - 1));
+    const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+    return { from: mon, to: sun };
+  }
+  if (val === "month") return { from: new Date(t.getFullYear(), t.getMonth(), 1), to: new Date(t.getFullYear(), t.getMonth()+1, 0) };
+  if (val === "prev_month") return { from: new Date(t.getFullYear(), t.getMonth()-1, 1), to: new Date(t.getFullYear(), t.getMonth(), 0) };
+  if (val === "three_months") return { from: new Date(t.getFullYear(), t.getMonth()-2, 1), to: new Date(t.getFullYear(), t.getMonth()+1, 0) };
+  if (val === "custom") {
+    const fromVal = document.getElementById("partner-date-from").value;
+    const toVal   = document.getElementById("partner-date-to").value;
+    if (!fromVal && !toVal) return null;
+    return { from: fromVal ? new Date(fromVal) : null, to: toVal ? new Date(toVal) : null };
+  }
+  return null;
+}
+
+// ── DEALS SUMMARY — respects current date range filter ──
+function renderDealsSummary(filteredPartners) {
+  // filteredPartners passed from renderPartners after applying range/search/status filters
+  const partners = filteredPartners || ALL_PARTNERS;
+  const partnerIds = new Set(partners.map(p => p.id));
+
+  // Only count payouts belonging to filtered partners
+  const relevantPayouts = ALL_PAYOUTS.filter(p => partnerIds.has(p.partnerId));
+
+  const totalInvested    = partners.reduce((a,p) => a+p.invested, 0);
+  const totalObligation  = relevantPayouts.reduce((a,p) => a+p.amount, 0);
+
+  const thisMonth = (() => { const n=new Date(TODAY); return n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0"); })();
+  const activeThisMonth = new Set(
+    relevantPayouts.filter(p => {
+      const d=new Date(p.dueDate);
+      return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0") === thisMonth;
+    }).map(p=>p.partnerId)
+  ).size;
+
+  const emiPartners     = partners.filter(p => p.payType && p.payType.toLowerCase().includes("emi"));
+  const flatPartners    = partners.filter(p => p.payType && p.payType.toLowerCase().includes("flat"));
+  const overduePartners = partners.filter(p => relevantPayouts.some(x => x.partnerId===p.id && getComputedStatus(x)==="overdue"));
+
+  // Range label for context
+  const rangeVal = document.getElementById("partner-date-range")?.value || "";
+  const rangeLabels = { "":"All time", today:"Today", week:"This week", month:"This month", prev_month:"Previous month", three_months:"Last 3 months", custom:"Custom range" };
+  const rangeLabel = rangeLabels[rangeVal] || "All time";
+  const showingAll = !rangeVal;
+
+  const r1 = document.getElementById("deals-summary");
+  if (r1) r1.innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">Deals ${showingAll?"(total)":"in range"}</div>
+      <div class="stat-val">${partners.length}</div>
+      ${!showingAll?`<div class="stat-sub">${rangeLabel}</div>`:""}
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Invested ${showingAll?"(total)":"in range"}</div>
+      <div class="stat-val" style="font-size:20px">${fmtINR(totalInvested)}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Payout obligation ${showingAll?"(total)":"in range"}</div>
+      <div class="stat-val" style="font-size:20px">${fmtINR(totalObligation)}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Active this month</div>
+      <div class="stat-val">${activeThisMonth} <span style="font-size:13px;font-weight:400;color:var(--muted)">partners</span></div>
+    </div>
+  `;
+
+  const r2 = document.getElementById("deals-summary-row2");
+  if (r2) r2.innerHTML = `
+    <div class="stat-card"><div class="stat-label">EMI deals</div><div class="stat-val">${emiPartners.length}</div><div class="stat-sub">${fmtINR(emiPartners.reduce((a,p)=>a+p.invested,0))} invested</div></div>
+    <div class="stat-card"><div class="stat-label">Flat fixed interest deals</div><div class="stat-val">${flatPartners.length}</div><div class="stat-sub">${fmtINR(flatPartners.reduce((a,p)=>a+p.invested,0))} invested</div></div>
+    <div class="stat-card"><div class="stat-label">Partners with overdue</div><div class="stat-val${overduePartners.length?" red":""}">${overduePartners.length}</div><div class="stat-sub${overduePartners.length?" red":""}"> ${overduePartners.length ? overduePartners.length+" need attention" : "all clear"}</div></div>
+  `;
+}
+
+// ── PARTNERS / DEALS ──
 function renderPartners() {
-  const el = document.getElementById("partner-grid");
-  el.innerHTML = ALL_PARTNERS.map(p => {
-    const payouts = ALL_PAYOUTS.filter(x => x.partnerId === p.id);
+  const search  = (document.getElementById("partner-search")?.value || "").toLowerCase();
+  const fStatus = document.getElementById("partner-filter-status")?.value || "";
+  const sort    = document.getElementById("partner-sort")?.value || "date";
+
+  let partners = ALL_PARTNERS.map(p => {
+    const payouts   = ALL_PAYOUTS.filter(x => x.partnerId === p.id);
     const processed = payouts.filter(x => getComputedStatus(x) === "processed").length;
     const overdue   = payouts.filter(x => getComputedStatus(x) === "overdue").length;
-    const next      = payouts.find(x => getComputedStatus(x) !== "processed");
-    const pct       = payouts.length ? Math.round((processed / payouts.length) * 100) : 0;
-    return `<div class="partner-card">
+    const allDone   = processed === payouts.length && payouts.length > 0;
+    return { ...p, payouts, processed, overdue, allDone };
+  });
+
+  // date range filter on start date
+  const partnerRange = getPartnerRangeBounds();
+  if (partnerRange) {
+    partners = partners.filter(p => {
+      if (!p.investDate) return false;
+      const d = new Date(p.investDate); d.setHours(0,0,0,0);
+      if (partnerRange.from && d < partnerRange.from) return false;
+      if (partnerRange.to   && d > partnerRange.to)   return false;
+      return true;
+    });
+  }
+
+  // other filters
+  if (search) partners = partners.filter(p =>
+    p.name.toLowerCase().includes(search) || p.id.toLowerCase().includes(search));
+  if (fStatus === "overdue")   partners = partners.filter(p => p.overdue > 0);
+  if (fStatus === "active")    partners = partners.filter(p => !p.allDone && p.overdue === 0);
+  if (fStatus === "completed") partners = partners.filter(p => p.allDone);
+
+  // sort
+  if (sort === "name")     partners.sort((a,b) => a.name.localeCompare(b.name));
+  if (sort === "date")     partners.sort((a,b) => new Date(b.investDate) - new Date(a.investDate));
+  if (sort === "invested") partners.sort((a,b) => b.invested - a.invested);
+  if (sort === "overdue")  partners.sort((a,b) => b.overdue - a.overdue);
+
+  // Pass filtered+sorted list to summary so it reflects current view
+  renderDealsSummary(partners);
+
+  const el = document.getElementById("partner-grid");
+  if (!partners.length) {
+    el.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg><h3>No partners found</h3><p>Try a different filter.</p></div>`;
+    return;
+  }
+
+  el.innerHTML = partners.map(p => {
+    const next = p.payouts.find(x => getComputedStatus(x) !== "processed");
+    const pct  = p.payouts.length ? Math.round((p.processed / p.payouts.length) * 100) : 0;
+    const investDateStr = p.investDate ? fmtDate(p.investDate) : "—";
+    return `<div class="partner-card" onclick="openPartnerModal('${p.id}')" style="cursor:pointer">
       <div class="pc-head">
         <div class="pc-avatar">${initials(p.name)}</div>
-        <div>
+        <div style="flex:1;min-width:0">
           <div class="pc-name">${p.name}</div>
-          <div class="pc-id">${p.id}</div>
+          <div class="pc-id">${p.afpId || p.id || "No AFP ID"}</div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);text-align:right;flex-shrink:0">
+          <div>Started</div>
+          <div style="font-weight:600;color:var(--ink)">${investDateStr}</div>
         </div>
       </div>
       <div class="pc-body">
         <div class="pc-row"><span>Invested</span><span>${fmtINR(p.invested)}</span></div>
-        <div class="pc-row"><span>Monthly payout</span><span>${fmtINR(p.monthly)}</span></div>
+        <div class="pc-row"><span>${p.model==="Yearly"?"Yearly":"Monthly"} payout</span><span>${fmtINR(p.monthly)}</span></div>
         <div class="pc-row"><span>Tenure</span><span>${p.tenure} months</span></div>
-        <div class="pc-row"><span>Payouts done</span><span>${processed} / ${payouts.length}</span></div>
-        ${overdue ? `<div class="pc-row"><span>Overdue</span><span class="pc-overdue-tag">⚠ ${overdue} payment${overdue>1?"s":""}</span></div>` : ""}
+        <div class="pc-row"><span>Payouts done</span><span>${p.processed} / ${p.payouts.length}</span></div>
+        <div class="pc-row"><span>Payout model</span><span>${p.model||"Monthly"}${p.payType?(" · "+p.payType):""}</span></div>
+        ${p.overdue ? `<div class="pc-row"><span>Overdue</span><span class="pc-overdue-tag">⚠ ${p.overdue} payment${p.overdue>1?"s":""}</span></div>` : ""}
         ${next ? `<div class="pc-row"><span>Next due</span><span>${fmtDate(next.dueDate)}</span></div>` : ""}
         <div class="pc-progress">
           <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:4px"><span>Progress</span><span>${pct}%</span></div>
           <div class="pc-progress-bar"><div class="pc-progress-fill" style="width:${pct}%"></div></div>
         </div>
+        <div style="margin-top:12px;font-size:11px;color:var(--blue);font-weight:600;text-align:center;padding:6px;background:var(--mist);border-radius:6px">View payout schedule →</div>
       </div>
     </div>`;
   }).join("");
+}
+
+// ── PARTNER MODAL ──
+function openPartnerModal(partnerId) {
+  const p = ALL_PARTNERS.find(x => x.id === partnerId);
+  if (!p) return;
+  const payouts   = ALL_PAYOUTS.filter(x => x.partnerId === partnerId);
+  const processed = payouts.filter(x => getComputedStatus(x) === "processed").length;
+  const overdue   = payouts.filter(x => getComputedStatus(x) === "overdue").length;
+  const totalSent = payouts.filter(x => getComputedStatus(x) === "processed").reduce((a,x)=>a+x.amount,0);
+
+  document.getElementById("modal-avatar").textContent = initials(p.name);
+  document.getElementById("modal-name").textContent = p.name;
+  document.getElementById("modal-meta").textContent = (p.afpId || p.id || "No AFP ID") + "  ·  Started " + fmtDate(p.investDate) + "  ·  " + p.tenure + " months · " + (p.model||"Monthly");
+
+  // Admin-only contact section
+  const contactEl = document.getElementById("modal-contact");
+  if (ROLE === "admin") {
+    const fields = [
+      { icon: "📱", label: "Phone", val: p.phone || "—" },
+      { icon: "✉️", label: "Email", val: p.email || "—" },
+      { icon: "🪪", label: "AFP ID", val: p.afpId || "Not assigned" },
+      { icon: "💳", label: "Payout type", val: p.payType || "—" },
+      { icon: "📋", label: "Total payout", val: fmtINR(p.totalPayout || 0) },
+    ];
+    contactEl.style.display = "flex";
+    contactEl.innerHTML = `
+      <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--blue);margin-bottom:2px;width:100%;display:flex;align-items:center;gap:6px">
+        <span style="background:var(--blue);color:#fff;font-size:9px;padding:2px 7px;border-radius:100px">Admin only</span>
+        Partner details
+      </div>
+      ${fields.map(f => `
+        <div style="display:flex;flex-direction:column;gap:2px;min-width:120px">
+          <div style="font-size:10px;color:var(--muted)">${f.icon} ${f.label}</div>
+          <div style="font-size:13px;font-weight:600;color:var(--ink)">${f.val}</div>
+        </div>
+      `).join("")}
+    `;
+  } else {
+    contactEl.style.display = "none";
+  }
+
+  document.getElementById("modal-stats").innerHTML = [
+    { label: "Invested", val: fmtINR(p.invested), sub: "" },
+    { label: p.model==="Yearly" ? "Yearly payout" : "Monthly payout", val: fmtINR(p.monthly), sub: "" },
+    { label: "Paid out", val: processed + "/" + payouts.length, sub: fmtINR(totalSent) + " sent" },
+    { label: "Overdue", val: overdue || "0", sub: overdue ? "needs attention" : "all clear", danger: overdue > 0 },
+  ].map(s => `<div style="padding:14px 16px;border-right:1px solid var(--border)">
+    <div style="font-size:11px;color:var(--muted);margin-bottom:3px">${s.label}</div>
+    <div style="font-size:18px;font-weight:700;font-family:'Bricolage Grotesque',sans-serif;color:${s.danger?"var(--danger)":"var(--ink)"}">${s.val}</div>
+    ${s.sub ? `<div style="font-size:11px;color:${s.danger?"var(--danger)":"var(--muted)"};margin-top:2px">${s.sub}</div>` : ""}
+  </div>`).join("");
+
+  const pillMap  = { overdue:"pill-overdue", due:"pill-due", processed:"pill-done", upcoming:"pill-upcoming" };
+  const pillLabel = { overdue:"Overdue", due:"Due today", processed:"Processed", upcoming:"Upcoming" };
+
+  document.getElementById("modal-tbody").innerHTML = payouts.map(pay => {
+    const s = getComputedStatus(pay);
+    const txn = pay.transactionId ? `<span class="txn-code">${pay.transactionId}</span>` : `<span style="color:#ccc">—</span>`;
+    const processedOnModal = pay.markedAt ? `<span style="font-size:12px;color:var(--muted)">${fmtDate(pay.markedAt)}</span>` : `<span style="color:#ccc">—</span>`;
+    const by  = pay.markedBy ? `<span style="font-size:11px;color:var(--muted)">${pay.markedBy}</span>` : `<span style="color:#ccc">—</span>`;
+    const rowBg = s === "overdue" ? "background:#fff5f5" : s === "due" ? "background:#fffbeb" : s === "processed" ? "background:#f0fdf4" : "";
+    return `<tr style="${rowBg}">
+      <td style="padding:10px 12px;border-bottom:1px solid #f0f2fa;font-weight:600">#${pay.payoutNum}/${pay.totalPayouts||pay.tenure}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #f0f2fa">${fmtDate(pay.dueDate)}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #f0f2fa;font-weight:600">${fmtINR(pay.amount)}${pay.includesPrincipal ? `<span style="font-size:10px;font-weight:700;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:4px;padding:1px 6px;margin-left:6px;vertical-align:middle">+Principal</span>` : ""}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #f0f2fa"><span class="status-pill ${pillMap[s]}">${pillLabel[s]}</span></td>
+      <td style="padding:10px 12px;border-bottom:1px solid #f0f2fa">${txn}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #f0f2fa">${processedOnModal}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #f0f2fa">${by}</td>
+    </tr>`;
+  }).join("");
+
+  document.getElementById("partner-modal-bg").style.display = "block";
+  document.body.style.overflow = "hidden";
+}
+
+function closePartnerModal(e) {
+  if (e && e.target !== document.getElementById("partner-modal-bg")) return;
+  document.getElementById("partner-modal-bg").style.display = "none";
+  document.body.style.overflow = "";
 }
 
 // ── TABS ──
@@ -788,20 +1212,36 @@ function updateBadges() {
   document.getElementById("badge-all").textContent = ALL_PAYOUTS.length;
 }
 
-function populateMonthFilter() {
-  const months = new Set();
-  ALL_PAYOUTS.forEach(p => {
-    const d = new Date(p.dueDate);
-    months.add(d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0"));
-  });
-  const sel = document.getElementById("filter-month");
-  sel.innerHTML = `<option value="">All months</option>`;
-  [...months].sort().forEach(m => {
-    const [y, mo] = m.split("-");
-    const label = new Date(+y, +mo-1, 1).toLocaleDateString("en-IN", { month: "short", year: "numeric" });
-    sel.innerHTML += `<option value="${m}">${label}</option>`;
-  });
+// ── POPULATE USER DROPDOWN ──
+async function populateUserDropdown() {
+  const sel = document.getElementById("username-input");
+  if (!sel) return;
+
+  if (SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
+    // demo mode — use local list
+    sel.innerHTML = '<option value="">— Select your name —</option>' +
+      DEMO_USERS.map(u => `<option value="${u.username}">${u.username}</option>`).join("");
+  } else {
+    // live mode — fetch from Apps Script (returns names only, no PINs)
+    try {
+      sel.innerHTML = '<option value="">Loading…</option>';
+      const res = await fetch(SCRIPT_URL + "?action=getUsers").then(r => r.json());
+      if (res.ok && res.users) {
+        sel.innerHTML = '<option value="">— Select your name —</option>' +
+          res.users.map(u => `<option value="${u}">${u}</option>`).join("");
+      } else {
+        sel.innerHTML = '<option value="">— Select your name —</option>';
+      }
+    } catch (e) {
+      sel.innerHTML = '<option value="">— Select your name —</option>';
+    }
+  }
 }
+populateUserDropdown();
+
+document.addEventListener("keydown", e => { if (e.key === "Escape") { document.getElementById("partner-modal-bg").style.display="none"; document.body.style.overflow=""; } });
+
+// month filter removed — replaced by range filter
 </script>
 </body>
 </html>
