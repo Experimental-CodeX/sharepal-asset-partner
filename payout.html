@@ -362,7 +362,7 @@ tbody tr:hover td { background: #f9faff; }
 // ─────────────────────────────────────────────
 // CONFIGURATION — replace with your deployed URL
 // ─────────────────────────────────────────────
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxGQbhTdMa2CmR_SQDHp5mEnvmeQR1t3jVH5QQNJoeta4X7kiGrbOF36fdZl9hTnWPUjg/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzTDfyCMvOxXMMUeZwED0mDwIq563ZuUt6NEUJKD5IxbSdyJZxtLUHkA8fam1Qx55Ld/exec";
 
 // ── STATE ──
 let ROLE = null;
@@ -411,7 +411,7 @@ async function doLogin() {
   const err = document.getElementById("login-error");
   if (!pin) { err.textContent = "Enter your PIN."; return; }
 
-  if (SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
+  if (SCRIPT_URL === "https://script.google.com/macros/s/AKfycbzTDfyCMvOxXMMUeZwED0mDwIq563ZuUt6NEUJKD5IxbSdyJZxtLUHkA8fam1Qx55Ld/exec") {
     // demo mode — accept any PIN for UI preview
     ROLE = "finance"; PIN = pin;
     bootApp();
