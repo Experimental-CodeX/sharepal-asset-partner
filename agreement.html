@@ -533,6 +533,19 @@ tr:hover td{background:rgba(108,92,231,0.03)}
 
 <!-- ════════════════════ STEP 0: Agreement Type ════════════════════ -->
 <div class="panel active" id="panel0">
+
+  <!-- Load from SharePal -->
+  <div class="card" id="sharepal-load-card" style="margin-bottom:20px">
+    <div class="card-label" style="color:var(--accent2)">⚡ Load from SharePal Deals</div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <select id="sharepal-partner-select" style="flex:1;min-width:240px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Inter',sans-serif;font-size:14px;padding:10px 12px;outline:none">
+        <option value="">— Select a partner —</option>
+      </select>
+      <button class="btn btn-primary" style="padding:10px 20px;font-size:13px" onclick="loadFromSharePal()">Load Data</button>
+    </div>
+    <div id="sharepal-load-status" style="font-size:12px;color:var(--muted);margin-top:10px"></div>
+  </div>
+
   <div class="sec-head" style="margin-bottom:28px">
     <h2>Select Agreement Type</h2>
     <p>Choose the payout structure for this agreement — you can change it anytime during filling</p>
@@ -2854,6 +2867,126 @@ function renderHistList() {
   }).join('');
 }
 
+// ── SharePal Integration ────────────────────────────────────────────────────
+// SCRIPT_URL — same Apps Script deployment used by the Payout Tracker
+const SHAREPAL_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxoPvmAN_dg9aLBZOKKsGSVLk_nifhR0Pt_dYzR5Gwg3-Mck7OucQrRVmSynZi7paV8IQ/exec";
+
+// Session creds — passed via URL params from the Payout Tracker, or entered manually
+let SP_USERNAME = "";
+let SP_PIN = "";
+
+function getUrlParam(name) {
+  return new URLSearchParams(window.location.search).get(name);
+}
+
+async function spApi(params) {
+  const qs = new URLSearchParams({ ...params, username: SP_USERNAME, pin: SP_PIN }).toString();
+  const res = await fetch(SHAREPAL_SCRIPT_URL + "?" + qs);
+  return res.json();
+}
+
+// Populate the partner dropdown on panel0
+async function populateSharePalPartners() {
+  const sel = document.getElementById('sharepal-partner-select');
+  const status = document.getElementById('sharepal-load-status');
+  if (!SP_USERNAME || !SP_PIN) {
+    status.textContent = 'Open this page from the SharePal Deals tab to enable auto-fill, or it will ask for credentials when you click Load.';
+    return;
+  }
+  try {
+    const res = await spApi({ action: 'getPartnerList' });
+    if (res.ok) {
+      sel.innerHTML = '<option value="">— Select a partner —</option>' +
+        res.partners.map(p => `<option value="${p.id}">${p.name} (${p.afpId || p.id}) — ₹${Math.round(p.invested).toLocaleString('en-IN')}</option>`).join('');
+    } else {
+      status.textContent = res.error || 'Could not load partner list.';
+    }
+  } catch (e) {
+    status.textContent = 'Connection error loading partner list.';
+  }
+}
+
+// Load a partner's data and fill the form
+async function loadFromSharePal(partnerIdOverride) {
+  const sel = document.getElementById('sharepal-partner-select');
+  const status = document.getElementById('sharepal-load-status');
+  const partnerId = partnerIdOverride || sel.value;
+
+  if (!partnerId) { status.textContent = 'Select a partner first.'; return; }
+
+  // Ask for credentials if not present
+  if (!SP_USERNAME || !SP_PIN) {
+    SP_USERNAME = prompt('SharePal username (admin):') || '';
+    SP_PIN = prompt('SharePal PIN:') || '';
+    if (!SP_USERNAME || !SP_PIN) { status.textContent = 'Credentials required to load data.'; return; }
+  }
+
+  status.textContent = 'Loading…';
+  try {
+    const res = await spApi({ action: 'getAgreementData', partnerId });
+    if (!res.ok) { status.textContent = res.error || 'Failed to load data.'; return; }
+    fillFormFromSharePal(res.data);
+    status.textContent = '✓ Loaded ' + res.data.lender_name + '. Review all fields, especially PAN/Aadhaar/Bank details.';
+  } catch (e) {
+    status.textContent = 'Connection error.';
+  }
+}
+
+// Apply fetched data to the form fields
+function fillFormFromSharePal(data) {
+  const s = (id, val) => { const el = document.getElementById(id); if (el && val !== undefined && val !== null && val !== '') el.value = val; };
+
+  // Step 1 — Lender info
+  s('lender_name', data.lender_name);
+  s('lender_pan', data.lender_pan);
+  s('lender_aadhaar', data.lender_aadhaar);
+  s('lender_address', data.lender_address);
+  s('lender_email', data.lender_email);
+  s('lender_mobile', data.lender_mobile);
+  s('bank_name', data.bank_name);
+  s('bank_acc', data.bank_acc);
+  s('bank_ifsc', data.bank_ifsc);
+  s('bank_bankname', data.bank_bankname);
+  if (data.bank_name) document.getElementById('bank_name').dataset.autoFilled = 'false';
+
+  // Agreement type
+  if (data.agreeType) selectAgreeType(data.agreeType);
+
+  // Step 2 — Loan terms
+  s('loan_amount', data.loan_amount);
+  s('effective_date', data.effective_date);
+  if (data.tenure) {
+    const pill = document.getElementById('t' + data.tenure);
+    if (pill) selectTenure(data.tenure, pill);
+  }
+  s('monthly_payout', data.monthly_payout);
+
+  // Step 3 — Transaction
+  s('txn_date', data.txn_date);
+  document.getElementById('txn_date').dataset.autoFilled = 'false';
+  s('txn_amount', data.txn_amount);
+  document.getElementById('txn_amount').dataset.autoFilled = 'false';
+  s('txn_id', data.txn_id);
+
+  // Step 4 — Assets
+  if (data.assets && data.assets.length) {
+    document.getElementById('asset-rows').innerHTML = '';
+    assetRowCount = 0;
+    data.assets.forEach(a => addAssetRow(a.name, a.serial, a.value));
+  }
+
+  // Recalculate schedule
+  calcEMI();
+
+  // Warn about asset value mismatch
+  if (data.assetValueWarning) {
+    alert('⚠ ' + data.assetValueWarning);
+  }
+
+  // Jump to Step 1 for review
+  if (cur === 0) goStep(1);
+}
+
 // ── Init ──
 window.addEventListener('DOMContentLoaded', () => {
   const today = new Date().toISOString().split('T')[0];
@@ -2866,6 +2999,21 @@ window.addEventListener('DOMContentLoaded', () => {
   cur = 0;
   document.getElementById('panel0').classList.add('active');
   document.getElementById('panel1').classList.remove('active');
+
+  // ── SharePal auto-load via URL params ──
+  // Usage: agreement.html?partner=AFP123...&username=Deep&pin=1234
+  const urlPartner  = getUrlParam('partner');
+  const urlUsername = getUrlParam('username');
+  const urlPin      = getUrlParam('pin');
+  if (urlUsername) SP_USERNAME = urlUsername;
+  if (urlPin)      SP_PIN = urlPin;
+
+  populateSharePalPartners();
+
+  if (urlPartner) {
+    document.getElementById('sharepal-partner-select').value = urlPartner;
+    loadFromSharePal(urlPartner);
+  }
 });
 </script>
 </body>
