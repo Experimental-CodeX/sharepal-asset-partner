@@ -524,13 +524,11 @@ tr:hover td{background:rgba(108,92,231,0.03)}
   <button class="s-btn" onclick="goStep(4)" id="sb4"><span class="n">4</span><span>Asset Details</span></button>
   <div class="s-div"></div>
   <button class="s-btn" onclick="goStep(5)" id="sb5"><span class="n">5</span><span>Preview</span></button>
-  <div class="s-div"></div>
-  <button class="s-btn" onclick="goStep(6)" id="sb6"><span class="n">6</span><span>E-Sign</span></button>
 </div>
 <div class="prog-row">
-  <span id="prog-lbl">Step 1 of 6</span>
-  <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:17%"></div></div>
-  <span id="prog-pct">17%</span>
+  <span id="prog-lbl">Step 1 of 5</span>
+  <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:20%"></div></div>
+  <span id="prog-pct">20%</span>
 </div>
 
 <!-- ════════════════════ STEP 0: Agreement Type ════════════════════ -->
@@ -839,12 +837,11 @@ tr:hover td{background:rgba(108,92,231,0.03)}
 
   <div class="btn-row">
     <button class="btn btn-ghost" onclick="goStep(4)">← Edit Details</button>
-    <button class="btn btn-primary" onclick="goStep(6)">Send for E-Sign →</button>
   </div>
 </div>
 
-<!-- ════════════════════ STEP 6: Share ════════════════════ -->
-<div class="panel" id="panel6">
+<!-- ════════════════════ STEP 6: Share (disabled) ════════════════════ -->
+<div class="panel" id="panel6" style="display:none !important">
   <div class="sec-head">
     <h2>Send for E-Signature</h2>
     <p>Aadhaar OTP e-sign via Digio — lender signs digitally from their phone</p>
@@ -1014,7 +1011,7 @@ tr:hover td{background:rgba(108,92,231,0.03)}
 <script>
 // ── State ──
 let cur = 0;  // 0 = type selector
-const TOTAL = 6;
+const TOTAL = 5;
 let agreeType = 'emi'; // 'emi' | 'flat_monthly' | 'flat_yearly'
 let amortData = [];
 let tenureVal = 0;
@@ -1037,7 +1034,6 @@ function goStep(n) {
   document.getElementById('prog-pct').textContent = n === 0 ? '0%' : pct + '%';
   document.getElementById('prog-lbl').textContent = n === 0 ? 'Select type' : 'Step ' + n + ' of ' + TOTAL;
   window.scrollTo({top:0,behavior:'smooth'});
-  if (n === 6) syncSig();
 }
 
 // ── Formatters ──
@@ -1708,7 +1704,7 @@ async function sendDigio() {
     // Show status + download buttons
     document.getElementById('post-send').style.display = 'block';
     document.getElementById('esign-req-id').textContent = token;
-    document.getElementById('sb6').classList.add('done');
+    document.getElementById('sb6')?.classList.add('done');
 
   } catch(err) {
     console.error('Meon eSign error:', err);
