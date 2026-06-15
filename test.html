@@ -1,200 +1,760 @@
-// ─────────────────────────────────────────────────────────────
-// SharePal Payout Tracker — Google Apps Script
-// Paste this entire file into Extensions > Apps Script > Code.gs
-// Deploy > New deployment > Web app
-//   Execute as: Me
-//   Who has access: Anyone
-// ─────────────────────────────────────────────────────────────
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SharePal — Asset Partner Internal Tool</title>
+<link rel="icon" type="image/png" href="data:image/png;base64,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">
+<link rel="icon" type="image/png" href="data:image/png;base64,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">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@300;400;500;600;700&family=Bricolage+Grotesque:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --blue: #1944E8; --blue-dark: #1237BB; --navy: #030D31;
+  --lime: #9FFE02; --ink: #030D31;
+  --mist: #E9ECFF; --border: #D1DAFB;
+  --text: #030D31; --muted: #5A6B8A;
+  --success: #16a34a; --success-bg: #f0fdf4; --success-border: #bbf7d0;
+  --warning: #d97706; --warning-bg: #fffbeb; --warning-border: #fde68a;
+  --danger: #dc2626; --danger-bg: #fef2f2; --danger-border: #fecaca;
+  --info-bg: #eff6ff; --info-text: #1d4ed8; --info-border: #bfdbfe;
+  --radius: 10px; --radius-lg: 14px;
+}
+html { scroll-behavior: smooth; }
+body { font-family: 'Hanken Grotesk', sans-serif; background: #f4f6fb; color: var(--ink); font-size: 14px; line-height: 1.5; min-height: 100vh; }
+h1,h2,h3,h4,h5 { font-family: 'Bricolage Grotesque', sans-serif; }
+a { text-decoration: none; color: inherit; }
 
-const SHEET_NAME_PARTNERS  = "All";
-const SHEET_NAME_STATUS    = "Payout_Status";
-const SHEET_NAME_USERS     = "Users";
-const SHEET_NAME_AGREEMENTS = "Agreement_Status";
+/* ── LOGIN ── */
+#login-screen {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, var(--navy) 0%, #0D1B6E 60%, var(--blue) 100%);
+}
+.login-card {
+  background: #fff; border-radius: 20px; padding: 44px 40px;
+  width: 360px; box-shadow: 0 24px 64px rgba(0,0,0,0.18);
+}
+.login-logo { font-family: 'Bricolage Grotesque', sans-serif; font-size: 26px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+.login-logo span { color: var(--lime); }
+.login-sub { font-size: 13px; color: var(--muted); margin-bottom: 32px; }
+.form-label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; display: block; }
+.form-input {
+  width: 100%; padding: 12px 14px; border: 1.5px solid var(--border);
+  border-radius: var(--radius); font-family: 'Hanken Grotesk', sans-serif;
+  font-size: 15px; color: var(--ink); background: #fff;
+  transition: border-color 0.2s;
+}
+.form-input:focus { outline: none; border-color: var(--blue); }
+.btn-login {
+  width: 100%; margin-top: 20px; padding: 13px;
+  background: var(--blue); color: #fff; border: none;
+  border-radius: var(--radius); font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 15px; font-weight: 700; cursor: pointer; transition: background 0.2s;
+}
+.btn-login:hover { background: var(--blue-dark); }
+.login-error { font-size: 13px; color: var(--danger); margin-top: 10px; text-align: center; }
 
-// ── USERS — edit this list to add/remove users ────────────────
-// Roles: "admin" (full access + contact info) | "finance" (can mark processed,
-// manage agreement sharing) | "sign" (viewer + can sign agreements internally)
-// | "viewer" (read-only)
-const USERS = [
-  { username: "Rushi Narang", pin: "7632", role: "viewer" },
-  { username: "Akash Deep Chhabra", pin: "3283", role: "sign" },
-  { username: "Shariq Usmani", pin: "8723", role: "viewer" },
-  { username: "Divakar V", pin: "2387", role: "finance" },
-  { username: "Deepesh Lakhera",    pin: "2468", role: "admin"   },
-  // Add more users below:
-  // { username: "Rahul", pin: "5678", role: "viewer" },
+/* ── APP SHELL ── */
+#app { display: none; min-height: 100vh; }
+.topbar {
+  background: var(--navy); padding: 0 32px; height: 58px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 50;
+}
+.topbar-logo { font-family: 'Bricolage Grotesque', sans-serif; font-size: 18px; font-weight: 800; color: #fff; }
+.topbar-logo span { color: var(--lime); }
+.topbar-right { display: flex; align-items: center; gap: 16px; }
+.role-badge {
+  font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+  padding: 4px 12px; border-radius: 100px;
+}
+.role-badge.finance { background: rgba(159,254,2,0.15); color: var(--lime); }
+.role-badge.admin  { background: rgba(159,254,2,0.15); color: var(--lime); }
+.role-badge.viewer { background: rgba(159,254,2,0.15); color: var(--lime); }
+.role-badge.sign   { background: rgba(159,254,2,0.15); color: var(--lime); }
+.btn-logout {
+  font-size: 12px; color: rgba(255,255,255,0.5); background: none; border: none;
+  cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: color 0.2s;
+}
+.btn-logout:hover { color: #fff; }
+.topbar-date { font-size: 12px; color: rgba(255,255,255,0.45); }
+
+.main { max-width: 1100px; margin: 0 auto; padding: 28px 24px; }
+
+/* ── TABS ── */
+.tabs { display: flex; gap: 4px; margin-bottom: 24px; background: #fff; border-radius: var(--radius-lg); padding: 5px; border: 1px solid var(--border); width: fit-content; }
+.tab {
+  padding: 8px 18px; border-radius: 8px; border: none; background: none;
+  font-family: 'Hanken Grotesk', sans-serif; font-size: 13px; font-weight: 600;
+  color: var(--muted); cursor: pointer; transition: all 0.18s; display: flex; align-items: center; gap: 6px;
+}
+.tab.active { background: var(--blue); color: #fff; }
+.tab:not(.active):hover { background: var(--mist); color: var(--ink); }
+.tab-badge {
+  font-size: 10px; font-weight: 800; padding: 1px 6px;
+  border-radius: 100px; line-height: 1.6;
+}
+.tab.active .tab-badge { background: rgba(255,255,255,0.2); color: #fff; }
+.tab:not(.active) .tab-badge { background: var(--danger-bg); color: var(--danger); }
+.tab:not(.active) .tab-badge.zero { background: var(--mist); color: var(--muted); }
+
+.section { display: none; }
+.section.active { display: block; }
+.agreement-view { display: none; }
+.agreement-view.active { display: block; }
+
+/* ── AGREEMENT STATUS BADGES ── */
+.agreement-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 100px; }
+.agreement-badge.not-drafted { background: var(--mist); color: var(--muted); }
+.agreement-badge.drafted     { background: var(--warning-bg); color: var(--warning); }
+.agreement-badge.shared      { background: var(--info-bg); color: var(--info-text); }
+.agreement-badge.signed      { background: var(--success-bg); color: var(--success); }
+.agreement-due-tag { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 100px; margin-left: 4px; }
+.agreement-due-tag.due     { background: var(--warning-bg); color: var(--warning); }
+.agreement-due-tag.overdue { background: var(--danger-bg); color: var(--danger); }
+
+/* ── AGREEMENT CARD ── */
+.agreement-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); margin-bottom: 10px; overflow: hidden; }
+.agreement-card.overdue { border-left: 3px solid var(--danger); }
+.agreement-card.due { border-left: 3px solid var(--warning); }
+.agr-header { padding: 16px 18px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.agr-info { flex: 1; min-width: 200px; }
+.agr-name { font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 2px; }
+.agr-meta { font-size: 12px; color: var(--muted); }
+.agr-body { border-top: 1px solid var(--border); padding: 14px 18px; background: #fafbff; display: flex; flex-direction: column; gap: 12px; }
+.agr-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+.agr-field { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 200px; }
+.agr-field label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; }
+.agr-field input, .agr-field textarea { padding: 9px 12px; border: 1.5px solid var(--border); border-radius: var(--radius); font-size: 13px; color: var(--ink); background: #fff; font-family: 'Hanken Grotesk', sans-serif; }
+.agr-field input:focus, .agr-field textarea:focus { outline: none; border-color: var(--blue); }
+.agr-remark { background: var(--warning-bg); border: 1px solid var(--warning-border); border-radius: var(--radius); padding: 10px 14px; font-size: 12px; color: var(--warning); }
+.agr-sign-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+.agr-sign-pill { display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 6px 12px; border-radius: 100px; font-weight: 600; }
+.agr-sign-pill.done { background: var(--success-bg); color: var(--success); }
+.agr-sign-pill.pending { background: var(--mist); color: var(--muted); }
+.btn-agr { padding: 9px 18px; border: none; border-radius: var(--radius); font-family: 'Bricolage Grotesque', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
+.btn-agr.primary { background: var(--blue); color: #fff; }
+.btn-agr.primary:hover { background: var(--blue-dark); }
+.btn-agr.success { background: var(--success); color: #fff; }
+.btn-agr.success:hover { background: #15803d; }
+.btn-agr.ghost { background: #fff; color: var(--ink); border: 1.5px solid var(--border); }
+.btn-agr.ghost:hover { background: var(--mist); }
+.btn-agr:disabled { opacity: 0.5; cursor: not-allowed; }
+.agr-link { display: inline-flex; align-items: center; gap: 5px; color: var(--blue); font-size: 12px; font-weight: 600; text-decoration: none; }
+.agr-link:hover { text-decoration: underline; }
+.agr-email-copy { display: inline-flex; align-items: center; gap: 6px; background: var(--mist); border-radius: 6px; padding: 5px 10px; font-size: 12px; font-family: 'JetBrains Mono', monospace; color: var(--ink); cursor: pointer; border: none; }
+.agr-email-copy:hover { background: var(--border); }
+
+/* ── STATS ROW ── */
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+.stat-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 20px; }
+.stat-label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+.stat-val { font-size: 26px; font-weight: 700; font-family: 'Bricolage Grotesque', sans-serif; color: var(--ink); line-height: 1.1; }
+.stat-val.red { color: var(--danger); }
+.stat-val.amber { color: var(--warning); }
+.stat-val.green { color: var(--success); }
+.stat-sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.stat-sub.red { color: var(--danger); }
+.stat-sub.amber { color: var(--warning); }
+
+/* ── ALERTS ── */
+.alert { display: flex; align-items: center; gap: 10px; padding: 11px 16px; border-radius: var(--radius); font-size: 13px; margin-bottom: 10px; border: 1px solid; }
+.alert.danger { background: var(--danger-bg); border-color: var(--danger-border); color: var(--danger); }
+.alert.warning { background: var(--warning-bg); border-color: var(--warning-border); color: var(--warning); }
+.alert svg { width: 16px; height: 16px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 2; }
+
+/* ── SECTION LABEL ── */
+.section-head { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+
+/* ── ACTION CARDS ── */
+.action-card {
+  background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg);
+  margin-bottom: 10px; overflow: hidden;
+}
+.action-card.overdue { border-left: 3px solid var(--danger); }
+.action-card.due-today { border-left: 3px solid var(--warning); }
+.ac-header { padding: 16px 18px; display: flex; align-items: center; gap: 14px; }
+.ac-avatar {
+  width: 40px; height: 40px; border-radius: 50%; background: var(--mist);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Bricolage Grotesque', sans-serif; font-size: 13px; font-weight: 800;
+  color: var(--blue); flex-shrink: 0;
+}
+.ac-info { flex: 1; min-width: 0; }
+.ac-name { font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 2px; }
+.ac-meta { font-size: 12px; color: var(--muted); }
+.ac-right { text-align: right; flex-shrink: 0; }
+.ac-amount { font-family: 'Bricolage Grotesque', sans-serif; font-size: 18px; font-weight: 800; color: var(--ink); }
+.status-pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 100px; margin-top: 4px; }
+.pill-overdue { background: var(--danger-bg); color: var(--danger); }
+.pill-due { background: var(--warning-bg); color: var(--warning); }
+.pill-done { background: var(--success-bg); color: var(--success); }
+.pill-upcoming { background: var(--info-bg); color: var(--info-text); }
+
+.ac-form { border-top: 1px solid var(--border); padding: 14px 18px; background: #fafbff; display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+.ac-form-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 180px; }
+.ac-form-group label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; }
+.ac-form-group input, .ac-form-group textarea {
+  padding: 9px 12px; border: 1.5px solid var(--border); border-radius: var(--radius);
+  font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink);
+  background: #fff; transition: border-color 0.2s;
+}
+.ac-form-group input:focus, .ac-form-group textarea:focus { outline: none; border-color: var(--blue); }
+.ac-form-group input.error { border-color: var(--danger); }
+.ac-form-error { font-size: 11px; color: var(--danger); margin-top: 2px; }
+.btn-process {
+  padding: 10px 20px; background: var(--blue); color: #fff; border: none;
+  border-radius: var(--radius); font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.2s;
+  white-space: nowrap; height: fit-content;
+}
+.btn-process:hover { background: var(--blue-dark); }
+.btn-process:disabled { opacity: 0.5; cursor: not-allowed; }
+.ac-done { border-top: 1px solid var(--border); padding: 12px 18px; background: var(--success-bg); display: flex; align-items: center; gap: 10px; }
+.ac-done-txn { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--success); font-weight: 500; }
+.ac-done-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+/* ── EMPTY STATE ── */
+.empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+.empty-state svg { width: 48px; height: 48px; stroke: #c5cde8; fill: none; stroke-width: 1.5; margin: 0 auto 12px; display: block; }
+.empty-state h3 { font-size: 16px; font-weight: 700; color: #a0abc8; margin-bottom: 6px; }
+.empty-state p { font-size: 13px; }
+
+/* ── FILTERS ── */
+.filter-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+.filter-row select, .filter-row input {
+  padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius);
+  font-family: 'Hanken Grotesk', sans-serif; font-size: 13px; color: var(--ink);
+  background: #fff;
+}
+.filter-row select:focus, .filter-row input:focus { outline: none; border-color: var(--blue); }
+
+/* ── TABLE ── */
+.table-wrap { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+table { width: 100%; border-collapse: collapse; }
+thead th { padding: 11px 14px; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; background: var(--mist); border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
+tbody td { padding: 11px 14px; border-bottom: 1px solid #f0f2fa; font-size: 13px; color: var(--ink); vertical-align: middle; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: #f9faff; }
+.txn-code { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--success); }
+.btn-undo { font-size: 12px; padding: 4px 10px; border: 1px solid var(--border); border-radius: 6px; background: none; color: var(--muted); cursor: pointer; }
+.btn-undo:hover { background: var(--danger-bg); color: var(--danger); border-color: var(--danger-border); }
+
+/* ── PARTNER CARDS ── */
+.partner-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.partner-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+.pc-head { padding: 16px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); }
+.pc-avatar { width: 42px; height: 42px; border-radius: 50%; background: var(--blue); display: flex; align-items: center; justify-content: center; font-family: 'Bricolage Grotesque', sans-serif; font-size: 13px; font-weight: 800; color: #fff; flex-shrink: 0; }
+.pc-name { font-size: 14px; font-weight: 700; color: var(--ink); }
+.pc-id { font-size: 11px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+.pc-body { padding: 14px 18px; }
+.pc-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; padding: 4px 0; }
+.pc-row span:first-child { color: var(--muted); }
+.pc-row span:last-child { font-weight: 600; color: var(--ink); }
+.pc-progress { margin-top: 12px; }
+.pc-progress-bar { height: 6px; background: var(--mist); border-radius: 100px; overflow: hidden; margin-top: 6px; }
+.pc-progress-fill { height: 100%; background: var(--blue); border-radius: 100px; transition: width 0.4s; }
+.pc-overdue-tag { font-size: 11px; color: var(--danger); font-weight: 700; }
+
+/* ── LOADING ── */
+.loading-overlay {
+  position: fixed; inset: 0; background: rgba(3,13,49,0.5);
+  display: none; align-items: center; justify-content: center; z-index: 200;
+}
+.loading-overlay.show { display: flex; }
+.loading-box { background: #fff; border-radius: 14px; padding: 28px 36px; text-align: center; }
+.spinner { width: 32px; height: 32px; border: 3px solid var(--mist); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: 13px; color: var(--muted); }
+
+/* ── TOAST ── */
+#toast {
+  position: fixed; bottom: 24px; right: 24px; z-index: 300;
+  padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 600;
+  color: #fff; opacity: 0; transform: translateY(10px);
+  transition: all 0.3s; pointer-events: none;
+}
+#toast.show { opacity: 1; transform: translateY(0); }
+#toast.success { background: var(--success); }
+#toast.error { background: var(--danger); }
+
+/* ── SETUP BANNER ── */
+.setup-banner { background: var(--warning-bg); border: 1px solid var(--warning-border); border-radius: var(--radius-lg); padding: 18px 20px; margin-bottom: 20px; font-size: 13px; color: var(--warning); }
+.setup-banner strong { display: block; margin-bottom: 4px; font-size: 14px; }
+.setup-banner code { background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+
+@media (max-width: 768px) {
+  .main { padding: 16px; }
+  .stats-row { grid-template-columns: 1fr 1fr; }
+  .topbar { padding: 0 16px; }
+  .topbar-date { display: none; }
+  .partner-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  .stats-row { grid-template-columns: 1fr; }
+  .tabs { width: 100%; }
+  .tab { flex: 1; justify-content: center; font-size: 12px; padding: 7px 10px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── LOADING OVERLAY (inline spinner for minor ops like undo) ── -->
+<div class="loading-overlay" id="loading-overlay">
+  <div class="loading-box">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loading-text">Loading...</div>
+  </div>
+</div>
+
+<!-- ── FULL SCREEN LOADING (shown while fetching data after login) ── -->
+<div id="fullscreen-loader" style="display:none;position:fixed;inset:0;z-index:500;background:linear-gradient(135deg,#030D31 0%,#0D1B6E 60%,#1944E8 100%);flex-direction:column;align-items:center;justify-content:center">
+  <div style="text-align:center">
+    <div style="font-family:'Bricolage Grotesque',sans-serif;font-size:32px;font-weight:800;color:#fff;margin-bottom:6px">Share<span style="color:#9FFE02">Pal</span></div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.45);letter-spacing:2px;text-transform:uppercase;margin-bottom:48px">Asset Partner Internal Tool</div>
+    <div style="width:48px;height:48px;border:3px solid rgba(255,255,255,0.1);border-top-color:#9FFE02;border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 20px"></div>
+    <div id="fullscreen-loader-text" style="font-size:14px;color:rgba(255,255,255,0.6)">Loading partner data…</div>
+  </div>
+</div>
+
+<!-- ── TOAST ── -->
+<div id="toast"></div>
+
+<!-- ── LOGIN SCREEN ── -->
+<div id="login-screen">
+  <div class="login-card">
+    <div style="background:var(--navy);margin:-44px -40px 28px;padding:24px 40px 20px;border-radius:20px 20px 0 0">
+      <div class="login-logo">Share<span>Pal</span></div>
+      <div class="login-sub" style="color:rgba(255,255,255,0.5);margin-bottom:0">Asset Partner Internal Tool</div>
+    </div>
+    <label class="form-label" for="username-input">Select user</label>
+    <select class="form-input" id="username-input" style="margin-bottom:14px;cursor:pointer" onchange="if(this.value)document.getElementById('pin-input').focus()">
+      <option value="">— Select your name —</option>
+    </select>
+    <label class="form-label" for="pin-input">PIN</label>
+    <input class="form-input" type="password" id="pin-input" placeholder="••••" maxlength="8" onkeydown="if(event.key==='Enter')doLogin()" />
+    <div id="login-error" class="login-error"></div>
+    <button class="btn-login" onclick="doLogin()">Sign In</button>
+    
+  </div>
+</div>
+
+<!-- ── APP ── -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-logo">Share<span>Pal</span></div>
+    <div class="topbar-right">
+      <span class="topbar-date" id="topbar-date"></span>
+      <span class="role-badge" id="role-badge"></span>
+      <button class="btn-logout" onclick="doLogout()">Sign out</button>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- SETUP BANNER — shown until SCRIPT_URL is configured -->
+    <div class="setup-banner" id="setup-banner" style="display:none">
+      <strong>⚙️ Apps Script not connected yet</strong>
+      Open this file in a text editor and replace <code>YOUR_APPS_SCRIPT_URL_HERE</code> with your deployed Apps Script web app URL, and update <code>DEMO_ADMIN_PIN</code> / <code>DEMO_FINANCE_PIN</code> to match your Apps Script PINs. See the included <code>sharepal_apps_script.js</code> for setup instructions.
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab active" id="tab-action" onclick="switchTab('action')">
+        ⚡ Action needed <span class="tab-badge" id="badge-action">0</span>
+      </button>
+      <button class="tab" id="tab-all" onclick="switchTab('all')">
+        ☰ All payouts <span class="tab-badge zero" id="badge-all">0</span>
+      </button>
+      <button class="tab" id="tab-partners" onclick="switchTab('partners')">
+        👥 Deals
+      </button>
+      <button class="tab" id="tab-agreements" onclick="switchTab('agreements')">
+        📄 Agreements <span class="tab-badge" id="badge-agreements">0</span>
+      </button>
+    </div>
+
+    <!-- ── ACTION TAB ── -->
+    <div class="section active" id="section-action">
+      <div class="stats-row" id="stats-row"></div>
+      <div id="alerts-area"></div>
+      <div class="section-head" id="action-section-head">Today &amp; overdue</div>
+      <div id="action-list"></div>
+    </div>
+
+    <!-- ── ALL PAYOUTS TAB ── -->
+    <div class="section" id="section-all">
+      <div class="filter-row" style="align-items:center">
+        <select id="filter-range" onchange="handleRangeChange()">
+          <option value="">All time</option>
+          <option value="today">Today</option>
+          <option value="week">This week</option>
+          <option value="month">This month</option>
+          <option value="prev_month">Previous month</option>
+          <option value="three_months">Last 3 months</option>
+          <option value="custom">Custom range…</option>
+        </select>
+        <div id="custom-range-wrap" style="display:none;display:none;gap:6px;align-items:center">
+          <input type="date" id="filter-date-from" onchange="renderAll()" style="padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;color:var(--ink)">
+          <span style="font-size:12px;color:var(--muted)">to</span>
+          <input type="date" id="filter-date-to" onchange="renderAll()" style="padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;color:var(--ink)">
+        </div>
+        <select id="filter-status" onchange="renderAll()">
+          <option value="">All statuses</option>
+          <option value="overdue">Overdue</option>
+          <option value="due">Due today</option>
+          <option value="upcoming">Upcoming</option>
+          <option value="processed">Processed</option>
+        </select>
+        <input type="text" id="filter-search" placeholder="Search name or ID…" oninput="renderAll()" style="min-width:200px">
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Partner</th>
+              <th>Payout #</th>
+              <th>Due date</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Transaction ID</th>
+              <th>Processed on</th>
+              <th>Marked by</th>
+              <th id="all-action-col">Action</th>
+            </tr>
+          </thead>
+          <tbody id="all-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── DEALS TAB ── -->
+    <div class="section" id="section-partners">
+      <div class="stats-row" id="deals-summary" style="margin-bottom:20px"></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px" id="deals-summary-row2"></div>
+      <div class="filter-row" style="margin-bottom:16px;align-items:center">
+        <input type="text" id="partner-search" placeholder="Search name or ID…" oninput="renderPartners()" style="min-width:200px">
+        <select id="partner-date-range" onchange="handlePartnerRangeChange()">
+          <option value="">All start dates</option>
+          <option value="today">Started today</option>
+          <option value="week">This week</option>
+          <option value="month">This month</option>
+          <option value="prev_month">Previous month</option>
+          <option value="three_months">Last 3 months</option>
+          <option value="custom">Custom range…</option>
+        </select>
+        <div id="partner-custom-range-wrap" style="display:none;gap:6px;align-items:center">
+          <input type="date" id="partner-date-from" onchange="renderPartners()" style="padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;color:var(--ink)">
+          <span style="font-size:12px;color:var(--muted)">to</span>
+          <input type="date" id="partner-date-to" onchange="renderPartners()" style="padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;color:var(--ink)">
+        </div>
+        <select id="partner-filter-status" onchange="renderPartners()">
+          <option value="">All statuses</option>
+          <option value="overdue">Has overdue</option>
+          <option value="active">Active</option>
+          <option value="completed">Completed</option>
+        </select>
+        <select id="partner-sort" onchange="renderPartners()">
+          <option value="date">Sort: Start date (latest)</option>
+          <option value="name">Sort: Name</option>
+          <option value="invested">Sort: Amount</option>
+          <option value="overdue">Sort: Overdue first</option>
+        </select>
+      </div>
+      <div class="partner-grid" id="partner-grid"></div>
+    </div>
+
+    <!-- ── AGREEMENTS TAB ── -->
+    <div class="section" id="section-agreements">
+      <div class="stats-row" id="agreement-stats-row"></div>
+      <div id="agreement-alerts-area"></div>
+
+      <div class="tabs" style="margin-bottom:16px">
+        <button class="tab active" id="atab-action" onclick="switchAgreementView('action')">
+          ⚡ Action needed <span class="tab-badge" id="badge-agreement-action">0</span>
+        </button>
+        <button class="tab" id="atab-all" onclick="switchAgreementView('all')">
+          ☰ All agreements
+        </button>
+        <button class="tab" id="atab-completed" onclick="switchAgreementView('completed')">
+          ✓ Completed <span class="tab-badge zero" id="badge-agreement-completed">0</span>
+        </button>
+      </div>
+
+      <div class="agreement-view active" id="aview-action">
+        <div id="agreement-action-list"></div>
+      </div>
+
+      <div class="agreement-view" id="aview-all">
+        <div class="filter-row">
+          <input type="text" id="agreement-search" placeholder="Search name or ID…" oninput="renderAgreementsAll()" style="min-width:220px">
+          <select id="agreement-filter-status" onchange="renderAgreementsAll()">
+            <option value="">All statuses</option>
+            <option value="Not Drafted">Not Drafted</option>
+            <option value="Drafted">Drafted</option>
+            <option value="Shared">Shared</option>
+            <option value="Signed">Signed</option>
+          </select>
+        </div>
+        <div id="agreement-all-list"></div>
+      </div>
+
+      <div class="agreement-view" id="aview-completed">
+        <div id="agreement-completed-list"></div>
+      </div>
+    </div>
+
+    <!-- ── PARTNER PAYOUT MODAL ── -->
+    <div id="partner-modal-bg" style="display:none;position:fixed;inset:0;background:rgba(3,13,49,0.55);z-index:100;overflow-y:auto;padding:32px 16px" onclick="closePartnerModal(event)">
+      <div id="partner-modal" style="background:#fff;border-radius:18px;max-width:760px;margin:0 auto;overflow:hidden;position:relative">
+        <div id="modal-head" style="padding:22px 24px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px">
+          <div id="modal-avatar" style="width:46px;height:46px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-size:14px;font-weight:800;color:#fff;flex-shrink:0"></div>
+          <div style="flex:1;min-width:0">
+            <div id="modal-name" style="font-size:16px;font-weight:700;color:var(--ink)"></div>
+            <div id="modal-meta" style="font-size:12px;color:var(--muted);margin-top:2px;font-family:'JetBrains Mono',monospace"></div>
+          </div>
+          <button onclick="closePartnerModal()" style="background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;padding:4px 8px;border-radius:6px;line-height:1">×</button>
+        </div>
+        <!-- Admin-only contact info -->
+        <div id="modal-contact" style="display:none;padding:14px 24px;background:#fafbff;border-bottom:1px solid var(--border);gap:24px;flex-wrap:wrap;align-items:center"></div>
+        <div id="modal-stats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-bottom:1px solid var(--border)"></div>
+        <div style="padding:20px 24px">
+          <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Payout Schedule</div>
+          <div style="overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse">
+              <thead>
+                <tr>
+                  <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;background:var(--mist);border-bottom:1px solid var(--border);white-space:nowrap">#</th>
+                  <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;background:var(--mist);border-bottom:1px solid var(--border);white-space:nowrap">Due date</th>
+                  <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;background:var(--mist);border-bottom:1px solid var(--border);white-space:nowrap">Amount</th>
+                  <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;background:var(--mist);border-bottom:1px solid var(--border);white-space:nowrap">Status</th>
+                  <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;background:var(--mist);border-bottom:1px solid var(--border);white-space:nowrap">Transaction ID</th>
+                  <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;background:var(--mist);border-bottom:1px solid var(--border);white-space:nowrap">Processed on</th>
+                  <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;background:var(--mist);border-bottom:1px solid var(--border);white-space:nowrap">Marked by</th>
+                </tr>
+              </thead>
+              <tbody id="modal-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// CONFIGURATION — replace with your deployed URL
+// ─────────────────────────────────────────────
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxoPvmAN_dg9aLBZOKKsGSVLk_nifhR0Pt_dYzR5Gwg3-Mck7OucQrRVmSynZi7paV8IQ/exec";
+
+// Demo-mode users — only used when SCRIPT_URL is not configured
+// Mirror these to the USERS array in Apps Script
+const DEMO_USERS = [
+  { username: "Deep",    pin: "1234", role: "admin"   },
+  { username: "Finance", pin: "9999", role: "finance" },
+  { username: "Akash",   pin: "4321", role: "sign"    },
+  { username: "Viewer",  pin: "0000", role: "viewer"  },
 ];
 
-// Everything goes through doGet to avoid CORS issues
-function doGet(e) {
-  const p = e && e.parameter ? e.parameter : {};
-  const action   = p.action   || "";
-  const username = (p.username || "").trim();
-  const pin      = (p.pin      || "").trim();
-  let result;
+// ── STATE ──
+let ROLE     = null;
+let PIN      = null;
+let USERNAME = null;
+let ALL_PAYOUTS   = [];
+let ALL_PARTNERS  = [];
+let ALL_AGREEMENTS = [];
+const TODAY = new Date();
+TODAY.setHours(0, 0, 0, 0);
 
+// ── UTILITIES ──
+function fmtINR(n) {
+  return "₹" + Math.round(n).toLocaleString("en-IN");
+}
+function fmtDate(d) {
+  if (!d) return "—";
+  const dt = new Date(d);
+  return dt.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+}
+function initials(name) {
+  return name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+}
+function daysDiff(dueDate) {
+  const d = new Date(dueDate); d.setHours(0, 0, 0, 0);
+  return Math.floor((TODAY - d) / 86400000);
+}
+function getComputedStatus(p) {
+  if (p.status === "Processed") return "processed";
+  const diff = daysDiff(p.dueDate);
+  if (diff > 0)  return "overdue";
+  if (diff === 0) return "due";
+  if (diff === -1) return "due";   // allow processing 1 day prior
+  return "upcoming";
+}
+function showToast(msg, type = "success") {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.className = "show " + type;
+  setTimeout(() => { t.className = ""; }, 3200);
+}
+function setLoading(show, msg = "Loading…") {
+  document.getElementById("loading-overlay").classList.toggle("show", show);
+  document.getElementById("loading-text").textContent = msg;
+}
+
+// ── AUTH ──
+async function doLogin() {
+  const usernameInput = document.getElementById("username-input");
+  const pinInput      = document.getElementById("pin-input");
+  const err           = document.getElementById("login-error");
+  const username      = usernameInput.value.trim();
+  const pin           = pinInput.value.trim();
+
+  if (!username) { err.textContent = "Select your name."; usernameInput.focus(); return; }
+  if (!pin)      { err.textContent = "Enter your PIN.";  pinInput.focus();      return; }
+
+  if (SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
+    // demo mode — check against demo users
+    const demoUser = DEMO_USERS.find(u => u.username.toLowerCase() === username.toLowerCase() && u.pin === pin);
+    if (demoUser) { ROLE = demoUser.role; PIN = pin; USERNAME = demoUser.username; localStorage.setItem("sp_last_user", USERNAME); saveSession(); bootApp(); }
+    else { err.textContent = "Wrong name or PIN. Try again."; }
+    return;
+  }
+
+  setLoading(true, "Signing in…");
   try {
-    if (action === "ping") {
-      result = { ok: true };
-
-    } else if (action === "getUsers") {
-      // Returns only usernames — no PINs or roles exposed
-      result = { ok: true, users: USERS.map(u => u.username) };
-
-    } else if (action === "verifyPin") {
-      result = verifyUser(username, pin);
-
-    } else if (action === "getAll") {
-      const user = getUser(username, pin);
-      if (!user) { result = { error: "Unauthorised" }; }
-      else { result = getAll(); result.role = user.role; result.username = user.username; }
-
-    } else if (action === "markProcessed") {
-      const user = getUser(username, pin);
-      if (!user) { result = { error: "Unauthorised" }; }
-      else if (user.role === "viewer") { result = { error: "No permission" }; }
-      else {
-        result = markProcessed(p.payoutKey, p.transactionId, p.note || "", user.username);
-      }
-
-    } else if (action === "undoPayout") {
-      const user = getUser(username, pin);
-      if (!user || user.role !== "admin") { result = { error: "Admin only" }; }
-      else { result = undoPayout(p.payoutKey); }
-
-    } else if (action === "getAgreementData") {
-      const user = getUser(username, pin);
-      if (!user || user.role !== "admin") { result = { error: "Admin only" }; }
-      else { result = getAgreementData(p.partnerId); }
-
-    } else if (action === "getPartnerList") {
-      const user = getUser(username, pin);
-      if (!user || user.role !== "admin") { result = { error: "Admin only" }; }
-      else { result = getPartnerList(); }
-
-    } else if (action === "setAgreementLink") {
-      // Admin adds/updates the Drive link + remark — moves status to "Drafted"
-      const user = getUser(username, pin);
-      if (!user || user.role !== "admin") { result = { error: "Admin only" }; }
-      else { result = setAgreementLink(p.partnerId, p.driveLink, p.remark || "", user.username); }
-
-    } else if (action === "markAgreementShared") {
-      // Finance marks the agreement as shared with the partner — moves status to "Shared"
-      const user = getUser(username, pin);
-      if (!user || (user.role !== "finance" && user.role !== "admin")) { result = { error: "No permission" }; }
-      else { result = markAgreementShared(p.partnerId, user.username); }
-
-    } else if (action === "markPartnerSigned") {
-      // Finance toggles partner signature received
-      const user = getUser(username, pin);
-      if (!user || (user.role !== "finance" && user.role !== "admin")) { result = { error: "No permission" }; }
-      else { result = markPartnerSigned(p.partnerId, user.username); }
-
-    } else if (action === "signInternal") {
-      // Sign role (or admin) signs internally on behalf of the team
-      const user = getUser(username, pin);
-      if (!user || (user.role !== "sign" && user.role !== "admin")) { result = { error: "No permission" }; }
-      else { result = signInternal(p.partnerId, user.username); }
-
+    const res = await fetch(SCRIPT_URL + "?action=verifyPin&username=" + encodeURIComponent(username) + "&pin=" + encodeURIComponent(pin)).then(r=>r.json());
+    if (res.ok) {
+      ROLE = res.role; PIN = pin; USERNAME = res.username;
+      localStorage.setItem("sp_last_user", USERNAME);
+      saveSession();
+      bootApp();
     } else {
-      result = { error: "Unknown action: " + action };
+      err.textContent = res.error || "Wrong name or PIN. Try again.";
     }
-  } catch (err) {
-    result = { error: err.message };
+  } catch (e) {
+    err.textContent = "Connection error. Check Apps Script URL.";
+  }
+  setLoading(false);
+}
+
+function doLogout() {
+  clearSession();
+  stopActivityTracking();
+  ROLE = null; PIN = null; USERNAME = null; ALL_PAYOUTS = []; ALL_PARTNERS = [];
+  document.getElementById("app").style.display = "none";
+  document.getElementById("fullscreen-loader").style.display = "none";
+  document.getElementById("login-screen").style.display = "flex";
+  document.getElementById("pin-input").value = "";
+  document.getElementById("login-error").textContent = "";
+  // Restore last username in dropdown
+  const lastUser = localStorage.getItem("sp_last_user");
+  const sel = document.getElementById("username-input");
+  if (lastUser && sel && sel.querySelector(`option[value="${lastUser}"]`)) sel.value = lastUser;
+  // Auto-focus PIN if username already selected
+  if (sel && sel.value) setTimeout(() => document.getElementById("pin-input").focus(), 50);
+}
+
+// ── API — everything via GET params to avoid CORS ──
+async function api(params) {
+  const qs = new URLSearchParams({ ...params, username: USERNAME || "", pin: PIN || "" }).toString();
+  const res = await fetch(SCRIPT_URL + "?" + qs);
+  return res.json();
+}
+
+// ── BOOT ──
+async function bootApp() {
+  // Show fullscreen loader immediately, hide login screen
+  document.getElementById("login-screen").style.display = "none";
+  document.getElementById("fullscreen-loader").style.display = "flex";
+  document.getElementById("app").style.display = "none";
+
+  // Set role badge with username
+  const rb = document.getElementById("role-badge");
+  rb.textContent = USERNAME || "User";
+  rb.className = "role-badge " + ROLE;
+
+  // Date
+  document.getElementById("topbar-date").textContent =
+    TODAY.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
+
+  // Reorder tabs based on role
+  // viewer/sign: Deals → All payouts → Agreements → Action needed
+  // finance/admin: Action needed → All payouts → Deals → Agreements (default)
+  const tabsEl = document.querySelector(".tabs");
+  const tAction     = document.getElementById("tab-action");
+  const tAll        = document.getElementById("tab-all");
+  const tPartners   = document.getElementById("tab-partners");
+  const tAgreements = document.getElementById("tab-agreements");
+  // Detach all first (avoids innerHTML wipe destroying references)
+  [tAction, tAll, tPartners, tAgreements].forEach(t => tabsEl.removeChild(t));
+  if (ROLE === "viewer" || ROLE === "sign") {
+    tabsEl.appendChild(tPartners);
+    tabsEl.appendChild(tAll);
+    tabsEl.appendChild(tAgreements);
+    tabsEl.appendChild(tAction);
+    switchTab("partners");
+  } else {
+    tabsEl.appendChild(tAction);
+    tabsEl.appendChild(tAll);
+    tabsEl.appendChild(tPartners);
+    tabsEl.appendChild(tAgreements);
+    switchTab("action");
   }
 
-  return ContentService
-    .createTextOutput(JSON.stringify(result))
-    .setMimeType(ContentService.MimeType.JSON);
-}
-
-// ── AUTH ──────────────────────────────────────────────────────
-function verifyUser(username, pin) {
-  if (!username) return { ok: false, error: "Enter your name" };
-  const user = USERS.find(u => u.username.toLowerCase() === username.toLowerCase() && u.pin === pin);
-  if (user) return { ok: true, role: user.role, username: user.username };
-  return { ok: false, error: "Wrong name or PIN" };
-}
-
-function getUser(username, pin) {
-  return USERS.find(u => u.username.toLowerCase() === username.toLowerCase() && u.pin === pin) || null;
-}
-
-// ── ENSURE STATUS SHEET ───────────────────────────────────────
-function ensureStatusSheet() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let sh = ss.getSheetByName(SHEET_NAME_STATUS);
-  if (!sh) {
-    sh = ss.insertSheet(SHEET_NAME_STATUS);
-    sh.appendRow([
-      "PayoutKey", "PartnerID", "PartnerName", "PayoutNum",
-      "DueDate", "Amount", "Status", "TransactionID",
-      "MarkedBy", "MarkedAt", "Note"
-    ]);
-    sh.setFrozenRows(1);
-    sh.getRange(1, 1, 1, 11).setFontWeight("bold");
+  // Show setup banner if not configured
+  if (SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
+    loadDemoData();
+    document.getElementById("fullscreen-loader").style.display = "none";
+    document.getElementById("app").style.display = "block";
+    document.getElementById("setup-banner").style.display = "block";
+    startActivityTracking();
+    saveSession();
+    return;
   }
-  return sh;
+
+  await refreshData();
+  document.getElementById("fullscreen-loader").style.display = "none";
+  document.getElementById("app").style.display = "block";
+  startActivityTracking();
+  saveSession(); // refresh savedAt on successful data load
 }
 
-// ── PARSE PARTNER DATA ────────────────────────────────────────
-function parsePartners() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sh = ss.getSheetByName(SHEET_NAME_PARTNERS);
-  const rows = sh.getDataRange().getValues();
-  const partners = [];
-
-  for (let i = 1; i < rows.length; i++) {
-    const r = rows[i];
-    if (!r[0]) continue;
-    // Use AFP ID if present, otherwise generate a stable fallback from email+name
-    const afpId = String(r[1]).trim();
-    const stableId = afpId || ("NO-ID-" + String(r[2]).trim().replace(/[^a-zA-Z0-9]/g,"").toUpperCase().slice(0,12));
-    partners.push({
-      name:       String(r[0]),
-      id:         stableId,
-      afpId:      afpId,   // original — may be empty
-      email:      String(r[2]),
-      phone:      String(r[3]),
-      invested:   parseAmount(r[4]),
-      model:      String(r[5]),
-      tenure:     parseInt(String(r[6])),
-      totalPayout:parseAmount(r[7]),
-      monthly:    parseAmount(r[8]),
-      investDate: parseDate(r[9]),
-      payType:    String(r[10]),
-      txnId:      String(r[11] || ""),
-      // ── Agreement fields ──
-      pan:          String(r[12] || ""),
-      aadhaar:      String(r[13] || ""),
-      address:      String(r[14] || ""),
-      bankAccount:  String(r[15] || ""),
-      ifsc:         String(r[16] || ""),
-      assetNames:   String(r[18] || ""),
-      assetSerials: String(r[19] || ""),
-      assetValues:  String(r[20] || ""),
-    });
+async function refreshData() {
+  document.getElementById("fullscreen-loader-text").textContent = "Loading payout data…";
+  setLoading(false);  // hide small overlay if open
+  try {
+    const res = await api({ action: "getAll", username: USERNAME || "" });
+    if (res.ok) {
+      // Update username from server response in case it wasn't set at login
+      if (res.username) USERNAME = res.username;
+      if (res.role)     ROLE     = res.role;
+      // Re-render topbar with confirmed username
+      const rb = document.getElementById("role-badge");
+      if (rb) rb.textContent = USERNAME || "User";
+      if (rb) rb.className = "role-badge " + ROLE;
+      ALL_PARTNERS   = res.partners;
+      ALL_PAYOUTS    = res.payouts;
+      ALL_AGREEMENTS = res.agreements || [];
+      renderAll();
+      renderAction();
+      renderStats();
+      renderPartners();
+      renderAgreements();
+      updateBadges();
+    } else {
+      showToast("Failed to load data: " + res.error, "error");
+    }
+  } catch (e) {
+    showToast("Network error. Check connection.", "error");
   }
-  return partners;
+  setLoading(false);
 }
 
-function parseAmount(val) {
-  if (typeof val === "number") return val;
-  return parseFloat(String(val).replace(/[₹,\s]/g, "")) || 0;
-}
-
-function parseDate(val) {
-  if (val instanceof Date) return val;
-  if (!val) return null;
-  const s = String(val).trim();
-  const months = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
-  const m = s.match(/(\d{1,2})-([A-Za-z]{3})-(\d{4})/);
-  if (m) return new Date(+m[3], months[m[2]], +m[1]);
-  return new Date(s);
-}
-
-// ── BUILD PAYOUT SCHEDULE ─────────────────────────────────────
-function buildPayoutSchedule(partners) {
+// ── CLIENT-SIDE PAYOUT SCHEDULE BUILDER ──
+// Used for demo data; real data comes pre-built from Apps Script
+function buildClientPayouts(partners) {
   const payouts = [];
   partners.forEach(p => {
     if (!p.investDate) return;
@@ -203,49 +763,28 @@ function buildPayoutSchedule(partners) {
     const isYearly = p.model  && p.model.toLowerCase().includes("yearly");
 
     if (isYearly) {
-      // Yearly model: one payout every 12 months
-      // Number of yearly payouts = tenure / 12
       const numPayouts = Math.round(p.tenure / 12);
       for (let i = 1; i <= numPayouts; i++) {
-        const due    = new Date(base);
-        due.setMonth(due.getMonth() + (i * 12));
+        const due    = new Date(base); due.setMonth(due.getMonth() + (i * 12));
         const isLast = i === numPayouts;
         const amount = Math.round(p.monthly) + (isFlat && isLast ? Math.round(p.invested) : 0);
         payouts.push({
-          key:               p.id + "-" + i,
-          partnerId:         p.id,
-          afpId:             p.afpId || "",
-          partnerName:       p.name,
-          payoutNum:         i,
-          tenure:            p.tenure,
-          totalPayouts:      numPayouts,
-          dueDate:           due.toISOString(),
-          amount,
-          isLastPayout:      isLast,
-          includesPrincipal: isFlat && isLast,
-          payoutModel:       "Yearly",
+          key: p.id+"-"+i, partnerId: p.id, afpId: p.afpId||"", partnerName: p.name,
+          payoutNum: i, tenure: p.tenure, totalPayouts: numPayouts,
+          dueDate: due.toISOString(), amount,
+          isLastPayout: isLast, includesPrincipal: isFlat && isLast, payoutModel: "Yearly",
         });
       }
     } else {
-      // Monthly model: one payout every month
       for (let i = 1; i <= p.tenure; i++) {
-        const due    = new Date(base);
-        due.setMonth(due.getMonth() + i);
+        const due    = new Date(base); due.setMonth(due.getMonth() + i);
         const isLast = i === p.tenure;
         const amount = Math.round(p.monthly) + (isFlat && isLast ? Math.round(p.invested) : 0);
         payouts.push({
-          key:               p.id + "-" + i,
-          partnerId:         p.id,
-          afpId:             p.afpId || "",
-          partnerName:       p.name,
-          payoutNum:         i,
-          tenure:            p.tenure,
-          totalPayouts:      p.tenure,
-          dueDate:           due.toISOString(),
-          amount,
-          isLastPayout:      isLast,
-          includesPrincipal: isFlat && isLast,
-          payoutModel:       "Monthly",
+          key: p.id+"-"+i, partnerId: p.id, afpId: p.afpId||"", partnerName: p.name,
+          payoutNum: i, tenure: p.tenure, totalPayouts: p.tenure,
+          dueDate: due.toISOString(), amount,
+          isLastPayout: isLast, includesPrincipal: isFlat && isLast, payoutModel: "Monthly",
         });
       }
     }
@@ -253,388 +792,1078 @@ function buildPayoutSchedule(partners) {
   return payouts;
 }
 
-// ── READ STATUS MAP ───────────────────────────────────────────
-function readStatusMap() {
-  const sh = ensureStatusSheet();
-  const rows = sh.getDataRange().getValues();
-  const map = {};
-  for (let i = 1; i < rows.length; i++) {
-    const r = rows[i];
-    if (!r[0]) continue;
-    map[String(r[0])] = {
-      status:        String(r[6]),
-      transactionId: String(r[7]),
-      markedBy:      String(r[8]),
-      markedAt:      String(r[9]),
-      note:          String(r[10]),
-      rowIndex:      i + 1,
-    };
-  }
-  return map;
-}
+// ── DEMO DATA (when Apps Script not set up) ──
+function loadDemoData() {
+  const raw = [
+    {name:"DEEPAK KUMAR JANGIR",   id:"AFP1778050867782F",  invested:15000,  tenure:12, monthly:1360,  investDate:"2026-05-06", model:"Monthly", payType:"EMI"},
+    {name:"SHREEHARI U",           id:"AFP1778526668985F",  invested:139500, tenure:24, monthly:6876,  investDate:"2026-05-11", model:"Monthly", payType:"EMI"},
+    {name:"Preeti Jain",           id:"NO-ID-THEPREETIJAIN",invested:125000, tenure:12, monthly:17500, investDate:"2026-05-13", model:"Yearly",  payType:"Flat fixed interest"},
+    {name:"Paras Mehta",           id:"AFP1778768385988F",  invested:16000,  tenure:24, monthly:789,   investDate:"2026-05-14", model:"Monthly", payType:"EMI"},
+    {name:"Jakir Hussain",         id:"AFP1779192231156F",  invested:57500,  tenure:12, monthly:5213,  investDate:"2026-05-19", model:"Monthly", payType:"EMI"},
+    {name:"Jakir Hussain",         id:"AFP1779196920191F",  invested:16000,  tenure:24, monthly:789,   investDate:"2026-05-19", model:"Monthly", payType:"EMI"},
+    {name:"Vandan Kumbhat",        id:"NO-ID-VANDANN79",    invested:125000, tenure:12, monthly:17500, investDate:"2026-05-19", model:"Yearly",  payType:"Flat fixed interest"},
+    {name:"RAMYA NARAYANAMURTHY",  id:"AFP1779464024805F",  invested:134500, tenure:12, monthly:12193, investDate:"2026-05-22", model:"Monthly", payType:"EMI"},
+    {name:"Chilukuri Sri Sneha Priya",id:"AFP1779544069782F",invested:54500, tenure:36, monthly:681,   investDate:"2026-05-23", model:"Monthly", payType:"Flat fixed interest"},
+    {name:"Kunal Agarwal",         id:"NO-ID-MRSHUBHAMAGARWAL",invested:125000,tenure:12,monthly:17500,investDate:"2026-05-29",model:"Yearly", payType:"Flat fixed interest"},
+    {name:"RAMYA NARAYANAMURTHY",  id:"AFP1780137016779F",  invested:269000, tenure:12, monthly:3138,  investDate:"2026-05-30", model:"Monthly", payType:"Flat fixed interest"},
+    {name:"Jaikrishna Sharma",     id:"AFP1780809035128F",  invested:57500,  tenure:12, monthly:671,   investDate:"2026-06-07", model:"Monthly", payType:"Flat fixed interest"},
+  ];
+  ALL_PARTNERS = raw.map(p => ({ ...p, email: p.name.toLowerCase().replace(/[^a-z]/g,"")+"@example.com", phone: "9999999999" }));
+  ALL_PAYOUTS = buildClientPayouts(ALL_PARTNERS);
 
-// ── GET ALL ───────────────────────────────────────────────────
-function getAll() {
-  const partners  = parsePartners();
-  const payouts   = buildPayoutSchedule(partners);
-  const statusMap = readStatusMap();
-
-  payouts.forEach(p => {
-    const s = statusMap[p.key];
-    if (s) {
-      p.status        = s.status;
-      p.transactionId = s.transactionId;
-      p.markedBy      = s.markedBy;
-      p.markedAt      = s.markedAt;
-      p.note          = s.note;
-    }
-  });
-
-  const agreements = buildAgreementList(partners);
-
-  return { ok: true, partners, payouts, agreements };
-}
-
-// ── MARK PROCESSED ────────────────────────────────────────────
-function markProcessed(payoutKey, transactionId, note, markedBy) {
-  if (!payoutKey)                        return { error: "payoutKey required" };
-  if (!transactionId || !transactionId.trim()) return { error: "Transaction ID is mandatory" };
-
-  const sh        = ensureStatusSheet();
-  const statusMap = readStatusMap();
-  const partners  = parsePartners();
-  const payouts   = buildPayoutSchedule(partners);
-  const payout    = payouts.find(p => p.key === payoutKey);
-  if (!payout) return { error: "Payout not found: " + payoutKey };
-
-  const now = new Date().toISOString();
-
-  if (statusMap[payoutKey]) {
-    const row = statusMap[payoutKey].rowIndex;
-    sh.getRange(row, 7).setValue("Processed");
-    sh.getRange(row, 8).setValue(transactionId.trim());
-    sh.getRange(row, 9).setValue(markedBy);
-    sh.getRange(row, 10).setValue(now);
-    sh.getRange(row, 11).setValue(note || "");
-  } else {
-    sh.appendRow([
-      payoutKey,
-      payout.partnerId,
-      payout.partnerName,
-      payout.payoutNum,
-      new Date(payout.dueDate),
-      payout.amount,
-      "Processed",
-      transactionId.trim(),
-      markedBy,
-      now,
-      note || "",
-    ]);
-  }
-  return { ok: true };
-}
-
-// ── UNDO PAYOUT (admin only) ──────────────────────────────────
-function undoPayout(payoutKey) {
-  const sh        = ensureStatusSheet();
-  const statusMap = readStatusMap();
-  if (!statusMap[payoutKey]) return { error: "Not found" };
-
-  const row = statusMap[payoutKey].rowIndex;
-  sh.getRange(row, 7).setValue("Pending");
-  sh.getRange(row, 8).setValue("");
-  sh.getRange(row, 9).setValue("");
-  sh.getRange(row, 10).setValue(new Date().toISOString());
-  sh.getRange(row, 11).setValue("Undone by admin");
-  return { ok: true };
-}
-
-// ── AGREEMENT DATA ────────────────────────────────────────────
-// Maps a partner record to agreement.html field IDs
-function getAgreementData(partnerId) {
-  if (!partnerId) return { error: "partnerId required" };
-  const partners = parsePartners();
-  const p = partners.find(x => x.id === partnerId);
-  if (!p) return { error: "Partner not found" };
-
-  // Determine agreement type from Payout Model + Payout Type
-  const isFlat   = p.payType && p.payType.toLowerCase().includes("flat");
-  const isYearly = p.model   && p.model.toLowerCase().includes("yearly");
-  let agreeType;
-  if (isYearly && isFlat)      agreeType = "flat_yearly";
-  else if (!isYearly && isFlat) agreeType = "flat_monthly";
-  else                           agreeType = "emi";
-
-  // Split comma-separated asset fields
-  const splitCsv = s => String(s||"").split(",").map(x=>x.trim()).filter(x=>x);
-  const names    = splitCsv(p.assetNames);
-  const serials  = splitCsv(p.assetSerials);
-  const values   = splitCsv(p.assetValues).map(v => parseAmount(v));
-
-  const assets = names.map((name, i) => ({
-    name:   name,
-    serial: serials[i] || "",
-    value:  values[i] !== undefined ? values[i] : "",
-  }));
-
-  // Warn if asset values don't sum to invested amount
-  let assetValueWarning = "";
-  if (values.length > 0) {
-    const sum = values.reduce((a,b)=>a+b, 0);
-    if (Math.abs(sum - p.invested) > 1) {
-      assetValueWarning = "Asset values sum to " + sum + " but Amount Invested is " + p.invested + ". Please review.";
-    }
-  }
-
-  // Effective date as YYYY-MM-DD for <input type="date">
-  const effectiveDate = p.investDate ? Utilities.formatDate(p.investDate, "Etc/GMT", "yyyy-MM-dd") : "";
-
-  return {
-    ok: true,
-    data: {
-      // Step 1 — Lender Info
-      lender_name:     p.name,
-      lender_pan:      p.pan,
-      lender_aadhaar:  p.aadhaar,
-      lender_address:  p.address,
-      lender_email:    p.email,
-      lender_mobile:   p.phone,
-      bank_name:       p.name,        // Account holder name defaults to lender name
-      bank_acc:        p.bankAccount,
-      bank_ifsc:       p.ifsc,
-
-      // Step 2 — Loan Terms
-      loan_amount:     p.invested,
-      effective_date:  effectiveDate,
-      tenure:          p.tenure,
-      monthly_payout:  p.monthly,
-      agreeType:       agreeType,
-
-      // Step 3 — Transaction (txn date/amount = investment date/amount)
-      txn_date:        effectiveDate,
-      txn_amount:      p.invested,
-      txn_id:          p.txnId,
-
-      // Step 4 — Assets
-      assets:          assets,
-
-      // Metadata
-      partnerId:       p.id,
-      afpId:           p.afpId,
-      assetValueWarning: assetValueWarning,
-    }
-  };
-}
-
-// ── PARTNER LIST (for manual picker in agreement.html) ────────
-function getPartnerList() {
-  const partners = parsePartners();
-  return {
-    ok: true,
-    partners: partners.map(p => ({
-      id:   p.id,
-      afpId: p.afpId,
-      name: p.name,
-      invested: p.invested,
-    })),
-  };
-}
-
-// ── ENSURE AGREEMENT SHEET ─────────────────────────────────────
-function ensureAgreementSheet() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let sh = ss.getSheetByName(SHEET_NAME_AGREEMENTS);
-  if (!sh) {
-    sh = ss.insertSheet(SHEET_NAME_AGREEMENTS);
-    sh.appendRow([
-      "PartnerID", "AgreementStatus", "DriveLink", "Remark", "PartnerEmail",
-      "InternalSigned", "InternalSignedBy", "InternalSignedAt",
-      "PartnerSigned", "PartnerSignedAt",
-      "SharedAt", "SharedBy", "LastUpdatedAt"
-    ]);
-    sh.setFrozenRows(1);
-    sh.getRange(1, 1, 1, 13).setFontWeight("bold");
-  }
-  return sh;
-}
-
-// ── READ AGREEMENT MAP ─────────────────────────────────────────
-function readAgreementMap() {
-  const sh = ensureAgreementSheet();
-  const rows = sh.getDataRange().getValues();
-  const map = {};
-  for (let i = 1; i < rows.length; i++) {
-    const r = rows[i];
-    if (!r[0]) continue;
-    map[String(r[0])] = {
-      agreementStatus:  String(r[1] || "Not Drafted"),
-      driveLink:        String(r[2] || ""),
-      remark:           String(r[3] || ""),
-      partnerEmail:     String(r[4] || ""),
-      internalSigned:   String(r[5] || "").toUpperCase() === "TRUE",
-      internalSignedBy: String(r[6] || ""),
-      internalSignedAt: String(r[7] || ""),
-      partnerSigned:    String(r[8] || "").toUpperCase() === "TRUE",
-      partnerSignedAt:  String(r[9] || ""),
-      sharedAt:         String(r[10] || ""),
-      sharedBy:         String(r[11] || ""),
-      lastUpdatedAt:    String(r[12] || ""),
-      rowIndex:         i + 1,
-    };
-  }
-  return map;
-}
-
-// ── BUILD AGREEMENT LIST ───────────────────────────────────────
-// One entry per partner, merging Agreement_Status sheet with partner data
-function buildAgreementList(partners) {
-  const map = readAgreementMap();
-  const now = new Date();
-
-  return partners.map(p => {
-    const a = map[p.id] || {
-      agreementStatus: "Not Drafted",
-      driveLink: "", remark: "", partnerEmail: p.email,
-      internalSigned: false, internalSignedBy: "", internalSignedAt: "",
-      partnerSigned: false, partnerSignedAt: "",
-      sharedAt: "", sharedBy: "", lastUpdatedAt: "",
-    };
-
-    // Both signatures done → status is "Signed" regardless of stored status
-    let status = a.agreementStatus;
-    if (a.internalSigned && a.partnerSigned) status = "Signed";
-
-    // Due/Overdue — only relevant until Signed
-    let dueStatus = "ok"; // "due" | "overdue" | "ok" (ok = signed/completed)
-    if (status !== "Signed" && p.investDate) {
-      const investDate = new Date(p.investDate);
-      const daysSince = Math.floor((now - investDate) / 86400000);
-      dueStatus = daysSince > 3 ? "overdue" : "due";
-    }
-
+  // Demo agreement data — all "Not Drafted" except a couple in further stages
+  const now = new Date(TODAY);
+  ALL_AGREEMENTS = ALL_PARTNERS.map((p, i) => {
+    const investDate = new Date(p.investDate);
+    const daysSince = Math.floor((now - investDate) / 86400000);
+    let agreementStatus = "Not Drafted";
+    let driveLink = "", remark = "", internalSigned = false, partnerSigned = false;
+    if (i === 0) { agreementStatus = "Drafted"; driveLink = "https://drive.google.com/drive/folders/demo1"; remark = "Double-check PAN before sharing"; }
+    if (i === 1) { agreementStatus = "Shared"; driveLink = "https://drive.google.com/drive/folders/demo2"; internalSigned = true; }
+    const dueStatus = agreementStatus === "Signed" ? "ok" : (daysSince > 3 ? "overdue" : "due");
     return {
-      partnerId:    p.id,
-      afpId:        p.afpId || "",
-      partnerName:  p.name,
-      investDate:   p.investDate ? p.investDate.toISOString() : null,
-      agreementStatus: status,
-      driveLink:    a.driveLink,
-      remark:       a.remark,
-      partnerEmail: a.partnerEmail || p.email,
-      internalSigned:   a.internalSigned,
-      internalSignedBy: a.internalSignedBy,
-      internalSignedAt: a.internalSignedAt,
-      partnerSigned:    a.partnerSigned,
-      partnerSignedAt:  a.partnerSignedAt,
-      sharedAt:     a.sharedAt,
-      sharedBy:     a.sharedBy,
-      dueStatus:    dueStatus, // "due" | "overdue" | "ok"
+      partnerId: p.id, afpId: p.afpId || "", partnerName: p.name,
+      investDate: p.investDate, agreementStatus, driveLink, remark,
+      partnerEmail: p.email,
+      internalSigned, internalSignedBy: internalSigned ? "Deep" : "",
+      internalSignedAt: internalSigned ? new Date().toISOString() : "",
+      partnerSigned, partnerSignedAt: "",
+      sharedAt: agreementStatus === "Shared" ? new Date().toISOString() : "",
+      sharedBy: agreementStatus === "Shared" ? "Finance" : "",
+      dueStatus,
     };
   });
+
+  renderAll(); renderAction(); renderStats(); renderPartners(); renderAgreements(); updateBadges();
 }
 
-// ── WRITE/UPDATE A ROW IN AGREEMENT SHEET ──────────────────────
-function upsertAgreementRow(partnerId, updates) {
-  const sh  = ensureAgreementSheet();
-  const map = readAgreementMap();
-  const now = new Date().toISOString();
+// ── STATS ──
+function renderStats() {
+  const overdue   = ALL_PAYOUTS.filter(p => getComputedStatus(p) === "overdue");
+  const due       = ALL_PAYOUTS.filter(p => getComputedStatus(p) === "due");
+  const processed = ALL_PAYOUTS.filter(p => getComputedStatus(p) === "processed");
+  const upcoming  = ALL_PAYOUTS.filter(p => getComputedStatus(p) === "upcoming");
+  document.getElementById("stats-row").innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">Overdue</div>
+      <div class="stat-val red">${overdue.length}</div>
+      <div class="stat-sub red">${fmtINR(overdue.reduce((a,p)=>a+p.amount,0))} pending</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Due today</div>
+      <div class="stat-val amber">${due.length}</div>
+      <div class="stat-sub amber">${fmtINR(due.reduce((a,p)=>a+p.amount,0))} to send</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Processed</div>
+      <div class="stat-val green">${processed.length}</div>
+      <div class="stat-sub">${fmtINR(processed.reduce((a,p)=>a+p.amount,0))} sent</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total payouts</div>
+      <div class="stat-val">${ALL_PAYOUTS.length}</div>
+      <div class="stat-sub">${upcoming.length} upcoming</div>
+    </div>
+  `;
+}
 
-  // Column order matches sheet header
-  const cols = {
-    AgreementStatus: 2, DriveLink: 3, Remark: 4, PartnerEmail: 5,
-    InternalSigned: 6, InternalSignedBy: 7, InternalSignedAt: 8,
-    PartnerSigned: 9, PartnerSignedAt: 10,
-    SharedAt: 11, SharedBy: 12, LastUpdatedAt: 13,
-  };
+// ── ACTION TAB ──
+function renderAction() {
+  const items = ALL_PAYOUTS
+    .filter(p => { const s = getComputedStatus(p); return s === "overdue" || s === "due"; })
+    .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
 
-  if (map[partnerId]) {
-    const row = map[partnerId].rowIndex;
-    Object.keys(updates).forEach(key => {
-      if (cols[key]) sh.getRange(row, cols[key]).setValue(updates[key]);
+  document.getElementById("action-section-head").textContent =
+    items.length ? `Today & overdue (${items.length} payouts)` : "Today & overdue";
+
+  // alerts
+  const overdue = items.filter(p => getComputedStatus(p) === "overdue");
+  const due     = items.filter(p => getComputedStatus(p) === "due");
+  let alertsHtml = "";
+  if (overdue.length) alertsHtml += `<div class="alert danger"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>${overdue.length} payout${overdue.length>1?"s are":" is"} overdue — send immediately and mark as processed.</div>`;
+  if (due.length)    alertsHtml += `<div class="alert warning"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${due.length} payout${due.length>1?"s are":" is"} due today — process and update below.</div>`;
+  document.getElementById("alerts-area").innerHTML = alertsHtml;
+
+  const el = document.getElementById("action-list");
+  if (!items.length) {
+    el.innerHTML = `<div class="empty-state">
+      <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      <h3>All clear</h3><p>No payouts need action right now.</p>
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = items.map(p => {
+    const s = getComputedStatus(p);
+    const days = daysDiff(p.dueDate);
+    const pillLabel = s === "overdue" ? `Overdue by ${days} day${days>1?"s":""}` : "Due today";
+    const pillClass = s === "overdue" ? "pill-overdue" : "pill-due";
+    const cardClass = s === "overdue" ? "overdue" : "due-today";
+    const canEdit = ROLE === "finance" || ROLE === "admin";
+
+    return `<div class="action-card ${cardClass}" id="ac-${p.key}">
+      <div class="ac-header">
+        <div class="ac-avatar">${initials(p.partnerName)}</div>
+        <div class="ac-info">
+          <div class="ac-name">${p.partnerName}</div>
+          <div class="ac-meta">${p.afpId||p.partnerId||"No AFP ID"} &nbsp;·&nbsp; Payout #${p.payoutNum} of ${p.totalPayouts||p.tenure} &nbsp;·&nbsp; ${p.payoutModel==="Yearly"?"Yearly":"Monthly"} &nbsp;·&nbsp; Due ${fmtDate(p.dueDate)}${p.includesPrincipal ? " &nbsp;·&nbsp; <strong style='color:#1d4ed8'>Includes principal return</strong>" : ""}</div>
+        </div>
+        <div class="ac-right">
+          <div class="ac-amount">${fmtINR(p.amount)}</div>
+          <span class="status-pill ${pillClass}">${pillLabel}</span>
+        </div>
+      </div>
+      ${canEdit ? `
+      <div class="ac-form" id="form-${p.key}">
+        <div class="ac-form-group" style="flex:2">
+          <label>Transaction ID <span style="color:var(--danger)">*</span></label>
+          <input type="text" id="txn-${p.key}" placeholder="e.g. NEFT2026061200123" />
+          <div class="ac-form-error" id="err-${p.key}"></div>
+        </div>
+        <div class="ac-form-group" style="flex:1.5">
+          <label>Note (optional)</label>
+          <input type="text" id="note-${p.key}" placeholder="e.g. via NEFT" />
+        </div>
+        <button class="btn-process" onclick="submitProcessed('${p.key}')">✓ Mark Processed</button>
+      </div>` : `<div style="padding:12px 18px;font-size:12px;color:var(--muted)">Contact Divakar to process the payout.</div>`}
+    </div>`;
+  }).join("");
+}
+
+async function submitProcessed(key) {
+  const txnInput = document.getElementById("txn-" + key);
+  const noteInput = document.getElementById("note-" + key);
+  const errEl = document.getElementById("err-" + key);
+  const txnId = txnInput.value.trim();
+
+  if (!txnId) {
+    txnInput.classList.add("error");
+    errEl.textContent = "Transaction ID is required before marking as processed.";
+    txnInput.focus();
+    return;
+  }
+  txnInput.classList.remove("error");
+  errEl.textContent = "";
+
+  const btn = document.querySelector(`#ac-${key} .btn-process`);
+  btn.disabled = true;
+  btn.textContent = "Saving…";
+
+  if (SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
+    // demo mode
+    const payout = ALL_PAYOUTS.find(p => p.key === key);
+    if (payout) {
+      payout.status = "Processed";
+      payout.transactionId = txnId;
+      payout.markedBy = USERNAME || ROLE;
+      payout.markedAt = new Date().toISOString();
+    }
+    renderAction(); renderStats(); renderAll(); renderPartners(); updateBadges();
+    showToast("Marked as processed ✓");
+    return;
+  }
+
+  try {
+    const res = await api({
+      action: "markProcessed",
+      payoutKey: key,
+      transactionId: txnId,
+      note: noteInput ? noteInput.value.trim() : "",
+      username: USERNAME || "",
     });
-    sh.getRange(row, cols.LastUpdatedAt).setValue(now);
-  } else {
-    // Build a full row with defaults, then apply updates
-    const defaults = {
-      AgreementStatus: "Not Drafted", DriveLink: "", Remark: "", PartnerEmail: "",
-      InternalSigned: false, InternalSignedBy: "", InternalSignedAt: "",
-      PartnerSigned: false, PartnerSignedAt: "",
-      SharedAt: "", SharedBy: "", LastUpdatedAt: now,
-    };
-    const merged = { ...defaults, ...updates, LastUpdatedAt: now };
-    sh.appendRow([
-      partnerId,
-      merged.AgreementStatus, merged.DriveLink, merged.Remark, merged.PartnerEmail,
-      merged.InternalSigned, merged.InternalSignedBy, merged.InternalSignedAt,
-      merged.PartnerSigned, merged.PartnerSignedAt,
-      merged.SharedAt, merged.SharedBy, merged.LastUpdatedAt,
-    ]);
+    if (res.ok) {
+      showToast("Payout marked as processed ✓");
+      await refreshData();
+    } else {
+      showToast(res.error || "Failed to save", "error");
+      btn.disabled = false;
+      btn.textContent = "✓ Mark Processed";
+    }
+  } catch (e) {
+    showToast("Network error", "error");
+    btn.disabled = false;
+    btn.textContent = "✓ Mark Processed";
   }
 }
 
-// ── ACTION: setAgreementLink (Admin) ──────────────────────────
-// Adds/updates Drive link + remark, moves status to "Drafted"
-function setAgreementLink(partnerId, driveLink, remark, username) {
-  if (!partnerId) return { error: "partnerId required" };
-  if (!driveLink || !driveLink.trim()) return { error: "Drive link is required" };
-
-  const partners = parsePartners();
-  const p = partners.find(x => x.id === partnerId);
-  if (!p) return { error: "Partner not found" };
-
-  upsertAgreementRow(partnerId, {
-    AgreementStatus: "Drafted",
-    DriveLink: driveLink.trim(),
-    Remark: remark || "",
-    PartnerEmail: p.email,
-  });
-
-  return { ok: true };
+// ── RANGE FILTER HELPERS ──
+function handleRangeChange() {
+  const val = document.getElementById("filter-range").value;
+  const wrap = document.getElementById("custom-range-wrap");
+  wrap.style.display = val === "custom" ? "flex" : "none";
+  renderAll();
 }
 
-// ── ACTION: markAgreementShared (Finance/Admin) ────────────────
-function markAgreementShared(partnerId, username) {
-  if (!partnerId) return { error: "partnerId required" };
-  const map = readAgreementMap();
-  const a = map[partnerId];
-  if (!a || !a.driveLink) return { error: "Agreement not drafted yet" };
-
-  upsertAgreementRow(partnerId, {
-    AgreementStatus: "Shared",
-    SharedAt: new Date().toISOString(),
-    SharedBy: username,
-  });
-
-  return { ok: true };
+function getRangeBounds() {
+  const val = document.getElementById("filter-range").value;
+  const t = new Date(TODAY);
+  if (!val) return null;
+  if (val === "today") {
+    return { from: new Date(t), to: new Date(t) };
+  }
+  if (val === "week") {
+    const day = t.getDay(); // 0=Sun
+    const mon = new Date(t); mon.setDate(t.getDate() - (day === 0 ? 6 : day - 1));
+    const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+    return { from: mon, to: sun };
+  }
+  if (val === "month") {
+    return { from: new Date(t.getFullYear(), t.getMonth(), 1), to: new Date(t.getFullYear(), t.getMonth()+1, 0) };
+  }
+  if (val === "prev_month") {
+    return { from: new Date(t.getFullYear(), t.getMonth()-1, 1), to: new Date(t.getFullYear(), t.getMonth(), 0) };
+  }
+  if (val === "three_months") {
+    const from = new Date(t.getFullYear(), t.getMonth()-2, 1);
+    return { from, to: new Date(t.getFullYear(), t.getMonth()+1, 0) };
+  }
+  if (val === "custom") {
+    const fromVal = document.getElementById("filter-date-from").value;
+    const toVal   = document.getElementById("filter-date-to").value;
+    if (!fromVal && !toVal) return null;
+    const from = fromVal ? new Date(fromVal) : null;
+    const to   = toVal   ? new Date(toVal)   : null;
+    return { from, to };
+  }
+  return null;
 }
 
-// ── ACTION: markPartnerSigned (Finance/Admin) ──────────────────
-function markPartnerSigned(partnerId, username) {
-  if (!partnerId) return { error: "partnerId required" };
-  const map = readAgreementMap();
-  if (!map[partnerId]) return { error: "Agreement not found" };
-  if (map[partnerId].agreementStatus !== "Shared") return { error: "Agreement must be Shared before signing" };
+// ── ALL PAYOUTS TABLE ──
+function renderAll() {
+  const range  = getRangeBounds();
+  const status = document.getElementById("filter-status").value;
+  const search = document.getElementById("filter-search").value.toLowerCase();
 
-  upsertAgreementRow(partnerId, {
-    PartnerSigned: true,
-    PartnerSignedAt: new Date().toISOString(),
-  });
+  let items = ALL_PAYOUTS.filter(p => {
+    const s = getComputedStatus(p);
+    const d = new Date(p.dueDate); d.setHours(0,0,0,0);
+    if (range) {
+      if (range.from && d < range.from) return false;
+      if (range.to   && d > range.to)   return false;
+    }
+    if (status && s !== status) return false;
+    if (search && !p.partnerName.toLowerCase().includes(search) && !p.partnerId.toLowerCase().includes(search)) return false;
+    return true;
+  }).sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
 
-  return { ok: true };
+  const pillMap = { overdue: "pill-overdue", due: "pill-due", processed: "pill-done", upcoming: "pill-upcoming" };
+  const pillLabel = { overdue: "Overdue", due: "Due today", processed: "Processed", upcoming: "Upcoming" };
+
+  const tbody = document.getElementById("all-tbody");
+  if (!items.length) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--muted)">No payouts match the filter.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = items.map(p => {
+    const s = getComputedStatus(p);
+    const txn = p.transactionId ? `<span class="txn-code">${p.transactionId}</span>` : `<span style="color:#ccc">—</span>`;
+    const processedOn = p.markedAt ? `<span style="font-size:12px;color:var(--muted)">${fmtDate(p.markedAt)}</span>` : `<span style="color:#ccc">—</span>`;
+    const markedBy = p.markedBy ? `<span style="font-size:11px;color:var(--muted)">${p.markedBy}</span>` : `<span style="color:#ccc">—</span>`;
+    let action = "";
+    if (s === "processed" && ROLE === "admin") {
+      action = `<button class="btn-undo" onclick="doUndo('${p.key}')">Undo</button>`;
+    } else if ((s === "overdue" || s === "due") && (ROLE === "finance" || ROLE === "admin")) {
+      action = `<button class="btn-undo" style="color:var(--blue);border-color:var(--border)" onclick="switchTab('action');setTimeout(()=>{const el=document.getElementById('txn-${p.key}');if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.focus();}},200)">Process →</button>`;
+    }
+    return `<tr>
+      <td><div style="font-weight:600">${p.partnerName}</div><div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace">${p.afpId||p.partnerId||"No AFP ID"}</div></td>
+      <td>#${p.payoutNum}/${p.totalPayouts||p.tenure}${p.payoutModel==="Yearly"?'<span style="font-size:10px;font-weight:700;background:#f5f3ff;color:#6d28d9;border:1px solid #ddd6fe;border-radius:4px;padding:1px 5px;margin-left:5px">Yearly</span>':""}</td>
+      <td>${fmtDate(p.dueDate)}</td>
+      <td style="font-weight:600">${fmtINR(p.amount)}${p.includesPrincipal ? `<span style="font-size:10px;font-weight:700;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:4px;padding:1px 6px;margin-left:6px;vertical-align:middle">+Principal</span>` : ""}</td>
+      <td><span class="status-pill ${pillMap[s]}">${pillLabel[s]}</span></td>
+      <td>${txn}</td>
+      <td>${processedOn}</td>
+      <td>${markedBy}</td>
+      <td>${action}</td>
+    </tr>`;
+  }).join("");
 }
 
-// ── ACTION: signInternal (Sign role/Admin) ─────────────────────
-function signInternal(partnerId, username) {
-  if (!partnerId) return { error: "partnerId required" };
-  const map = readAgreementMap();
-  if (!map[partnerId]) return { error: "Agreement not found" };
-  if (map[partnerId].agreementStatus !== "Shared") return { error: "Agreement must be Shared before signing" };
+async function doUndo(key) {
+  if (!confirm("Undo this processed payout? (Admin only)")) return;
+  if (SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
+    const p = ALL_PAYOUTS.find(x => x.key === key);
+    if (p) { delete p.status; delete p.transactionId; delete p.markedBy; }
+    renderAll(); renderAction(); renderStats(); updateBadges();
+    return;
+  }
+  setLoading(true, "Undoing…");
+  const res = await api({ action: "undoPayout", payoutKey: key, username: USERNAME || "" });
+  setLoading(false);
+  if (res.ok) { showToast("Payout undone"); await refreshData(); }
+  else showToast(res.error || "Failed", "error");
+}
 
-  upsertAgreementRow(partnerId, {
-    InternalSigned: true,
-    InternalSignedBy: username,
-    InternalSignedAt: new Date().toISOString(),
+// ── PARTNER RANGE FILTER ──
+function handlePartnerRangeChange() {
+  const val = document.getElementById("partner-date-range").value;
+  const wrap = document.getElementById("partner-custom-range-wrap");
+  wrap.style.display = val === "custom" ? "flex" : "none";
+  renderPartners();
+}
+
+function getPartnerRangeBounds() {
+  const val = document.getElementById("partner-date-range")?.value || "";
+  const t = new Date(TODAY);
+  if (!val) return null;
+  if (val === "today") return { from: new Date(t), to: new Date(t) };
+  if (val === "week") {
+    const day = t.getDay();
+    const mon = new Date(t); mon.setDate(t.getDate() - (day === 0 ? 6 : day - 1));
+    const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+    return { from: mon, to: sun };
+  }
+  if (val === "month") return { from: new Date(t.getFullYear(), t.getMonth(), 1), to: new Date(t.getFullYear(), t.getMonth()+1, 0) };
+  if (val === "prev_month") return { from: new Date(t.getFullYear(), t.getMonth()-1, 1), to: new Date(t.getFullYear(), t.getMonth(), 0) };
+  if (val === "three_months") return { from: new Date(t.getFullYear(), t.getMonth()-2, 1), to: new Date(t.getFullYear(), t.getMonth()+1, 0) };
+  if (val === "custom") {
+    const fromVal = document.getElementById("partner-date-from").value;
+    const toVal   = document.getElementById("partner-date-to").value;
+    if (!fromVal && !toVal) return null;
+    return { from: fromVal ? new Date(fromVal) : null, to: toVal ? new Date(toVal) : null };
+  }
+  return null;
+}
+
+// ── DEALS SUMMARY — respects current date range filter ──
+function renderDealsSummary(filteredPartners) {
+  // filteredPartners passed from renderPartners after applying range/search/status filters
+  const partners = filteredPartners || ALL_PARTNERS;
+  const partnerIds = new Set(partners.map(p => p.id));
+
+  // Only count payouts belonging to filtered partners
+  const relevantPayouts = ALL_PAYOUTS.filter(p => partnerIds.has(p.partnerId));
+
+  const totalInvested    = partners.reduce((a,p) => a+p.invested, 0);
+  const totalObligation  = relevantPayouts.reduce((a,p) => a+p.amount, 0);
+
+  const thisMonth = (() => { const n=new Date(TODAY); return n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0"); })();
+  const activeThisMonth = new Set(
+    relevantPayouts.filter(p => {
+      const d=new Date(p.dueDate);
+      return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0") === thisMonth;
+    }).map(p=>p.partnerId)
+  ).size;
+
+  const emiPartners     = partners.filter(p => p.payType && p.payType.toLowerCase().includes("emi"));
+  const flatPartners    = partners.filter(p => p.payType && p.payType.toLowerCase().includes("flat"));
+  const overduePartners = partners.filter(p => relevantPayouts.some(x => x.partnerId===p.id && getComputedStatus(x)==="overdue"));
+
+  // Range label for context
+  const rangeVal = document.getElementById("partner-date-range")?.value || "";
+  const rangeLabels = { "":"All time", today:"Today", week:"This week", month:"This month", prev_month:"Previous month", three_months:"Last 3 months", custom:"Custom range" };
+  const rangeLabel = rangeLabels[rangeVal] || "All time";
+  const showingAll = !rangeVal;
+
+  const r1 = document.getElementById("deals-summary");
+  if (r1) r1.innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">Deals ${showingAll?"(total)":"in range"}</div>
+      <div class="stat-val">${partners.length}</div>
+      ${!showingAll?`<div class="stat-sub">${rangeLabel}</div>`:""}
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Invested ${showingAll?"(total)":"in range"}</div>
+      <div class="stat-val" style="font-size:20px">${fmtINR(totalInvested)}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Payout obligation ${showingAll?"(total)":"in range"}</div>
+      <div class="stat-val" style="font-size:20px">${fmtINR(totalObligation)}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Active this month</div>
+      <div class="stat-val">${activeThisMonth} <span style="font-size:13px;font-weight:400;color:var(--muted)">partners</span></div>
+    </div>
+  `;
+
+  const r2 = document.getElementById("deals-summary-row2");
+  if (r2) r2.innerHTML = `
+    <div class="stat-card"><div class="stat-label">EMI deals</div><div class="stat-val">${emiPartners.length}</div><div class="stat-sub">${fmtINR(emiPartners.reduce((a,p)=>a+p.invested,0))} invested</div></div>
+    <div class="stat-card"><div class="stat-label">Flat fixed interest deals</div><div class="stat-val">${flatPartners.length}</div><div class="stat-sub">${fmtINR(flatPartners.reduce((a,p)=>a+p.invested,0))} invested</div></div>
+    <div class="stat-card"><div class="stat-label">Partners with overdue</div><div class="stat-val${overduePartners.length?" red":""}">${overduePartners.length}</div><div class="stat-sub${overduePartners.length?" red":""}"> ${overduePartners.length ? overduePartners.length+" need attention" : "all clear"}</div></div>
+  `;
+}
+
+// ── PARTNERS / DEALS ──
+function renderPartners() {
+  const search  = (document.getElementById("partner-search")?.value || "").toLowerCase();
+  const fStatus = document.getElementById("partner-filter-status")?.value || "";
+  const sort    = document.getElementById("partner-sort")?.value || "date";
+
+  let partners = ALL_PARTNERS.map(p => {
+    const payouts   = ALL_PAYOUTS.filter(x => x.partnerId === p.id);
+    const processed = payouts.filter(x => getComputedStatus(x) === "processed").length;
+    const overdue   = payouts.filter(x => getComputedStatus(x) === "overdue").length;
+    const allDone   = processed === payouts.length && payouts.length > 0;
+    return { ...p, payouts, processed, overdue, allDone };
   });
 
-  return { ok: true };
+  // date range filter on start date
+  const partnerRange = getPartnerRangeBounds();
+  if (partnerRange) {
+    partners = partners.filter(p => {
+      if (!p.investDate) return false;
+      const d = new Date(p.investDate); d.setHours(0,0,0,0);
+      if (partnerRange.from && d < partnerRange.from) return false;
+      if (partnerRange.to   && d > partnerRange.to)   return false;
+      return true;
+    });
+  }
+
+  // other filters
+  if (search) partners = partners.filter(p =>
+    p.name.toLowerCase().includes(search) || p.id.toLowerCase().includes(search));
+  if (fStatus === "overdue")   partners = partners.filter(p => p.overdue > 0);
+  if (fStatus === "active")    partners = partners.filter(p => !p.allDone && p.overdue === 0);
+  if (fStatus === "completed") partners = partners.filter(p => p.allDone);
+
+  // sort
+  if (sort === "name")     partners.sort((a,b) => a.name.localeCompare(b.name));
+  if (sort === "date")     partners.sort((a,b) => new Date(b.investDate) - new Date(a.investDate));
+  if (sort === "invested") partners.sort((a,b) => b.invested - a.invested);
+  if (sort === "overdue")  partners.sort((a,b) => b.overdue - a.overdue);
+
+  // Pass filtered+sorted list to summary so it reflects current view
+  renderDealsSummary(partners);
+
+  const el = document.getElementById("partner-grid");
+  if (!partners.length) {
+    el.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg><h3>No partners found</h3><p>Try a different filter.</p></div>`;
+    return;
+  }
+
+  el.innerHTML = partners.map(p => {
+    const next = p.payouts.find(x => getComputedStatus(x) !== "processed");
+    const pct  = p.payouts.length ? Math.round((p.processed / p.payouts.length) * 100) : 0;
+    const investDateStr = p.investDate ? fmtDate(p.investDate) : "—";
+    const agr  = ALL_AGREEMENTS.find(x => x.partnerId === p.id);
+    const agrBadge = agr ? agreementBadgeHtml(agr.agreementStatus, agr.dueStatus) : "";
+    return `<div class="partner-card" onclick="openPartnerModal('${p.id}')" style="cursor:pointer">
+      <div class="pc-head">
+        <div class="pc-avatar">${initials(p.name)}</div>
+        <div style="flex:1;min-width:0">
+          <div class="pc-name">${p.name}</div>
+          <div class="pc-id">${p.afpId || p.id || "No AFP ID"}</div>
+          ${agrBadge ? `<div style="margin-top:4px">${agrBadge}</div>` : ""}
+        </div>
+        <div style="font-size:11px;color:var(--muted);text-align:right;flex-shrink:0">
+          <div>Started</div>
+          <div style="font-weight:600;color:var(--ink)">${investDateStr}</div>
+        </div>
+      </div>
+      <div class="pc-body">
+        <div class="pc-row"><span>Invested</span><span>${fmtINR(p.invested)}</span></div>
+        <div class="pc-row"><span>${p.model==="Yearly"?"Yearly":"Monthly"} payout</span><span>${fmtINR(p.monthly)}</span></div>
+        <div class="pc-row"><span>Tenure</span><span>${p.tenure} months</span></div>
+        <div class="pc-row"><span>Payouts done</span><span>${p.processed} / ${p.payouts.length}</span></div>
+        <div class="pc-row"><span>Payout model</span><span>${p.model||"Monthly"}${p.payType?(" · "+p.payType):""}</span></div>
+        ${p.overdue ? `<div class="pc-row"><span>Overdue</span><span class="pc-overdue-tag">⚠ ${p.overdue} payment${p.overdue>1?"s":""}</span></div>` : ""}
+        ${next ? `<div class="pc-row"><span>Next due</span><span>${fmtDate(next.dueDate)}</span></div>` : ""}
+        <div class="pc-progress">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:4px"><span>Progress</span><span>${pct}%</span></div>
+          <div class="pc-progress-bar"><div class="pc-progress-fill" style="width:${pct}%"></div></div>
+        </div>
+        <div style="margin-top:12px;font-size:11px;color:var(--blue);font-weight:600;text-align:center;padding:6px;background:var(--mist);border-radius:6px">View payout schedule →</div>
+      </div>
+    </div>`;
+  }).join("");
 }
+
+// ── AGREEMENT LINK ──
+// Same-repo relative path — adjust AGREEMENT_PATH if agreement.html lives elsewhere
+const AGREEMENT_PATH = "agreement.html";
+function getAgreementUrl(p) {
+  const params = new URLSearchParams({
+    partner: p.id,
+    username: USERNAME || "",
+    pin: PIN || "",
+  });
+  return AGREEMENT_PATH + "?" + params.toString();
+}
+
+// ── PARTNER MODAL ──
+function openPartnerModal(partnerId) {
+  const p = ALL_PARTNERS.find(x => x.id === partnerId);
+  if (!p) return;
+  const payouts   = ALL_PAYOUTS.filter(x => x.partnerId === partnerId);
+  const processed = payouts.filter(x => getComputedStatus(x) === "processed").length;
+  const overdue   = payouts.filter(x => getComputedStatus(x) === "overdue").length;
+  const totalSent = payouts.filter(x => getComputedStatus(x) === "processed").reduce((a,x)=>a+x.amount,0);
+
+  document.getElementById("modal-avatar").textContent = initials(p.name);
+  document.getElementById("modal-name").textContent = p.name;
+  document.getElementById("modal-meta").textContent = (p.afpId || p.id || "No AFP ID") + "  ·  Started " + fmtDate(p.investDate) + "  ·  " + p.tenure + " months · " + (p.model||"Monthly");
+
+  // Admin-only contact section
+  const contactEl = document.getElementById("modal-contact");
+  if (ROLE === "admin") {
+    const fields = [
+      { icon: "📱", label: "Phone", val: p.phone || "—" },
+      { icon: "✉️", label: "Email", val: p.email || "—" },
+      { icon: "🪪", label: "AFP ID", val: p.afpId || "Not assigned" },
+      { icon: "💳", label: "Payout type", val: p.payType || "—" },
+      { icon: "📋", label: "Total payout", val: fmtINR(p.totalPayout || 0) },
+    ];
+    contactEl.style.display = "flex";
+    contactEl.innerHTML = `
+      <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--blue);margin-bottom:2px;width:100%;display:flex;align-items:center;justify-content:space-between;gap:6px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="background:var(--blue);color:#fff;font-size:9px;padding:2px 7px;border-radius:100px">Admin only</span>
+          Partner details
+        </div>
+        <a href="${getAgreementUrl(p)}" target="_blank" style="display:inline-flex;align-items:center;gap:5px;background:var(--navy);color:#fff;font-size:11px;font-weight:700;text-transform:none;letter-spacing:normal;padding:6px 12px;border-radius:6px;text-decoration:none">
+          📄 Generate Agreement
+        </a>
+      </div>
+      ${fields.map(f => `
+        <div style="display:flex;flex-direction:column;gap:2px;min-width:120px">
+          <div style="font-size:10px;color:var(--muted)">${f.icon} ${f.label}</div>
+          <div style="font-size:13px;font-weight:600;color:var(--ink)">${f.val}</div>
+        </div>
+      `).join("")}
+    `;
+  } else {
+    contactEl.style.display = "none";
+  }
+
+  document.getElementById("modal-stats").innerHTML = [
+    { label: "Invested", val: fmtINR(p.invested), sub: "" },
+    { label: p.model==="Yearly" ? "Yearly payout" : "Monthly payout", val: fmtINR(p.monthly), sub: "" },
+    { label: "Paid out", val: processed + "/" + payouts.length, sub: fmtINR(totalSent) + " sent" },
+    { label: "Overdue", val: overdue || "0", sub: overdue ? "needs attention" : "all clear", danger: overdue > 0 },
+  ].map(s => `<div style="padding:14px 16px;border-right:1px solid var(--border)">
+    <div style="font-size:11px;color:var(--muted);margin-bottom:3px">${s.label}</div>
+    <div style="font-size:18px;font-weight:700;font-family:'Bricolage Grotesque',sans-serif;color:${s.danger?"var(--danger)":"var(--ink)"}">${s.val}</div>
+    ${s.sub ? `<div style="font-size:11px;color:${s.danger?"var(--danger)":"var(--muted)"};margin-top:2px">${s.sub}</div>` : ""}
+  </div>`).join("");
+
+  const pillMap  = { overdue:"pill-overdue", due:"pill-due", processed:"pill-done", upcoming:"pill-upcoming" };
+  const pillLabel = { overdue:"Overdue", due:"Due today", processed:"Processed", upcoming:"Upcoming" };
+
+  document.getElementById("modal-tbody").innerHTML = payouts.map(pay => {
+    const s = getComputedStatus(pay);
+    const txn = pay.transactionId ? `<span class="txn-code">${pay.transactionId}</span>` : `<span style="color:#ccc">—</span>`;
+    const processedOnModal = pay.markedAt ? `<span style="font-size:12px;color:var(--muted)">${fmtDate(pay.markedAt)}</span>` : `<span style="color:#ccc">—</span>`;
+    const by  = pay.markedBy ? `<span style="font-size:11px;color:var(--muted)">${pay.markedBy}</span>` : `<span style="color:#ccc">—</span>`;
+    const rowBg = s === "overdue" ? "background:#fff5f5" : s === "due" ? "background:#fffbeb" : s === "processed" ? "background:#f0fdf4" : "";
+    return `<tr style="${rowBg}">
+      <td style="padding:10px 12px;border-bottom:1px solid #f0f2fa;font-weight:600">#${pay.payoutNum}/${pay.totalPayouts||pay.tenure}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #f0f2fa">${fmtDate(pay.dueDate)}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #f0f2fa;font-weight:600">${fmtINR(pay.amount)}${pay.includesPrincipal ? `<span style="font-size:10px;font-weight:700;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:4px;padding:1px 6px;margin-left:6px;vertical-align:middle">+Principal</span>` : ""}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #f0f2fa"><span class="status-pill ${pillMap[s]}">${pillLabel[s]}</span></td>
+      <td style="padding:10px 12px;border-bottom:1px solid #f0f2fa">${txn}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #f0f2fa">${processedOnModal}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #f0f2fa">${by}</td>
+    </tr>`;
+  }).join("");
+
+  document.getElementById("partner-modal-bg").style.display = "block";
+  document.body.style.overflow = "hidden";
+}
+
+function closePartnerModal(e) {
+  if (e && e.target !== document.getElementById("partner-modal-bg")) return;
+  document.getElementById("partner-modal-bg").style.display = "none";
+  document.body.style.overflow = "";
+}
+
+// ── TABS ──
+function switchTab(name) {
+  ["action","all","partners","agreements"].forEach(n => {
+    document.getElementById("tab-"+n).classList.toggle("active", n===name);
+    document.getElementById("section-"+n).classList.toggle("active", n===name);
+  });
+  if (name === "all") renderAll();
+  if (name === "partners") renderPartners();
+  if (name === "agreements") renderAgreements();
+}
+
+// ── AGREEMENT SUB-VIEWS ──
+function switchAgreementView(name) {
+  ["action","all","completed"].forEach(n => {
+    document.getElementById("atab-"+n).classList.toggle("active", n===name);
+    document.getElementById("aview-"+n).classList.toggle("active", n===name);
+  });
+  if (name === "all") renderAgreementsAll();
+  if (name === "completed") renderAgreementsCompleted();
+}
+
+// ── BADGES ──
+function updateBadges() {
+  const count = ALL_PAYOUTS.filter(p => { const s = getComputedStatus(p); return s==="overdue"||s==="due"; }).length;
+  const badge = document.getElementById("badge-action");
+  badge.textContent = count;
+  badge.className = "tab-badge" + (count > 0 ? "" : " zero");
+  document.getElementById("badge-all").textContent = ALL_PAYOUTS.length;
+
+  // Agreement badges
+  const agrActionCount = ALL_AGREEMENTS.filter(a => a.agreementStatus !== "Signed" && (a.dueStatus === "due" || a.dueStatus === "overdue")).length;
+  const agrBadge = document.getElementById("badge-agreements");
+  if (agrBadge) {
+    agrBadge.textContent = agrActionCount;
+    agrBadge.className = "tab-badge" + (agrActionCount > 0 ? "" : " zero");
+  }
+}
+
+// ── POPULATE USER DROPDOWN ──
+async function populateUserDropdown() {
+  const sel = document.getElementById("username-input");
+  if (!sel) return;
+
+  if (SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
+    // demo mode — use local list
+    sel.innerHTML = '<option value="">— Select your name —</option>' +
+      DEMO_USERS.map(u => `<option value="${u.username}">${u.username}</option>`).join("");
+    const lastUser = localStorage.getItem("sp_last_user");
+    if (lastUser && sel.querySelector(`option[value="${lastUser}"]`)) {
+      sel.value = lastUser;
+      setTimeout(() => document.getElementById("pin-input").focus(), 50);
+    }
+  } else {
+    // live mode — fetch from Apps Script (returns names only, no PINs)
+    try {
+      sel.innerHTML = '<option value="">Loading…</option>';
+      const res = await fetch(SCRIPT_URL + "?action=getUsers").then(r => r.json());
+      if (res.ok && res.users) {
+        sel.innerHTML = '<option value="">— Select your name —</option>' +
+          res.users.map(u => `<option value="${u}">${u}</option>`).join("");
+      } else {
+        sel.innerHTML = '<option value="">— Select your name —</option>';
+      }
+    } catch (e) {
+      sel.innerHTML = '<option value="">— Select your name —</option>';
+    }
+  }
+  // Restore last selected username
+  const lastUser = localStorage.getItem("sp_last_user");
+  if (lastUser && sel.querySelector(`option[value="${lastUser}"]`)) {
+    sel.value = lastUser;
+    setTimeout(() => document.getElementById("pin-input").focus(), 50);
+  }
+}
+populateUserDropdown();
+
+// ── SESSION MANAGEMENT ──
+const SESSION_INACTIVITY_MS = 5 * 60 * 1000; // 5 minutes
+let activityTimer = null;
+
+function saveSession() {
+  const session = { username: USERNAME, pin: PIN, role: ROLE, savedAt: Date.now() };
+  sessionStorage.setItem("sp_session", JSON.stringify(session));
+}
+
+function clearSession() {
+  sessionStorage.removeItem("sp_session");
+}
+
+function resetActivityTimer() {
+  clearTimeout(activityTimer);
+  activityTimer = setTimeout(() => {
+    clearSession();
+    doLogout();
+    document.getElementById("login-error").textContent = "Session expired due to inactivity.";
+  }, SESSION_INACTIVITY_MS);
+}
+
+function startActivityTracking() {
+  ["mousemove","keydown","click","touchstart","scroll"].forEach(evt =>
+    document.addEventListener(evt, resetActivityTimer, { passive: true })
+  );
+  resetActivityTimer();
+}
+
+function stopActivityTracking() {
+  ["mousemove","keydown","click","touchstart","scroll"].forEach(evt =>
+    document.removeEventListener(evt, resetActivityTimer)
+  );
+  clearTimeout(activityTimer);
+}
+
+// ── AUTO-RESTORE SESSION ON PAGE LOAD ──
+(async function tryRestoreSession() {
+  try {
+    const raw = sessionStorage.getItem("sp_session");
+    if (!raw) return;
+    const session = JSON.parse(raw);
+    if (!session.username || !session.pin || !session.role) return;
+    // Check inactivity — if last save was within 5 min, restore
+    if (Date.now() - session.savedAt > SESSION_INACTIVITY_MS) {
+      clearSession();
+      return;
+    }
+    // Restore state
+    USERNAME = session.username;
+    PIN      = session.pin;
+    ROLE     = session.role;
+    await bootApp();
+  } catch(e) {
+    clearSession();
+  }
+})();
+
+
+// ════════════════════════════════════════════════════════════
+// AGREEMENT TRACKING
+// ════════════════════════════════════════════════════════════
+
+const AGREEMENT_STATUS_INFO = {
+  "Not Drafted": { cls: "not-drafted", label: "Not Drafted" },
+  "Drafted":     { cls: "drafted",     label: "Drafted" },
+  "Shared":      { cls: "shared",      label: "Shared" },
+  "Signed":      { cls: "signed",      label: "Signed" },
+};
+
+function agreementBadgeHtml(status, dueStatus) {
+  const info = AGREEMENT_STATUS_INFO[status] || AGREEMENT_STATUS_INFO["Not Drafted"];
+  let dueTag = "";
+  if (status !== "Signed") {
+    if (dueStatus === "overdue") dueTag = `<span class="agreement-due-tag overdue">Overdue</span>`;
+    else if (dueStatus === "due") dueTag = `<span class="agreement-due-tag due">Due</span>`;
+  }
+  return `<span class="agreement-badge ${info.cls}">${info.label}</span>${dueTag}`;
+}
+
+// ── MAIN AGREEMENTS TAB (default = Action needed sub-view) ──
+function renderAgreements() {
+  renderAgreementStats();
+  renderAgreementsAction();
+  // Pre-render the other sub-views too so badges/counts are correct
+  renderAgreementsAll();
+  renderAgreementsCompleted();
+}
+
+function renderAgreementStats() {
+  const total      = ALL_AGREEMENTS.length;
+  const notDrafted = ALL_AGREEMENTS.filter(a => a.agreementStatus === "Not Drafted").length;
+  const drafted    = ALL_AGREEMENTS.filter(a => a.agreementStatus === "Drafted").length;
+  const shared     = ALL_AGREEMENTS.filter(a => a.agreementStatus === "Shared").length;
+  const signed     = ALL_AGREEMENTS.filter(a => a.agreementStatus === "Signed").length;
+  const overdue    = ALL_AGREEMENTS.filter(a => a.agreementStatus !== "Signed" && a.dueStatus === "overdue").length;
+
+  const r = document.getElementById("agreement-stats-row");
+  if (!r) return;
+  r.innerHTML = `
+    <div class="stat-card"><div class="stat-label">Total agreements</div><div class="stat-val">${total}</div></div>
+    <div class="stat-card"><div class="stat-label">Not drafted</div><div class="stat-val">${notDrafted}</div></div>
+    <div class="stat-card"><div class="stat-label">Awaiting signatures</div><div class="stat-val">${drafted + shared}</div><div class="stat-sub">${shared} shared</div></div>
+    <div class="stat-card"><div class="stat-label">Signed</div><div class="stat-val green">${signed}</div><div class="stat-sub${overdue?" red":""}">${overdue ? overdue + " overdue" : "all clear"}</div></div>
+  `;
+}
+
+// ── ACTION NEEDED SUB-VIEW ──
+function renderAgreementsAction() {
+  const items = ALL_AGREEMENTS
+    .filter(a => a.agreementStatus !== "Signed")
+    .sort((a,b) => {
+      // overdue first, then due, then ok; then by invest date
+      const rank = { overdue: 0, due: 1, ok: 2 };
+      const r = (rank[a.dueStatus]||2) - (rank[b.dueStatus]||2);
+      if (r !== 0) return r;
+      return new Date(a.investDate) - new Date(b.investDate);
+    });
+
+  // Alerts
+  const overdue = items.filter(a => a.dueStatus === "overdue");
+  const due     = items.filter(a => a.dueStatus === "due");
+  let alertsHtml = "";
+  if (overdue.length) alertsHtml += `<div class="alert danger"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>${overdue.length} agreement${overdue.length>1?"s are":" is"} overdue — 3+ days since deal start with signatures pending.</div>`;
+  if (due.length)    alertsHtml += `<div class="alert warning"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${due.length} agreement${due.length>1?"s":""} due for drafting/signing.</div>`;
+  const alertsEl = document.getElementById("agreement-alerts-area");
+  if (alertsEl) alertsEl.innerHTML = alertsHtml;
+
+  const el = document.getElementById("agreement-action-list");
+  if (!el) return;
+
+  if (!items.length) {
+    el.innerHTML = `<div class="empty-state">
+      <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      <h3>All clear</h3><p>No agreements need action right now.</p>
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = items.map(a => agreementCardHtml(a)).join("");
+}
+
+// ── ALL AGREEMENTS SUB-VIEW ──
+function renderAgreementsAll() {
+  const search = (document.getElementById("agreement-search")?.value || "").toLowerCase();
+  const fStatus = document.getElementById("agreement-filter-status")?.value || "";
+
+  let items = [...ALL_AGREEMENTS];
+  if (search) items = items.filter(a => a.partnerName.toLowerCase().includes(search) || (a.afpId||a.partnerId).toLowerCase().includes(search));
+  if (fStatus) items = items.filter(a => a.agreementStatus === fStatus);
+
+  items.sort((a,b) => new Date(b.investDate) - new Date(a.investDate));
+
+  const el = document.getElementById("agreement-all-list");
+  if (!el) return;
+
+  if (!items.length) {
+    el.innerHTML = `<div class="empty-state"><h3>No agreements found</h3><p>Try a different filter.</p></div>`;
+    return;
+  }
+
+  el.innerHTML = items.map(a => agreementCardHtml(a)).join("");
+}
+
+// ── COMPLETED SUB-VIEW ──
+function renderAgreementsCompleted() {
+  const items = ALL_AGREEMENTS.filter(a => a.agreementStatus === "Signed")
+    .sort((a,b) => new Date(b.investDate) - new Date(a.investDate));
+
+  const badge = document.getElementById("badge-agreement-completed");
+  if (badge) {
+    badge.textContent = items.length;
+    badge.className = "tab-badge" + (items.length > 0 ? "" : " zero");
+  }
+  const actionBadge = document.getElementById("badge-agreement-action");
+  if (actionBadge) {
+    const count = ALL_AGREEMENTS.filter(a => a.agreementStatus !== "Signed" && (a.dueStatus === "due" || a.dueStatus === "overdue")).length;
+    actionBadge.textContent = count;
+    actionBadge.className = "tab-badge" + (count > 0 ? "" : " zero");
+  }
+
+  const el = document.getElementById("agreement-completed-list");
+  if (!el) return;
+
+  if (!items.length) {
+    el.innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><h3>No completed agreements yet</h3><p>Fully signed agreements will appear here.</p></div>`;
+    return;
+  }
+
+  el.innerHTML = items.map(a => agreementCardHtml(a, true)).join("");
+}
+
+// ── AGREEMENT CARD ──
+function agreementCardHtml(a, completedView) {
+  const cardClass = a.agreementStatus !== "Signed" && a.dueStatus === "overdue" ? "overdue"
+    : a.agreementStatus !== "Signed" && a.dueStatus === "due" ? "due" : "";
+
+  const daysSince = a.investDate ? Math.floor((TODAY - new Date(a.investDate)) / 86400000) : 0;
+
+  // ── Body content varies by status + role ──
+  let bodyHtml = "";
+
+  // Admin: Drive link form (Not Drafted) or shown link + edit (Drafted+)
+  if (ROLE === "admin") {
+    if (a.agreementStatus === "Not Drafted") {
+      bodyHtml += `
+        <div class="agr-row">
+          <div class="agr-field" style="flex:2">
+            <label>Drive Link <span style="color:var(--danger)">*</span></label>
+            <input type="text" id="drivelink-${a.partnerId}" placeholder="https://drive.google.com/..." />
+          </div>
+          <div class="agr-field" style="flex:1.5">
+            <label>Remark (visible to Finance until shared)</label>
+            <input type="text" id="remark-${a.partnerId}" placeholder="e.g. double-check PAN before sharing" />
+          </div>
+          <button class="btn-agr primary" onclick="submitAgreementLink('${a.partnerId}')">Save Draft Link</button>
+        </div>
+        <div class="agr-form-error" id="err-drivelink-${a.partnerId}" style="font-size:11px;color:var(--danger)"></div>
+      `;
+    } else {
+      bodyHtml += `
+        <div class="agr-row">
+          <a href="${a.driveLink}" target="_blank" class="agr-link">📄 Open agreement in Drive →</a>
+          <button class="btn-agr ghost" style="margin-left:auto" onclick="toggleEditLink('${a.partnerId}')">Edit link / remark</button>
+        </div>
+        <div id="edit-link-${a.partnerId}" style="display:none">
+          <div class="agr-row">
+            <div class="agr-field" style="flex:2">
+              <label>Drive Link</label>
+              <input type="text" id="drivelink-${a.partnerId}" value="${a.driveLink}" />
+            </div>
+            <div class="agr-field" style="flex:1.5">
+              <label>Remark</label>
+              <input type="text" id="remark-${a.partnerId}" value="${a.remark||''}" />
+            </div>
+            <button class="btn-agr primary" onclick="submitAgreementLink('${a.partnerId}')">Update</button>
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  // Remark — visible to everyone until Shared
+  if (a.remark && (a.agreementStatus === "Drafted") && ROLE !== "admin") {
+    bodyHtml += `<div class="agr-remark">📝 ${a.remark}</div>`;
+  } else if (a.remark && a.agreementStatus === "Drafted" && ROLE === "admin") {
+    // admin already sees it in edit form, but show inline note too
+    bodyHtml += `<div class="agr-remark">📝 Remark (visible to Finance): ${a.remark}</div>`;
+  }
+
+  // Drive link for non-admin roles once drafted
+  if (ROLE !== "admin" && a.driveLink) {
+    bodyHtml += `<div class="agr-row"><a href="${a.driveLink}" target="_blank" class="agr-link">📄 Open agreement in Drive →</a></div>`;
+  }
+
+  // Email for sharing — Finance/Admin, only while Drafted (about to share)
+  if ((ROLE === "finance" || ROLE === "admin") && a.agreementStatus === "Drafted") {
+    bodyHtml += `
+      <div class="agr-row">
+        <div style="font-size:12px;color:var(--muted)">Partner email for sharing:</div>
+        <button class="agr-email-copy" onclick="copyAgreementEmail('${a.partnerEmail}', this)">${a.partnerEmail || "—"} 📋</button>
+        <button class="btn-agr primary" style="margin-left:auto" onclick="submitMarkShared('${a.partnerId}')">Mark as Shared</button>
+      </div>
+    `;
+  }
+
+  // Signature status row — shown only once Shared or fully Signed (mandatory steps, no skipping)
+  if (a.agreementStatus === "Shared" || a.agreementStatus === "Signed") {
+    const internalPill = a.internalSigned
+      ? `<span class="agr-sign-pill done">✓ Internal sign done${a.internalSignedBy ? " by "+a.internalSignedBy : ""}</span>`
+      : `<span class="agr-sign-pill pending">○ Internal sign pending</span>`;
+    const partnerPill = a.partnerSigned
+      ? `<span class="agr-sign-pill done">✓ Partner sign done</span>`
+      : `<span class="agr-sign-pill pending">○ Partner sign pending</span>`;
+
+    let signActions = "";
+    // Sign role / admin — Sign by Me (only once Shared)
+    if ((ROLE === "sign" || ROLE === "admin") && !a.internalSigned && a.agreementStatus === "Shared") {
+      signActions += `<button class="btn-agr success" onclick="submitSignInternal('${a.partnerId}')">✓ Sign by Me</button>`;
+    }
+    // Finance/admin — Partner Signed (only once Shared)
+    if ((ROLE === "finance" || ROLE === "admin") && !a.partnerSigned && a.agreementStatus === "Shared") {
+      signActions += `<button class="btn-agr primary" onclick="submitPartnerSigned('${a.partnerId}')">✓ Partner Signed</button>`;
+    }
+
+    bodyHtml += `
+      <div class="agr-sign-row">
+        ${internalPill}
+        ${partnerPill}
+        ${signActions ? `<div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">${signActions}</div>` : ""}
+      </div>
+    `;
+  }
+
+  if (!bodyHtml) {
+    bodyHtml = `<div style="font-size:12px;color:var(--muted)">No action available for your role.</div>`;
+  }
+
+  return `<div class="agreement-card ${cardClass}">
+    <div class="agr-header">
+      <div class="ac-avatar">${initials(a.partnerName)}</div>
+      <div class="agr-info">
+        <div class="agr-name">${a.partnerName}</div>
+        <div class="agr-meta">${a.afpId||a.partnerId} &nbsp;·&nbsp; Deal started ${fmtDate(a.investDate)} (${daysSince}d ago)</div>
+      </div>
+      <div style="text-align:right">
+        ${agreementBadgeHtml(a.agreementStatus, a.dueStatus)}
+      </div>
+    </div>
+    <div class="agr-body">${bodyHtml}</div>
+  </div>`;
+}
+
+function toggleEditLink(partnerId) {
+  const el = document.getElementById("edit-link-" + partnerId);
+  if (el) el.style.display = el.style.display === "none" ? "block" : "none";
+}
+
+function copyAgreementEmail(email, btn) {
+  if (!email) return;
+  navigator.clipboard.writeText(email).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = "Copied ✓";
+    setTimeout(() => { btn.textContent = orig; }, 1500);
+  });
+}
+
+// ── ACTIONS ──
+async function submitAgreementLink(partnerId) {
+  const linkInput = document.getElementById("drivelink-" + partnerId);
+  const remarkInput = document.getElementById("remark-" + partnerId);
+  const errEl = document.getElementById("err-drivelink-" + partnerId);
+  const link = linkInput.value.trim();
+  const remark = remarkInput ? remarkInput.value.trim() : "";
+
+  if (!link) {
+    if (errEl) errEl.textContent = "Drive link is required.";
+    linkInput.focus();
+    return;
+  }
+  if (errEl) errEl.textContent = "";
+
+  if (SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
+    const a = ALL_AGREEMENTS.find(x => x.partnerId === partnerId);
+    if (a) { a.agreementStatus = "Drafted"; a.driveLink = link; a.remark = remark; }
+    renderAgreements(); updateBadges();
+    showToast("Draft link saved ✓");
+    return;
+  }
+
+  setLoading(true, "Saving…");
+  try {
+    const res = await api({ action: "setAgreementLink", partnerId, driveLink: link, remark });
+    if (res.ok) { showToast("Draft link saved ✓"); await refreshData(); }
+    else showToast(res.error || "Failed", "error");
+  } catch(e) { showToast("Network error", "error"); }
+  setLoading(false);
+}
+
+async function submitMarkShared(partnerId) {
+  if (SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
+    const a = ALL_AGREEMENTS.find(x => x.partnerId === partnerId);
+    if (a) { a.agreementStatus = "Shared"; a.sharedBy = USERNAME; a.sharedAt = new Date().toISOString(); }
+    renderAgreements(); updateBadges();
+    showToast("Marked as shared ✓");
+    return;
+  }
+  setLoading(true, "Updating…");
+  try {
+    const res = await api({ action: "markAgreementShared", partnerId });
+    if (res.ok) { showToast("Marked as shared ✓"); await refreshData(); }
+    else showToast(res.error || "Failed", "error");
+  } catch(e) { showToast("Network error", "error"); }
+  setLoading(false);
+}
+
+async function submitPartnerSigned(partnerId) {
+  if (SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
+    const a = ALL_AGREEMENTS.find(x => x.partnerId === partnerId);
+    if (a) {
+      a.partnerSigned = true; a.partnerSignedAt = new Date().toISOString();
+      if (a.internalSigned) a.agreementStatus = "Signed";
+    }
+    renderAgreements(); updateBadges();
+    showToast("Partner signature recorded ✓");
+    return;
+  }
+  setLoading(true, "Updating…");
+  try {
+    const res = await api({ action: "markPartnerSigned", partnerId });
+    if (res.ok) { showToast("Partner signature recorded ✓"); await refreshData(); }
+    else showToast(res.error || "Failed", "error");
+  } catch(e) { showToast("Network error", "error"); }
+  setLoading(false);
+}
+
+async function submitSignInternal(partnerId) {
+  if (SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
+    const a = ALL_AGREEMENTS.find(x => x.partnerId === partnerId);
+    if (a) {
+      a.internalSigned = true; a.internalSignedBy = USERNAME; a.internalSignedAt = new Date().toISOString();
+      if (a.partnerSigned) a.agreementStatus = "Signed";
+    }
+    renderAgreements(); updateBadges();
+    showToast("Signed ✓");
+    return;
+  }
+  setLoading(true, "Signing…");
+  try {
+    const res = await api({ action: "signInternal", partnerId });
+    if (res.ok) { showToast("Signed ✓"); await refreshData(); }
+    else showToast(res.error || "Failed", "error");
+  } catch(e) { showToast("Network error", "error"); }
+  setLoading(false);
+}
+
+
+document.addEventListener("keydown", e => { if (e.key === "Escape") { document.getElementById("partner-modal-bg").style.display="none"; document.body.style.overflow=""; } });
+
+// month filter removed — replaced by range filter
+</script>
+</body>
+</html>
