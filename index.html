@@ -658,7 +658,7 @@ function doLogout() {
 
 // ── API — everything via GET params to avoid CORS ──
 async function api(params) {
-  const qs = new URLSearchParams({ ...params, pin: PIN }).toString();
+  const qs = new URLSearchParams({ ...params, username: USERNAME || "", pin: PIN || "" }).toString();
   const res = await fetch(SCRIPT_URL + "?" + qs);
   return res.json();
 }
