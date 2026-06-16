@@ -78,6 +78,14 @@ a { text-decoration: none; color: inherit; }
   cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: color 0.2s;
 }
 .btn-logout:hover { color: #fff; }
+.btn-refresh {
+  display: flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 50%;
+  background: none; border: none; color: rgba(255,255,255,0.5);
+  cursor: pointer; transition: color 0.2s, transform 0.4s;
+}
+.btn-refresh:hover { color: #fff; }
+.btn-refresh.spinning svg { animation: spin 0.8s linear; }
 .topbar-date { font-size: 12px; color: rgba(255,255,255,0.45); }
 
 .main { max-width: 1100px; margin: 0 auto; padding: 28px 24px; }
@@ -346,6 +354,9 @@ tbody tr:hover td { background: #f9faff; }
     <div class="topbar-logo">Share<span>Pal</span></div>
     <div class="topbar-right">
       <span class="topbar-date" id="topbar-date"></span>
+      <button class="btn-refresh" id="btn-refresh" onclick="manualRefresh()" title="Refresh data">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+      </button>
       <span class="role-badge" id="role-badge"></span>
       <button class="btn-logout" onclick="doLogout()">Sign out</button>
     </div>
@@ -379,7 +390,11 @@ tbody tr:hover td { background: #f9faff; }
     <div class="section active" id="section-action">
       <div class="stats-row" id="stats-row"></div>
       <div id="alerts-area"></div>
-      <div class="section-head" id="action-section-head">Today &amp; overdue</div>
+
+      <div class="section-head" id="your-tasks-head" style="display:none">Your Tasks</div>
+      <div id="your-tasks-list"></div>
+
+      <div class="section-head" id="other-due-head">Today &amp; overdue</div>
       <div id="action-list"></div>
     </div>
 
@@ -566,6 +581,7 @@ let USERNAME = null;
 let ALL_PAYOUTS   = [];
 let ALL_PARTNERS  = [];
 let ALL_AGREEMENTS = [];
+let USER_ROLES = []; // [{username, role}] — for "Waiting on: <name>" labels
 const TODAY = new Date();
 TODAY.setHours(0, 0, 0, 0);
 
@@ -640,8 +656,8 @@ async function doLogin() {
 }
 
 function doLogout() {
+  stopAutoRefresh();
   clearSession();
-  stopActivityTracking();
   ROLE = null; PIN = null; USERNAME = null; ALL_PAYOUTS = []; ALL_PARTNERS = [];
   document.getElementById("app").style.display = "none";
   document.getElementById("fullscreen-loader").style.display = "none";
@@ -661,6 +677,56 @@ async function api(params) {
   const qs = new URLSearchParams({ ...params, username: USERNAME || "", pin: PIN || "" }).toString();
   const res = await fetch(SCRIPT_URL + "?" + qs);
   return res.json();
+}
+
+// ── USER ROLES (for "Waiting on: <name>" labels) ──
+async function fetchUserRoles() {
+  if (SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
+    USER_ROLES = DEMO_USERS.map(u => ({ username: u.username, role: u.role }));
+    return;
+  }
+  try {
+    const res = await api({ action: "getUserRoles" });
+    if (res.ok) USER_ROLES = res.users;
+  } catch (e) { /* non-critical */ }
+}
+
+// Find the display name for a role (excludes admin per requirements)
+function nameForRole(role) {
+  if (role === "admin") return null;
+  const u = USER_ROLES.find(x => x.role === role);
+  return u ? u.username : null;
+}
+
+// ── REAL-TIME REFRESH ──
+const REFRESH_INTERVAL_MS = 60 * 1000; // 60 seconds
+let refreshTimer = null;
+
+function startAutoRefresh() {
+  stopAutoRefresh();
+  refreshTimer = setInterval(() => {
+    if (document.visibilityState === "visible") refreshData();
+  }, REFRESH_INTERVAL_MS);
+
+  // Refresh immediately when tab regains focus
+  document.addEventListener("visibilitychange", handleVisibilityRefresh);
+}
+
+function stopAutoRefresh() {
+  if (refreshTimer) clearInterval(refreshTimer);
+  refreshTimer = null;
+  document.removeEventListener("visibilitychange", handleVisibilityRefresh);
+}
+
+function handleVisibilityRefresh() {
+  if (document.visibilityState === "visible") refreshData();
+}
+
+async function manualRefresh() {
+  const btn = document.getElementById("btn-refresh");
+  if (btn) btn.classList.add("spinning");
+  await refreshData();
+  if (btn) setTimeout(() => btn.classList.remove("spinning"), 400);
 }
 
 // ── BOOT ──
@@ -705,20 +771,31 @@ async function bootApp() {
 
   // Show setup banner if not configured
   if (SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
+    await fetchUserRoles();
     loadDemoData();
     document.getElementById("fullscreen-loader").style.display = "none";
     document.getElementById("app").style.display = "block";
     document.getElementById("setup-banner").style.display = "block";
-    startActivityTracking();
-    saveSession();
+    ensureSessionSaved();
+    startAutoRefresh();
     return;
   }
 
   await refreshData();
   document.getElementById("fullscreen-loader").style.display = "none";
   document.getElementById("app").style.display = "block";
-  startActivityTracking();
-  saveSession(); // refresh savedAt on successful data load
+  ensureSessionSaved();
+  startAutoRefresh();
+}
+
+// Save session only if not already saved (preserves original 24h login window on restore)
+function ensureSessionSaved() {
+  const raw = localStorage.getItem("sp_session");
+  if (!raw) { saveSession(); return; }
+  try {
+    const session = JSON.parse(raw);
+    if (session.username !== USERNAME || session.role !== ROLE) saveSession();
+  } catch(e) { saveSession(); }
 }
 
 async function refreshData() {
@@ -737,6 +814,7 @@ async function refreshData() {
       ALL_PARTNERS   = res.partners;
       ALL_PAYOUTS    = res.payouts;
       ALL_AGREEMENTS = res.agreements || [];
+      if (!USER_ROLES.length) await fetchUserRoles();
       renderAll();
       renderAction();
       renderStats();
@@ -868,52 +946,17 @@ function renderStats() {
 }
 
 // ── ACTION TAB ──
-function renderAction() {
-  const items = ALL_PAYOUTS
-    .filter(p => { const s = getComputedStatus(p); return s === "overdue" || s === "due"; })
-    .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+// ── Build a payout action card (with optional "Waiting on" footer for non-actionable view) ──
+function payoutActionCardHtml(p, canEdit) {
+  const s = getComputedStatus(p);
+  const days = daysDiff(p.dueDate);
+  const pillLabel = s === "overdue" ? `Overdue by ${days} day${days>1?"s":""}` : "Due today";
+  const pillClass = s === "overdue" ? "pill-overdue" : "pill-due";
+  const cardClass = s === "overdue" ? "overdue" : "due-today";
 
-  document.getElementById("action-section-head").textContent =
-    items.length ? `Today & overdue (${items.length} payouts)` : "Today & overdue";
-
-  // alerts
-  const overdue = items.filter(p => getComputedStatus(p) === "overdue");
-  const due     = items.filter(p => getComputedStatus(p) === "due");
-  let alertsHtml = "";
-  if (overdue.length) alertsHtml += `<div class="alert danger"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>${overdue.length} payout${overdue.length>1?"s are":" is"} overdue — send immediately and mark as processed.</div>`;
-  if (due.length)    alertsHtml += `<div class="alert warning"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${due.length} payout${due.length>1?"s are":" is"} due today — process and update below.</div>`;
-  document.getElementById("alerts-area").innerHTML = alertsHtml;
-
-  const el = document.getElementById("action-list");
-  if (!items.length) {
-    el.innerHTML = `<div class="empty-state">
-      <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-      <h3>All clear</h3><p>No payouts need action right now.</p>
-    </div>`;
-    return;
-  }
-
-  el.innerHTML = items.map(p => {
-    const s = getComputedStatus(p);
-    const days = daysDiff(p.dueDate);
-    const pillLabel = s === "overdue" ? `Overdue by ${days} day${days>1?"s":""}` : "Due today";
-    const pillClass = s === "overdue" ? "pill-overdue" : "pill-due";
-    const cardClass = s === "overdue" ? "overdue" : "due-today";
-    const canEdit = ROLE === "finance" || ROLE === "admin";
-
-    return `<div class="action-card ${cardClass}" id="ac-${p.key}">
-      <div class="ac-header">
-        <div class="ac-avatar">${initials(p.partnerName)}</div>
-        <div class="ac-info">
-          <div class="ac-name">${p.partnerName}</div>
-          <div class="ac-meta">${p.afpId||p.partnerId||"No AFP ID"} &nbsp;·&nbsp; Payout #${p.payoutNum} of ${p.totalPayouts||p.tenure} &nbsp;·&nbsp; ${p.payoutModel==="Yearly"?"Yearly":"Monthly"} &nbsp;·&nbsp; Due ${fmtDate(p.dueDate)}${p.includesPrincipal ? " &nbsp;·&nbsp; <strong style='color:#1d4ed8'>Includes principal return</strong>" : ""}</div>
-        </div>
-        <div class="ac-right">
-          <div class="ac-amount">${fmtINR(p.amount)}</div>
-          <span class="status-pill ${pillClass}">${pillLabel}</span>
-        </div>
-      </div>
-      ${canEdit ? `
+  let footer;
+  if (canEdit) {
+    footer = `
       <div class="ac-form" id="form-${p.key}">
         <div class="ac-form-group" style="flex:2">
           <label>Transaction ID <span style="color:var(--danger)">*</span></label>
@@ -925,9 +968,161 @@ function renderAction() {
           <input type="text" id="note-${p.key}" placeholder="e.g. via NEFT" />
         </div>
         <button class="btn-process" onclick="submitProcessed('${p.key}')">✓ Mark Processed</button>
-      </div>` : `<div style="padding:12px 18px;font-size:12px;color:var(--muted)">Contact Divakar to process the payout.</div>`}
-    </div>`;
-  }).join("");
+      </div>`;
+  } else {
+    const waitingName = nameForRole("finance");
+    footer = `<div style="padding:12px 18px;font-size:12px;color:var(--muted)">${waitingName ? `Waiting on: <strong style="color:var(--ink)">${waitingName}</strong>` : "Awaiting processing"}</div>`;
+  }
+
+  return `<div class="action-card ${cardClass}" id="ac-${p.key}">
+    <div class="ac-header">
+      <div class="ac-avatar">${initials(p.partnerName)}</div>
+      <div class="ac-info">
+        <div class="ac-name">${p.partnerName}</div>
+        <div class="ac-meta"><span class="agreement-badge" style="background:var(--mist);color:var(--blue)">💰 Payout</span> &nbsp;·&nbsp; ${p.afpId||p.partnerId||"No AFP ID"} &nbsp;·&nbsp; Payout #${p.payoutNum} of ${p.totalPayouts||p.tenure} &nbsp;·&nbsp; ${p.payoutModel==="Yearly"?"Yearly":"Monthly"} &nbsp;·&nbsp; Due ${fmtDate(p.dueDate)}${p.includesPrincipal ? " &nbsp;·&nbsp; <strong style='color:#1d4ed8'>Includes principal return</strong>" : ""}</div>
+      </div>
+      <div class="ac-right">
+        <div class="ac-amount">${fmtINR(p.amount)}</div>
+        <span class="status-pill ${pillClass}">${pillLabel}</span>
+      </div>
+    </div>
+    ${footer}
+  </div>`;
+}
+
+// ── Determine if the current user can act on this agreement right now ──
+function agreementActionableByMe(a) {
+  if (a.agreementStatus === "Signed") return false;
+  if (a.agreementStatus === "Not Drafted") return ROLE === "admin";
+  if (a.agreementStatus === "Drafted")     return ROLE === "finance" || ROLE === "admin";
+  if (a.agreementStatus === "Shared") {
+    if (!a.internalSigned && (ROLE === "sign" || ROLE === "admin")) return true;
+    if (!a.partnerSigned  && (ROLE === "finance" || ROLE === "admin")) return true;
+    return false;
+  }
+  return false;
+}
+
+// ── Who is this agreement waiting on (for non-actionable view), excluding admin ──
+function agreementWaitingOnName(a) {
+  if (a.agreementStatus === "Not Drafted") return null; // admin task, don't show name
+  if (a.agreementStatus === "Drafted")     return nameForRole("finance");
+  if (a.agreementStatus === "Shared") {
+    if (!a.internalSigned) return nameForRole("sign");
+    if (!a.partnerSigned)  return nameForRole("finance");
+  }
+  return null;
+}
+
+// ── Compact agreement card for the Action tab (non-actionable — shows "Waiting on") ──
+function agreementWaitingCardHtml(a) {
+  const cardClass = a.dueStatus === "overdue" ? "overdue" : a.dueStatus === "due" ? "due-today" : "";
+  const daysSince = a.investDate ? Math.floor((TODAY - new Date(a.investDate)) / 86400000) : 0;
+  const pillLabel = a.dueStatus === "overdue" ? `Overdue by ${daysSince - 3} day${(daysSince-3)>1?"s":""}` : "Due";
+  const pillClass = a.dueStatus === "overdue" ? "pill-overdue" : "pill-due";
+  const waitingName = agreementWaitingOnName(a);
+
+  let statusLabel;
+  if (a.agreementStatus === "Not Drafted") statusLabel = "Agreement not drafted yet";
+  else if (a.agreementStatus === "Drafted") statusLabel = "Awaiting share with partner";
+  else if (a.agreementStatus === "Shared" && !a.internalSigned) statusLabel = "Awaiting internal signature";
+  else if (a.agreementStatus === "Shared" && !a.partnerSigned) statusLabel = "Awaiting partner signature";
+  else statusLabel = "";
+
+  return `<div class="action-card ${cardClass}">
+    <div class="ac-header">
+      <div class="ac-avatar">${initials(a.partnerName)}</div>
+      <div class="ac-info">
+        <div class="ac-name">${a.partnerName}</div>
+        <div class="ac-meta"><span class="agreement-badge" style="background:var(--mist);color:#6d28d9">📄 Agreement</span> &nbsp;·&nbsp; ${a.afpId||a.partnerId} &nbsp;·&nbsp; Deal started ${fmtDate(a.investDate)} (${daysSince}d ago)</div>
+      </div>
+      <div class="ac-right">
+        ${agreementBadgeHtml(a.agreementStatus, a.dueStatus)}
+      </div>
+    </div>
+    <div style="padding:12px 18px;font-size:12px;color:var(--muted)">
+      ${statusLabel}${waitingName ? ` &nbsp;·&nbsp; Waiting on: <strong style="color:var(--ink)">${waitingName}</strong>` : ""}
+    </div>
+  </div>`;
+}
+
+function renderAction() {
+  const duePayouts = ALL_PAYOUTS.filter(p => { const s = getComputedStatus(p); return s === "overdue" || s === "due"; });
+  const dueAgreements = ALL_AGREEMENTS.filter(a => a.agreementStatus !== "Signed" && (a.dueStatus === "overdue" || a.dueStatus === "due"));
+
+  // Split into "your tasks" (actionable by current role) vs "other due"
+  const myPayouts    = (ROLE === "finance" || ROLE === "admin") ? duePayouts : [];
+  const otherPayouts = (ROLE === "finance" || ROLE === "admin") ? [] : duePayouts;
+
+  const myAgreements    = dueAgreements.filter(a => agreementActionableByMe(a));
+  const otherAgreements = dueAgreements.filter(a => !agreementActionableByMe(a));
+
+  const totalDue = duePayouts.length + dueAgreements.length;
+  const myCount  = myPayouts.length + myAgreements.length;
+
+  // alerts (overall)
+  const overduePayouts = duePayouts.filter(p => getComputedStatus(p) === "overdue");
+  const overdueAgreements = dueAgreements.filter(a => a.dueStatus === "overdue");
+  let alertsHtml = "";
+  if (overduePayouts.length || overdueAgreements.length) {
+    const parts = [];
+    if (overduePayouts.length) parts.push(`${overduePayouts.length} payout${overduePayouts.length>1?"s":""}`);
+    if (overdueAgreements.length) parts.push(`${overdueAgreements.length} agreement${overdueAgreements.length>1?"s":""}`);
+    alertsHtml += `<div class="alert danger"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>${parts.join(" and ")} overdue — please action immediately.</div>`;
+  }
+  document.getElementById("alerts-area").innerHTML = alertsHtml;
+
+  // ── Your Tasks section ──
+  const yourHead = document.getElementById("your-tasks-head");
+  const yourList = document.getElementById("your-tasks-list");
+  if (myCount > 0) {
+    yourHead.style.display = "block";
+    yourHead.textContent = `Your Tasks (${myCount})`;
+    const myItems = [
+      ...myPayouts.map(p => ({ type: "payout", item: p, dueDate: p.dueDate, overdue: getComputedStatus(p) === "overdue" })),
+      ...myAgreements.map(a => ({ type: "agreement", item: a, dueDate: a.investDate, overdue: a.dueStatus === "overdue" })),
+    ].sort((x,y) => { if (x.overdue !== y.overdue) return x.overdue ? -1 : 1; return new Date(x.dueDate) - new Date(y.dueDate); });
+
+    yourList.innerHTML = myItems.map(x =>
+      x.type === "payout" ? payoutActionCardHtml(x.item, true) : agreementCardHtml(x.item)
+    ).join("");
+  } else {
+    yourHead.style.display = "none";
+    yourList.innerHTML = "";
+  }
+
+  // ── Other Due section ──
+  const otherHead = document.getElementById("other-due-head");
+  const otherList = document.getElementById("action-list");
+  const otherCount = otherPayouts.length + otherAgreements.length;
+
+  otherHead.textContent = myCount > 0
+    ? (otherCount ? `Other Due (${otherCount})` : "Other Due")
+    : (totalDue ? `Today & overdue (${totalDue})` : "Today & overdue");
+
+  if (!otherCount) {
+    if (myCount > 0) {
+      otherHead.style.display = "none";
+      otherList.innerHTML = "";
+    } else {
+      otherHead.style.display = "block";
+      otherList.innerHTML = `<div class="empty-state">
+        <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <h3>All clear</h3><p>Nothing needs action right now.</p>
+      </div>`;
+    }
+    return;
+  }
+
+  otherHead.style.display = "block";
+  const otherItems = [
+    ...otherPayouts.map(p => ({ type: "payout", item: p, dueDate: p.dueDate, overdue: getComputedStatus(p) === "overdue" })),
+    ...otherAgreements.map(a => ({ type: "agreement", item: a, dueDate: a.investDate, overdue: a.dueStatus === "overdue" })),
+  ].sort((x,y) => { if (x.overdue !== y.overdue) return x.overdue ? -1 : 1; return new Date(x.dueDate) - new Date(y.dueDate); });
+
+  otherList.innerHTML = otherItems.map(x =>
+    x.type === "payout" ? payoutActionCardHtml(x.item, false) : agreementWaitingCardHtml(x.item)
+  ).join("");
 }
 
 async function submitProcessed(key) {
@@ -1391,7 +1586,9 @@ function switchAgreementView(name) {
 
 // ── BADGES ──
 function updateBadges() {
-  const count = ALL_PAYOUTS.filter(p => { const s = getComputedStatus(p); return s==="overdue"||s==="due"; }).length;
+  const payoutCount = ALL_PAYOUTS.filter(p => { const s = getComputedStatus(p); return s==="overdue"||s==="due"; }).length;
+  const agrDueCount = ALL_AGREEMENTS.filter(a => a.agreementStatus !== "Signed" && (a.dueStatus==="overdue"||a.dueStatus==="due")).length;
+  const count = payoutCount + agrDueCount;
   const badge = document.getElementById("badge-action");
   badge.textContent = count;
   badge.className = "tab-badge" + (count > 0 ? "" : " zero");
@@ -1445,50 +1642,26 @@ async function populateUserDropdown() {
 populateUserDropdown();
 
 // ── SESSION MANAGEMENT ──
-const SESSION_INACTIVITY_MS = 5 * 60 * 1000; // 5 minutes
-let activityTimer = null;
+const SESSION_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours from login
 
 function saveSession() {
-  const session = { username: USERNAME, pin: PIN, role: ROLE, savedAt: Date.now() };
-  sessionStorage.setItem("sp_session", JSON.stringify(session));
+  const session = { username: USERNAME, pin: PIN, role: ROLE, loginAt: Date.now() };
+  localStorage.setItem("sp_session", JSON.stringify(session));
 }
 
 function clearSession() {
-  sessionStorage.removeItem("sp_session");
-}
-
-function resetActivityTimer() {
-  clearTimeout(activityTimer);
-  activityTimer = setTimeout(() => {
-    clearSession();
-    doLogout();
-    document.getElementById("login-error").textContent = "Session expired due to inactivity.";
-  }, SESSION_INACTIVITY_MS);
-}
-
-function startActivityTracking() {
-  ["mousemove","keydown","click","touchstart","scroll"].forEach(evt =>
-    document.addEventListener(evt, resetActivityTimer, { passive: true })
-  );
-  resetActivityTimer();
-}
-
-function stopActivityTracking() {
-  ["mousemove","keydown","click","touchstart","scroll"].forEach(evt =>
-    document.removeEventListener(evt, resetActivityTimer)
-  );
-  clearTimeout(activityTimer);
+  localStorage.removeItem("sp_session");
 }
 
 // ── AUTO-RESTORE SESSION ON PAGE LOAD ──
 (async function tryRestoreSession() {
   try {
-    const raw = sessionStorage.getItem("sp_session");
+    const raw = localStorage.getItem("sp_session");
     if (!raw) return;
     const session = JSON.parse(raw);
     if (!session.username || !session.pin || !session.role) return;
-    // Check inactivity — if last save was within 5 min, restore
-    if (Date.now() - session.savedAt > SESSION_INACTIVITY_MS) {
+    // Session valid for 24 hours from login
+    if (Date.now() - session.loginAt > SESSION_DURATION_MS) {
       clearSession();
       return;
     }
