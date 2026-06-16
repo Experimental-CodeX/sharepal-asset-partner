@@ -1084,7 +1084,7 @@ function renderAction() {
     ].sort((x,y) => { if (x.overdue !== y.overdue) return x.overdue ? -1 : 1; return new Date(x.dueDate) - new Date(y.dueDate); });
 
     yourList.innerHTML = myItems.map(x =>
-      x.type === "payout" ? payoutActionCardHtml(x.item, true) : agreementCardHtml(x.item)
+      x.type === "payout" ? payoutActionCardHtml(x.item, true) : agreementCardHtml(x.item, false, true)
     ).join("");
   } else {
     yourHead.style.display = "none";
@@ -1810,7 +1810,7 @@ function renderAgreementsCompleted() {
 }
 
 // ── AGREEMENT CARD ──
-function agreementCardHtml(a, completedView) {
+function agreementCardHtml(a, completedView, showTypeBadge) {
   const cardClass = a.agreementStatus !== "Signed" && a.dueStatus === "overdue" ? "overdue"
     : a.agreementStatus !== "Signed" && a.dueStatus === "due" ? "due" : "";
 
@@ -1920,7 +1920,7 @@ function agreementCardHtml(a, completedView) {
       <div class="ac-avatar">${initials(a.partnerName)}</div>
       <div class="agr-info">
         <div class="agr-name">${a.partnerName}</div>
-        <div class="agr-meta">${a.afpId||a.partnerId} &nbsp;·&nbsp; Deal started ${fmtDate(a.investDate)} (${daysSince}d ago)</div>
+        <div class="agr-meta">${showTypeBadge ? `<span class="agreement-badge" style="background:var(--mist);color:#6d28d9">📄 Agreement</span> &nbsp;·&nbsp; ` : ""}${a.afpId||a.partnerId} &nbsp;·&nbsp; Deal started ${fmtDate(a.investDate)} (${daysSince}d ago)</div>
       </div>
       <div style="text-align:right">
         ${agreementBadgeHtml(a.agreementStatus, a.dueStatus)}
