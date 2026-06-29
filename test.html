@@ -598,15 +598,17 @@ function initials(name) {
   return name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
 }
 function daysDiff(dueDate) {
-  const d = new Date(dueDate); d.setHours(0, 0, 0, 0);
-  return Math.floor((TODAY - d) / 86400000);
+  // Parse the ISO date string as a local date (avoid UTC-to-IST shift)
+  const parts = dueDate.substring(0, 10).split("-");
+  const d = new Date(+parts[0], +parts[1] - 1, +parts[2]); // local midnight
+  const todayMidnight = new Date(TODAY); todayMidnight.setHours(0,0,0,0);
+  return Math.floor((todayMidnight - d) / 86400000);
 }
 function getComputedStatus(p) {
   if (p.status === "Processed") return "processed";
   const diff = daysDiff(p.dueDate);
   if (diff > 0)  return "overdue";
   if (diff === 0) return "due";
-  if (diff === -1) return "due";   // allow processing 1 day prior
   return "upcoming";
 }
 function showToast(msg, type = "success") {
@@ -1017,7 +1019,13 @@ function agreementWaitingOnName(a) {
 // ── Compact agreement card for the Action tab (non-actionable — shows "Waiting on") ──
 function agreementWaitingCardHtml(a) {
   const cardClass = a.dueStatus === "overdue" ? "overdue" : a.dueStatus === "due" ? "due-today" : "";
-  const daysSince = a.investDate ? Math.floor((TODAY - new Date(a.investDate)) / 86400000) : 0;
+  // Parse date locally to avoid UTC→IST timezone shift
+  const daysSince = a.investDate ? (() => {
+    const parts = a.investDate.substring(0,10).split("-");
+    const d = new Date(+parts[0], +parts[1]-1, +parts[2]);
+    const t = new Date(TODAY); t.setHours(0,0,0,0);
+    return Math.floor((t - d) / 86400000);
+  })() : 0;
   const pillLabel = a.dueStatus === "overdue" ? `Overdue by ${daysSince - 3} day${(daysSince-3)>1?"s":""}` : "Due";
   const pillClass = a.dueStatus === "overdue" ? "pill-overdue" : "pill-due";
   const waitingName = agreementWaitingOnName(a);
@@ -1084,7 +1092,7 @@ function renderAction() {
     ].sort((x,y) => { if (x.overdue !== y.overdue) return x.overdue ? -1 : 1; return new Date(x.dueDate) - new Date(y.dueDate); });
 
     yourList.innerHTML = myItems.map(x =>
-      x.type === "payout" ? payoutActionCardHtml(x.item, true) : agreementCardHtml(x.item, false, true)
+      x.type === "payout" ? payoutActionCardHtml(x.item, true) : agreementCardHtml(x.item, false, true, "act")
     ).join("");
   } else {
     yourHead.style.display = "none";
@@ -1810,11 +1818,18 @@ function renderAgreementsCompleted() {
 }
 
 // ── AGREEMENT CARD ──
-function agreementCardHtml(a, completedView, showTypeBadge) {
+function agreementCardHtml(a, completedView, showTypeBadge, ctx) {
+  ctx = ctx || "agr"; // unique prefix per render context to avoid duplicate IDs
   const cardClass = a.agreementStatus !== "Signed" && a.dueStatus === "overdue" ? "overdue"
     : a.agreementStatus !== "Signed" && a.dueStatus === "due" ? "due" : "";
 
-  const daysSince = a.investDate ? Math.floor((TODAY - new Date(a.investDate)) / 86400000) : 0;
+  // Parse date locally to avoid UTC→IST timezone shift
+  const daysSince = a.investDate ? (() => {
+    const parts = a.investDate.substring(0,10).split("-");
+    const d = new Date(+parts[0], +parts[1]-1, +parts[2]);
+    const t = new Date(TODAY); t.setHours(0,0,0,0);
+    return Math.floor((t - d) / 86400000);
+  })() : 0;
 
   // ── Body content varies by status + role ──
   let bodyHtml = "";
@@ -1826,33 +1841,33 @@ function agreementCardHtml(a, completedView, showTypeBadge) {
         <div class="agr-row">
           <div class="agr-field" style="flex:2">
             <label>Drive Link <span style="color:var(--danger)">*</span></label>
-            <input type="text" id="drivelink-${a.partnerId}" placeholder="https://drive.google.com/..." />
+            <input type="text" id="${ctx}-drivelink-${a.partnerId}" placeholder="https://drive.google.com/..." />
           </div>
           <div class="agr-field" style="flex:1.5">
             <label>Remark (visible to Finance until shared)</label>
-            <input type="text" id="remark-${a.partnerId}" placeholder="e.g. double-check PAN before sharing" />
+            <input type="text" id="${ctx}-remark-${a.partnerId}" placeholder="e.g. double-check PAN before sharing" />
           </div>
-          <button class="btn-agr primary" onclick="submitAgreementLink('${a.partnerId}')">Save Draft Link</button>
+          <button class="btn-agr primary" onclick="submitAgreementLink('${a.partnerId}','${ctx}')">Save Draft Link</button>
         </div>
-        <div class="agr-form-error" id="err-drivelink-${a.partnerId}" style="font-size:11px;color:var(--danger)"></div>
+        <div class="agr-form-error" id="${ctx}-err-drivelink-${a.partnerId}" style="font-size:11px;color:var(--danger)"></div>
       `;
     } else {
       bodyHtml += `
         <div class="agr-row">
           <a href="${a.driveLink}" target="_blank" class="agr-link">📄 Open agreement in Drive →</a>
-          <button class="btn-agr ghost" style="margin-left:auto" onclick="toggleEditLink('${a.partnerId}')">Edit link / remark</button>
+          <button class="btn-agr ghost" style="margin-left:auto" onclick="toggleEditLink('${a.partnerId}','${ctx}')">Edit link / remark</button>
         </div>
-        <div id="edit-link-${a.partnerId}" style="display:none">
+        <div id="${ctx}-edit-link-${a.partnerId}" style="display:none">
           <div class="agr-row">
             <div class="agr-field" style="flex:2">
               <label>Drive Link</label>
-              <input type="text" id="drivelink-${a.partnerId}" value="${a.driveLink}" />
+              <input type="text" id="${ctx}-drivelink-${a.partnerId}" value="${a.driveLink}" />
             </div>
             <div class="agr-field" style="flex:1.5">
               <label>Remark</label>
-              <input type="text" id="remark-${a.partnerId}" value="${a.remark||''}" />
+              <input type="text" id="${ctx}-remark-${a.partnerId}" value="${a.remark||''}" />
             </div>
-            <button class="btn-agr primary" onclick="submitAgreementLink('${a.partnerId}')">Update</button>
+            <button class="btn-agr primary" onclick="submitAgreementLink('${a.partnerId}','${ctx}')">Update</button>
           </div>
         </div>
       `;
@@ -1930,8 +1945,9 @@ function agreementCardHtml(a, completedView, showTypeBadge) {
   </div>`;
 }
 
-function toggleEditLink(partnerId) {
-  const el = document.getElementById("edit-link-" + partnerId);
+function toggleEditLink(partnerId, ctx) {
+  ctx = ctx || "agr";
+  const el = document.getElementById(ctx + "-edit-link-" + partnerId);
   if (el) el.style.display = el.style.display === "none" ? "block" : "none";
 }
 
@@ -1945,10 +1961,11 @@ function copyAgreementEmail(email, btn) {
 }
 
 // ── ACTIONS ──
-async function submitAgreementLink(partnerId) {
-  const linkInput = document.getElementById("drivelink-" + partnerId);
-  const remarkInput = document.getElementById("remark-" + partnerId);
-  const errEl = document.getElementById("err-drivelink-" + partnerId);
+async function submitAgreementLink(partnerId, ctx) {
+  ctx = ctx || "agr";
+  const linkInput = document.getElementById(ctx + "-drivelink-" + partnerId);
+  const remarkInput = document.getElementById(ctx + "-remark-" + partnerId);
+  const errEl = document.getElementById(ctx + "-err-drivelink-" + partnerId);
   const link = linkInput.value.trim();
   const remark = remarkInput ? remarkInput.value.trim() : "";
 
