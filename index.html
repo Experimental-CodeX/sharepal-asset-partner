@@ -72,11 +72,20 @@ a { text-decoration: none; color: inherit; }
 .role-badge.finance { background: rgba(159,254,2,0.15); color: var(--lime); }
 .role-badge.admin  { background: rgba(159,254,2,0.15); color: var(--lime); }
 .role-badge.viewer { background: rgba(159,254,2,0.15); color: var(--lime); }
+.role-badge.sign   { background: rgba(159,254,2,0.15); color: var(--lime); }
 .btn-logout {
   font-size: 12px; color: rgba(255,255,255,0.5); background: none; border: none;
   cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: color 0.2s;
 }
 .btn-logout:hover { color: #fff; }
+.btn-refresh {
+  display: flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 50%;
+  background: none; border: none; color: rgba(255,255,255,0.5);
+  cursor: pointer; transition: color 0.2s, transform 0.4s;
+}
+.btn-refresh:hover { color: #fff; }
+.btn-refresh.spinning svg { animation: spin 0.8s linear; }
 .topbar-date { font-size: 12px; color: rgba(255,255,255,0.45); }
 
 .main { max-width: 1100px; margin: 0 auto; padding: 28px 24px; }
@@ -100,6 +109,50 @@ a { text-decoration: none; color: inherit; }
 
 .section { display: none; }
 .section.active { display: block; }
+.agreement-view { display: none; }
+.agreement-view.active { display: block; }
+
+/* ── AGREEMENT STATUS BADGES ── */
+.agreement-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 100px; }
+.agreement-badge.not-drafted { background: var(--mist); color: var(--muted); }
+.agreement-badge.drafted     { background: var(--warning-bg); color: var(--warning); }
+.agreement-badge.shared      { background: var(--info-bg); color: var(--info-text); }
+.agreement-badge.signed      { background: var(--success-bg); color: var(--success); }
+.agreement-due-tag { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 100px; margin-left: 4px; }
+.agreement-due-tag.due     { background: var(--warning-bg); color: var(--warning); }
+.agreement-due-tag.overdue { background: var(--danger-bg); color: var(--danger); }
+
+/* ── AGREEMENT CARD ── */
+.agreement-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); margin-bottom: 10px; overflow: hidden; }
+.agreement-card.overdue { border-left: 3px solid var(--danger); }
+.agreement-card.due { border-left: 3px solid var(--warning); }
+.agr-header { padding: 16px 18px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.agr-info { flex: 1; min-width: 200px; }
+.agr-name { font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 2px; }
+.agr-meta { font-size: 12px; color: var(--muted); }
+.agr-body { border-top: 1px solid var(--border); padding: 14px 18px; background: #fafbff; display: flex; flex-direction: column; gap: 12px; }
+.agr-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+.agr-field { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 200px; }
+.agr-field label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; }
+.agr-field input, .agr-field textarea { padding: 9px 12px; border: 1.5px solid var(--border); border-radius: var(--radius); font-size: 13px; color: var(--ink); background: #fff; font-family: 'Hanken Grotesk', sans-serif; }
+.agr-field input:focus, .agr-field textarea:focus { outline: none; border-color: var(--blue); }
+.agr-remark { background: var(--warning-bg); border: 1px solid var(--warning-border); border-radius: var(--radius); padding: 10px 14px; font-size: 12px; color: var(--warning); }
+.agr-sign-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+.agr-sign-pill { display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 6px 12px; border-radius: 100px; font-weight: 600; }
+.agr-sign-pill.done { background: var(--success-bg); color: var(--success); }
+.agr-sign-pill.pending { background: var(--mist); color: var(--muted); }
+.btn-agr { padding: 9px 18px; border: none; border-radius: var(--radius); font-family: 'Bricolage Grotesque', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
+.btn-agr.primary { background: var(--blue); color: #fff; }
+.btn-agr.primary:hover { background: var(--blue-dark); }
+.btn-agr.success { background: var(--success); color: #fff; }
+.btn-agr.success:hover { background: #15803d; }
+.btn-agr.ghost { background: #fff; color: var(--ink); border: 1.5px solid var(--border); }
+.btn-agr.ghost:hover { background: var(--mist); }
+.btn-agr:disabled { opacity: 0.5; cursor: not-allowed; }
+.agr-link { display: inline-flex; align-items: center; gap: 5px; color: var(--blue); font-size: 12px; font-weight: 600; text-decoration: none; }
+.agr-link:hover { text-decoration: underline; }
+.agr-email-copy { display: inline-flex; align-items: center; gap: 6px; background: var(--mist); border-radius: 6px; padding: 5px 10px; font-size: 12px; font-family: 'JetBrains Mono', monospace; color: var(--ink); cursor: pointer; border: none; }
+.agr-email-copy:hover { background: var(--border); }
 
 /* ── STATS ROW ── */
 .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
@@ -301,6 +354,9 @@ tbody tr:hover td { background: #f9faff; }
     <div class="topbar-logo">Share<span>Pal</span></div>
     <div class="topbar-right">
       <span class="topbar-date" id="topbar-date"></span>
+      <button class="btn-refresh" id="btn-refresh" onclick="manualRefresh()" title="Refresh data">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+      </button>
       <span class="role-badge" id="role-badge"></span>
       <button class="btn-logout" onclick="doLogout()">Sign out</button>
     </div>
@@ -325,13 +381,20 @@ tbody tr:hover td { background: #f9faff; }
       <button class="tab" id="tab-partners" onclick="switchTab('partners')">
         👥 Deals
       </button>
+      <button class="tab" id="tab-agreements" onclick="switchTab('agreements')">
+        📄 Agreements <span class="tab-badge" id="badge-agreements">0</span>
+      </button>
     </div>
 
     <!-- ── ACTION TAB ── -->
     <div class="section active" id="section-action">
       <div class="stats-row" id="stats-row"></div>
       <div id="alerts-area"></div>
-      <div class="section-head" id="action-section-head">Today &amp; overdue</div>
+
+      <div class="section-head" id="your-tasks-head" style="display:none">Your Tasks</div>
+      <div id="your-tasks-list"></div>
+
+      <div class="section-head" id="other-due-head">Today &amp; overdue</div>
       <div id="action-list"></div>
     </div>
 
@@ -417,6 +480,46 @@ tbody tr:hover td { background: #f9faff; }
       <div class="partner-grid" id="partner-grid"></div>
     </div>
 
+    <!-- ── AGREEMENTS TAB ── -->
+    <div class="section" id="section-agreements">
+      <div class="stats-row" id="agreement-stats-row"></div>
+      <div id="agreement-alerts-area"></div>
+
+      <div class="tabs" style="margin-bottom:16px">
+        <button class="tab active" id="atab-action" onclick="switchAgreementView('action')">
+          ⚡ Action needed <span class="tab-badge" id="badge-agreement-action">0</span>
+        </button>
+        <button class="tab" id="atab-all" onclick="switchAgreementView('all')">
+          ☰ All agreements
+        </button>
+        <button class="tab" id="atab-completed" onclick="switchAgreementView('completed')">
+          ✓ Completed <span class="tab-badge zero" id="badge-agreement-completed">0</span>
+        </button>
+      </div>
+
+      <div class="agreement-view active" id="aview-action">
+        <div id="agreement-action-list"></div>
+      </div>
+
+      <div class="agreement-view" id="aview-all">
+        <div class="filter-row">
+          <input type="text" id="agreement-search" placeholder="Search name or ID…" oninput="renderAgreementsAll()" style="min-width:220px">
+          <select id="agreement-filter-status" onchange="renderAgreementsAll()">
+            <option value="">All statuses</option>
+            <option value="Not Drafted">Not Drafted</option>
+            <option value="Drafted">Drafted</option>
+            <option value="Shared">Shared</option>
+            <option value="Signed">Signed</option>
+          </select>
+        </div>
+        <div id="agreement-all-list"></div>
+      </div>
+
+      <div class="agreement-view" id="aview-completed">
+        <div id="agreement-completed-list"></div>
+      </div>
+    </div>
+
     <!-- ── PARTNER PAYOUT MODAL ── -->
     <div id="partner-modal-bg" style="display:none;position:fixed;inset:0;background:rgba(3,13,49,0.55);z-index:100;overflow-y:auto;padding:32px 16px" onclick="closePartnerModal(event)">
       <div id="partner-modal" style="background:#fff;border-radius:18px;max-width:760px;margin:0 auto;overflow:hidden;position:relative">
@@ -467,6 +570,8 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxoPvmAN_dg9aLBZOKKs
 const DEMO_USERS = [
   { username: "Deep",    pin: "1234", role: "admin"   },
   { username: "Finance", pin: "9999", role: "finance" },
+  { username: "Akash",   pin: "4321", role: "sign"    },
+  { username: "Viewer",  pin: "0000", role: "viewer"  },
 ];
 
 // ── STATE ──
@@ -475,6 +580,8 @@ let PIN      = null;
 let USERNAME = null;
 let ALL_PAYOUTS   = [];
 let ALL_PARTNERS  = [];
+let ALL_AGREEMENTS = [];
+let USER_ROLES = []; // [{username, role}] — for "Waiting on: <name>" labels
 const TODAY = new Date();
 TODAY.setHours(0, 0, 0, 0);
 
@@ -491,15 +598,17 @@ function initials(name) {
   return name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
 }
 function daysDiff(dueDate) {
-  const d = new Date(dueDate); d.setHours(0, 0, 0, 0);
-  return Math.floor((TODAY - d) / 86400000);
+  // Parse the ISO date string as a local date (avoid UTC-to-IST shift)
+  const parts = dueDate.substring(0, 10).split("-");
+  const d = new Date(+parts[0], +parts[1] - 1, +parts[2]); // local midnight
+  const todayMidnight = new Date(TODAY); todayMidnight.setHours(0,0,0,0);
+  return Math.floor((todayMidnight - d) / 86400000);
 }
 function getComputedStatus(p) {
   if (p.status === "Processed") return "processed";
   const diff = daysDiff(p.dueDate);
   if (diff > 0)  return "overdue";
   if (diff === 0) return "due";
-  if (diff === -1) return "due";   // allow processing 1 day prior
   return "upcoming";
 }
 function showToast(msg, type = "success") {
@@ -549,8 +658,8 @@ async function doLogin() {
 }
 
 function doLogout() {
+  stopAutoRefresh();
   clearSession();
-  stopActivityTracking();
   ROLE = null; PIN = null; USERNAME = null; ALL_PAYOUTS = []; ALL_PARTNERS = [];
   document.getElementById("app").style.display = "none";
   document.getElementById("fullscreen-loader").style.display = "none";
@@ -567,9 +676,59 @@ function doLogout() {
 
 // ── API — everything via GET params to avoid CORS ──
 async function api(params) {
-  const qs = new URLSearchParams({ ...params, pin: PIN }).toString();
+  const qs = new URLSearchParams({ ...params, username: USERNAME || "", pin: PIN || "" }).toString();
   const res = await fetch(SCRIPT_URL + "?" + qs);
   return res.json();
+}
+
+// ── USER ROLES (for "Waiting on: <name>" labels) ──
+async function fetchUserRoles() {
+  if (SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
+    USER_ROLES = DEMO_USERS.map(u => ({ username: u.username, role: u.role }));
+    return;
+  }
+  try {
+    const res = await api({ action: "getUserRoles" });
+    if (res.ok) USER_ROLES = res.users;
+  } catch (e) { /* non-critical */ }
+}
+
+// Find the display name for a role (excludes admin per requirements)
+function nameForRole(role) {
+  if (role === "admin") return null;
+  const u = USER_ROLES.find(x => x.role === role);
+  return u ? u.username : null;
+}
+
+// ── REAL-TIME REFRESH ──
+const REFRESH_INTERVAL_MS = 60 * 1000; // 60 seconds
+let refreshTimer = null;
+
+function startAutoRefresh() {
+  stopAutoRefresh();
+  refreshTimer = setInterval(() => {
+    if (document.visibilityState === "visible") refreshData();
+  }, REFRESH_INTERVAL_MS);
+
+  // Refresh immediately when tab regains focus
+  document.addEventListener("visibilitychange", handleVisibilityRefresh);
+}
+
+function stopAutoRefresh() {
+  if (refreshTimer) clearInterval(refreshTimer);
+  refreshTimer = null;
+  document.removeEventListener("visibilitychange", handleVisibilityRefresh);
+}
+
+function handleVisibilityRefresh() {
+  if (document.visibilityState === "visible") refreshData();
+}
+
+async function manualRefresh() {
+  const btn = document.getElementById("btn-refresh");
+  if (btn) btn.classList.add("spinning");
+  await refreshData();
+  if (btn) setTimeout(() => btn.classList.remove("spinning"), 400);
 }
 
 // ── BOOT ──
@@ -589,42 +748,56 @@ async function bootApp() {
     TODAY.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
 
   // Reorder tabs based on role
-  // viewer: Deals → All payouts → Action needed
-  // finance/admin: Action needed → All payouts → Deals (default)
+  // viewer/sign: Deals → All payouts → Agreements → Action needed
+  // finance/admin: Action needed → All payouts → Deals → Agreements (default)
   const tabsEl = document.querySelector(".tabs");
-  const tAction   = document.getElementById("tab-action");
-  const tAll      = document.getElementById("tab-all");
-  const tPartners = document.getElementById("tab-partners");
+  const tAction     = document.getElementById("tab-action");
+  const tAll        = document.getElementById("tab-all");
+  const tPartners   = document.getElementById("tab-partners");
+  const tAgreements = document.getElementById("tab-agreements");
   // Detach all first (avoids innerHTML wipe destroying references)
-  [tAction, tAll, tPartners].forEach(t => tabsEl.removeChild(t));
-  if (ROLE === "viewer") {
+  [tAction, tAll, tPartners, tAgreements].forEach(t => tabsEl.removeChild(t));
+  if (ROLE === "viewer" || ROLE === "sign") {
     tabsEl.appendChild(tPartners);
     tabsEl.appendChild(tAll);
+    tabsEl.appendChild(tAgreements);
     tabsEl.appendChild(tAction);
     switchTab("partners");
   } else {
     tabsEl.appendChild(tAction);
     tabsEl.appendChild(tAll);
     tabsEl.appendChild(tPartners);
+    tabsEl.appendChild(tAgreements);
     switchTab("action");
   }
 
   // Show setup banner if not configured
   if (SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
+    await fetchUserRoles();
     loadDemoData();
     document.getElementById("fullscreen-loader").style.display = "none";
     document.getElementById("app").style.display = "block";
     document.getElementById("setup-banner").style.display = "block";
-    startActivityTracking();
-    saveSession();
+    ensureSessionSaved();
+    startAutoRefresh();
     return;
   }
 
   await refreshData();
   document.getElementById("fullscreen-loader").style.display = "none";
   document.getElementById("app").style.display = "block";
-  startActivityTracking();
-  saveSession(); // refresh savedAt on successful data load
+  ensureSessionSaved();
+  startAutoRefresh();
+}
+
+// Save session only if not already saved (preserves original 24h login window on restore)
+function ensureSessionSaved() {
+  const raw = localStorage.getItem("sp_session");
+  if (!raw) { saveSession(); return; }
+  try {
+    const session = JSON.parse(raw);
+    if (session.username !== USERNAME || session.role !== ROLE) saveSession();
+  } catch(e) { saveSession(); }
 }
 
 async function refreshData() {
@@ -640,12 +813,15 @@ async function refreshData() {
       const rb = document.getElementById("role-badge");
       if (rb) rb.textContent = USERNAME || "User";
       if (rb) rb.className = "role-badge " + ROLE;
-      ALL_PARTNERS = res.partners;
-      ALL_PAYOUTS  = res.payouts;
+      ALL_PARTNERS   = res.partners;
+      ALL_PAYOUTS    = res.payouts;
+      ALL_AGREEMENTS = res.agreements || [];
+      if (!USER_ROLES.length) await fetchUserRoles();
       renderAll();
       renderAction();
       renderStats();
       renderPartners();
+      renderAgreements();
       updateBadges();
     } else {
       showToast("Failed to load data: " + res.error, "error");
@@ -712,9 +888,33 @@ function loadDemoData() {
     {name:"RAMYA NARAYANAMURTHY",  id:"AFP1780137016779F",  invested:269000, tenure:12, monthly:3138,  investDate:"2026-05-30", model:"Monthly", payType:"Flat fixed interest"},
     {name:"Jaikrishna Sharma",     id:"AFP1780809035128F",  invested:57500,  tenure:12, monthly:671,   investDate:"2026-06-07", model:"Monthly", payType:"Flat fixed interest"},
   ];
-  ALL_PARTNERS = raw.map(p => ({ ...p, email: "—", phone: "—" }));
+  ALL_PARTNERS = raw.map(p => ({ ...p, email: p.name.toLowerCase().replace(/[^a-z]/g,"")+"@example.com", phone: "9999999999" }));
   ALL_PAYOUTS = buildClientPayouts(ALL_PARTNERS);
-  renderAll(); renderAction(); renderStats(); renderPartners(); updateBadges();
+
+  // Demo agreement data — all "Not Drafted" except a couple in further stages
+  const now = new Date(TODAY);
+  ALL_AGREEMENTS = ALL_PARTNERS.map((p, i) => {
+    const investDate = new Date(p.investDate);
+    const daysSince = Math.floor((now - investDate) / 86400000);
+    let agreementStatus = "Not Drafted";
+    let driveLink = "", remark = "", internalSigned = false, partnerSigned = false;
+    if (i === 0) { agreementStatus = "Drafted"; driveLink = "https://drive.google.com/drive/folders/demo1"; remark = "Double-check PAN before sharing"; }
+    if (i === 1) { agreementStatus = "Shared"; driveLink = "https://drive.google.com/drive/folders/demo2"; internalSigned = true; }
+    const dueStatus = agreementStatus === "Signed" ? "ok" : (daysSince > 3 ? "overdue" : "due");
+    return {
+      partnerId: p.id, afpId: p.afpId || "", partnerName: p.name,
+      investDate: p.investDate, agreementStatus, driveLink, remark,
+      partnerEmail: p.email,
+      internalSigned, internalSignedBy: internalSigned ? "Deep" : "",
+      internalSignedAt: internalSigned ? new Date().toISOString() : "",
+      partnerSigned, partnerSignedAt: "",
+      sharedAt: agreementStatus === "Shared" ? new Date().toISOString() : "",
+      sharedBy: agreementStatus === "Shared" ? "Finance" : "",
+      dueStatus,
+    };
+  });
+
+  renderAll(); renderAction(); renderStats(); renderPartners(); renderAgreements(); updateBadges();
 }
 
 // ── STATS ──
@@ -748,52 +948,17 @@ function renderStats() {
 }
 
 // ── ACTION TAB ──
-function renderAction() {
-  const items = ALL_PAYOUTS
-    .filter(p => { const s = getComputedStatus(p); return s === "overdue" || s === "due"; })
-    .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+// ── Build a payout action card (with optional "Waiting on" footer for non-actionable view) ──
+function payoutActionCardHtml(p, canEdit) {
+  const s = getComputedStatus(p);
+  const days = daysDiff(p.dueDate);
+  const pillLabel = s === "overdue" ? `Overdue by ${days} day${days>1?"s":""}` : "Due today";
+  const pillClass = s === "overdue" ? "pill-overdue" : "pill-due";
+  const cardClass = s === "overdue" ? "overdue" : "due-today";
 
-  document.getElementById("action-section-head").textContent =
-    items.length ? `Today & overdue (${items.length} payouts)` : "Today & overdue";
-
-  // alerts
-  const overdue = items.filter(p => getComputedStatus(p) === "overdue");
-  const due     = items.filter(p => getComputedStatus(p) === "due");
-  let alertsHtml = "";
-  if (overdue.length) alertsHtml += `<div class="alert danger"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>${overdue.length} payout${overdue.length>1?"s are":" is"} overdue — send immediately and mark as processed.</div>`;
-  if (due.length)    alertsHtml += `<div class="alert warning"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${due.length} payout${due.length>1?"s are":" is"} due today — process and update below.</div>`;
-  document.getElementById("alerts-area").innerHTML = alertsHtml;
-
-  const el = document.getElementById("action-list");
-  if (!items.length) {
-    el.innerHTML = `<div class="empty-state">
-      <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-      <h3>All clear</h3><p>No payouts need action right now.</p>
-    </div>`;
-    return;
-  }
-
-  el.innerHTML = items.map(p => {
-    const s = getComputedStatus(p);
-    const days = daysDiff(p.dueDate);
-    const pillLabel = s === "overdue" ? `Overdue by ${days} day${days>1?"s":""}` : "Due today";
-    const pillClass = s === "overdue" ? "pill-overdue" : "pill-due";
-    const cardClass = s === "overdue" ? "overdue" : "due-today";
-    const canEdit = ROLE === "finance" || ROLE === "admin";
-
-    return `<div class="action-card ${cardClass}" id="ac-${p.key}">
-      <div class="ac-header">
-        <div class="ac-avatar">${initials(p.partnerName)}</div>
-        <div class="ac-info">
-          <div class="ac-name">${p.partnerName}</div>
-          <div class="ac-meta">${p.afpId||p.partnerId||"No AFP ID"} &nbsp;·&nbsp; Payout #${p.payoutNum} of ${p.totalPayouts||p.tenure} &nbsp;·&nbsp; ${p.payoutModel==="Yearly"?"Yearly":"Monthly"} &nbsp;·&nbsp; Due ${fmtDate(p.dueDate)}${p.includesPrincipal ? " &nbsp;·&nbsp; <strong style='color:#1d4ed8'>Includes principal return</strong>" : ""}</div>
-        </div>
-        <div class="ac-right">
-          <div class="ac-amount">${fmtINR(p.amount)}</div>
-          <span class="status-pill ${pillClass}">${pillLabel}</span>
-        </div>
-      </div>
-      ${canEdit ? `
+  let footer;
+  if (canEdit) {
+    footer = `
       <div class="ac-form" id="form-${p.key}">
         <div class="ac-form-group" style="flex:2">
           <label>Transaction ID <span style="color:var(--danger)">*</span></label>
@@ -805,9 +970,167 @@ function renderAction() {
           <input type="text" id="note-${p.key}" placeholder="e.g. via NEFT" />
         </div>
         <button class="btn-process" onclick="submitProcessed('${p.key}')">✓ Mark Processed</button>
-      </div>` : `<div style="padding:12px 18px;font-size:12px;color:var(--muted)">Contact Divakar to process the payout.</div>`}
-    </div>`;
-  }).join("");
+      </div>`;
+  } else {
+    const waitingName = nameForRole("finance");
+    footer = `<div style="padding:12px 18px;font-size:12px;color:var(--muted)">${waitingName ? `Waiting on: <strong style="color:var(--ink)">${waitingName}</strong>` : "Awaiting processing"}</div>`;
+  }
+
+  return `<div class="action-card ${cardClass}" id="ac-${p.key}">
+    <div class="ac-header">
+      <div class="ac-avatar">${initials(p.partnerName)}</div>
+      <div class="ac-info">
+        <div class="ac-name">${p.partnerName}</div>
+        <div class="ac-meta"><span class="agreement-badge" style="background:var(--mist);color:var(--blue)">💰 Payout</span> &nbsp;·&nbsp; ${p.afpId||p.partnerId||"No AFP ID"} &nbsp;·&nbsp; Payout #${p.payoutNum} of ${p.totalPayouts||p.tenure} &nbsp;·&nbsp; ${p.payoutModel==="Yearly"?"Yearly":"Monthly"} &nbsp;·&nbsp; Due ${fmtDate(p.dueDate)}${p.includesPrincipal ? " &nbsp;·&nbsp; <strong style='color:#1d4ed8'>Includes principal return</strong>" : ""}</div>
+      </div>
+      <div class="ac-right">
+        <div class="ac-amount">${fmtINR(p.amount)}</div>
+        <span class="status-pill ${pillClass}">${pillLabel}</span>
+      </div>
+    </div>
+    ${footer}
+  </div>`;
+}
+
+// ── Determine if the current user can act on this agreement right now ──
+function agreementActionableByMe(a) {
+  if (a.agreementStatus === "Signed") return false;
+  if (a.agreementStatus === "Not Drafted") return ROLE === "admin";
+  if (a.agreementStatus === "Drafted")     return ROLE === "finance" || ROLE === "admin";
+  if (a.agreementStatus === "Shared") {
+    if (!a.internalSigned && (ROLE === "sign" || ROLE === "admin")) return true;
+    if (!a.partnerSigned  && (ROLE === "finance" || ROLE === "admin")) return true;
+    return false;
+  }
+  return false;
+}
+
+// ── Who is this agreement waiting on (for non-actionable view), excluding admin ──
+function agreementWaitingOnName(a) {
+  if (a.agreementStatus === "Not Drafted") return null; // admin task, don't show name
+  if (a.agreementStatus === "Drafted")     return nameForRole("finance");
+  if (a.agreementStatus === "Shared") {
+    if (!a.internalSigned) return nameForRole("sign");
+    if (!a.partnerSigned)  return nameForRole("finance");
+  }
+  return null;
+}
+
+// ── Compact agreement card for the Action tab (non-actionable — shows "Waiting on") ──
+function agreementWaitingCardHtml(a) {
+  const cardClass = a.dueStatus === "overdue" ? "overdue" : a.dueStatus === "due" ? "due-today" : "";
+  // Parse date locally to avoid UTC→IST timezone shift
+  const daysSince = a.investDate ? (() => {
+    const parts = a.investDate.substring(0,10).split("-");
+    const d = new Date(+parts[0], +parts[1]-1, +parts[2]);
+    const t = new Date(TODAY); t.setHours(0,0,0,0);
+    return Math.floor((t - d) / 86400000);
+  })() : 0;
+  const pillLabel = a.dueStatus === "overdue" ? `Overdue by ${daysSince - 3} day${(daysSince-3)>1?"s":""}` : "Due";
+  const pillClass = a.dueStatus === "overdue" ? "pill-overdue" : "pill-due";
+  const waitingName = agreementWaitingOnName(a);
+
+  let statusLabel;
+  if (a.agreementStatus === "Not Drafted") statusLabel = "Agreement not drafted yet";
+  else if (a.agreementStatus === "Drafted") statusLabel = "Awaiting share with partner";
+  else if (a.agreementStatus === "Shared" && !a.internalSigned) statusLabel = "Awaiting internal signature";
+  else if (a.agreementStatus === "Shared" && !a.partnerSigned) statusLabel = "Awaiting partner signature";
+  else statusLabel = "";
+
+  return `<div class="action-card ${cardClass}">
+    <div class="ac-header">
+      <div class="ac-avatar">${initials(a.partnerName)}</div>
+      <div class="ac-info">
+        <div class="ac-name">${a.partnerName}</div>
+        <div class="ac-meta"><span class="agreement-badge" style="background:var(--mist);color:#6d28d9">📄 Agreement</span> &nbsp;·&nbsp; ${a.afpId||a.partnerId} &nbsp;·&nbsp; Deal started ${fmtDate(a.investDate)} (${daysSince}d ago)</div>
+      </div>
+      <div class="ac-right">
+        ${agreementBadgeHtml(a.agreementStatus, a.dueStatus)}
+      </div>
+    </div>
+    <div style="padding:12px 18px;font-size:12px;color:var(--muted)">
+      ${statusLabel}${waitingName ? ` &nbsp;·&nbsp; Waiting on: <strong style="color:var(--ink)">${waitingName}</strong>` : ""}
+    </div>
+  </div>`;
+}
+
+function renderAction() {
+  const duePayouts = ALL_PAYOUTS.filter(p => { const s = getComputedStatus(p); return s === "overdue" || s === "due"; });
+  const dueAgreements = ALL_AGREEMENTS.filter(a => a.agreementStatus !== "Signed" && (a.dueStatus === "overdue" || a.dueStatus === "due"));
+
+  // Split into "your tasks" (actionable by current role) vs "other due"
+  const myPayouts    = (ROLE === "finance" || ROLE === "admin") ? duePayouts : [];
+  const otherPayouts = (ROLE === "finance" || ROLE === "admin") ? [] : duePayouts;
+
+  const myAgreements    = dueAgreements.filter(a => agreementActionableByMe(a));
+  const otherAgreements = dueAgreements.filter(a => !agreementActionableByMe(a));
+
+  const totalDue = duePayouts.length + dueAgreements.length;
+  const myCount  = myPayouts.length + myAgreements.length;
+
+  // alerts (overall)
+  const overduePayouts = duePayouts.filter(p => getComputedStatus(p) === "overdue");
+  const overdueAgreements = dueAgreements.filter(a => a.dueStatus === "overdue");
+  let alertsHtml = "";
+  if (overduePayouts.length || overdueAgreements.length) {
+    const parts = [];
+    if (overduePayouts.length) parts.push(`${overduePayouts.length} payout${overduePayouts.length>1?"s":""}`);
+    if (overdueAgreements.length) parts.push(`${overdueAgreements.length} agreement${overdueAgreements.length>1?"s":""}`);
+    alertsHtml += `<div class="alert danger"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>${parts.join(" and ")} overdue — please action immediately.</div>`;
+  }
+  document.getElementById("alerts-area").innerHTML = alertsHtml;
+
+  // ── Your Tasks section ──
+  const yourHead = document.getElementById("your-tasks-head");
+  const yourList = document.getElementById("your-tasks-list");
+  if (myCount > 0) {
+    yourHead.style.display = "block";
+    yourHead.textContent = `Your Tasks (${myCount})`;
+    const myItems = [
+      ...myPayouts.map(p => ({ type: "payout", item: p, dueDate: p.dueDate, overdue: getComputedStatus(p) === "overdue" })),
+      ...myAgreements.map(a => ({ type: "agreement", item: a, dueDate: a.investDate, overdue: a.dueStatus === "overdue" })),
+    ].sort((x,y) => { if (x.overdue !== y.overdue) return x.overdue ? -1 : 1; return new Date(x.dueDate) - new Date(y.dueDate); });
+
+    yourList.innerHTML = myItems.map(x =>
+      x.type === "payout" ? payoutActionCardHtml(x.item, true) : agreementCardHtml(x.item, false, true, "act")
+    ).join("");
+  } else {
+    yourHead.style.display = "none";
+    yourList.innerHTML = "";
+  }
+
+  // ── Other Due section ──
+  const otherHead = document.getElementById("other-due-head");
+  const otherList = document.getElementById("action-list");
+  const otherCount = otherPayouts.length + otherAgreements.length;
+
+  otherHead.textContent = myCount > 0
+    ? (otherCount ? `Other Due (${otherCount})` : "Other Due")
+    : (totalDue ? `Today & overdue (${totalDue})` : "Today & overdue");
+
+  if (!otherCount) {
+    if (myCount > 0) {
+      otherHead.style.display = "none";
+      otherList.innerHTML = "";
+    } else {
+      otherHead.style.display = "block";
+      otherList.innerHTML = `<div class="empty-state">
+        <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <h3>All clear</h3><p>Nothing needs action right now.</p>
+      </div>`;
+    }
+    return;
+  }
+
+  otherHead.style.display = "block";
+  const otherItems = [
+    ...otherPayouts.map(p => ({ type: "payout", item: p, dueDate: p.dueDate, overdue: getComputedStatus(p) === "overdue" })),
+    ...otherAgreements.map(a => ({ type: "agreement", item: a, dueDate: a.investDate, overdue: a.dueStatus === "overdue" })),
+  ].sort((x,y) => { if (x.overdue !== y.overdue) return x.overdue ? -1 : 1; return new Date(x.dueDate) - new Date(y.dueDate); });
+
+  otherList.innerHTML = otherItems.map(x =>
+    x.type === "payout" ? payoutActionCardHtml(x.item, false) : agreementWaitingCardHtml(x.item)
+  ).join("");
 }
 
 async function submitProcessed(key) {
@@ -1117,12 +1440,15 @@ function renderPartners() {
     const next = p.payouts.find(x => getComputedStatus(x) !== "processed");
     const pct  = p.payouts.length ? Math.round((p.processed / p.payouts.length) * 100) : 0;
     const investDateStr = p.investDate ? fmtDate(p.investDate) : "—";
+    const agr  = ALL_AGREEMENTS.find(x => x.partnerId === p.id);
+    const agrBadge = agr ? agreementBadgeHtml(agr.agreementStatus, agr.dueStatus) : "";
     return `<div class="partner-card" onclick="openPartnerModal('${p.id}')" style="cursor:pointer">
       <div class="pc-head">
         <div class="pc-avatar">${initials(p.name)}</div>
         <div style="flex:1;min-width:0">
           <div class="pc-name">${p.name}</div>
           <div class="pc-id">${p.afpId || p.id || "No AFP ID"}</div>
+          ${agrBadge ? `<div style="margin-top:4px">${agrBadge}</div>` : ""}
         </div>
         <div style="font-size:11px;color:var(--muted);text-align:right;flex-shrink:0">
           <div>Started</div>
@@ -1145,6 +1471,18 @@ function renderPartners() {
       </div>
     </div>`;
   }).join("");
+}
+
+// ── AGREEMENT LINK ──
+// Same-repo relative path — adjust AGREEMENT_PATH if agreement.html lives elsewhere
+const AGREEMENT_PATH = "agreement.html";
+function getAgreementUrl(p) {
+  const params = new URLSearchParams({
+    partner: p.id,
+    username: USERNAME || "",
+    pin: PIN || "",
+  });
+  return AGREEMENT_PATH + "?" + params.toString();
 }
 
 // ── PARTNER MODAL ──
@@ -1172,9 +1510,14 @@ function openPartnerModal(partnerId) {
     ];
     contactEl.style.display = "flex";
     contactEl.innerHTML = `
-      <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--blue);margin-bottom:2px;width:100%;display:flex;align-items:center;gap:6px">
-        <span style="background:var(--blue);color:#fff;font-size:9px;padding:2px 7px;border-radius:100px">Admin only</span>
-        Partner details
+      <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--blue);margin-bottom:2px;width:100%;display:flex;align-items:center;justify-content:space-between;gap:6px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="background:var(--blue);color:#fff;font-size:9px;padding:2px 7px;border-radius:100px">Admin only</span>
+          Partner details
+        </div>
+        <a href="${getAgreementUrl(p)}" target="_blank" style="display:inline-flex;align-items:center;gap:5px;background:var(--navy);color:#fff;font-size:11px;font-weight:700;text-transform:none;letter-spacing:normal;padding:6px 12px;border-radius:6px;text-decoration:none">
+          📄 Generate Agreement
+        </a>
       </div>
       ${fields.map(f => `
         <div style="display:flex;flex-direction:column;gap:2px;min-width:120px">
@@ -1230,21 +1573,42 @@ function closePartnerModal(e) {
 
 // ── TABS ──
 function switchTab(name) {
-  ["action","all","partners"].forEach(n => {
+  ["action","all","partners","agreements"].forEach(n => {
     document.getElementById("tab-"+n).classList.toggle("active", n===name);
     document.getElementById("section-"+n).classList.toggle("active", n===name);
   });
   if (name === "all") renderAll();
   if (name === "partners") renderPartners();
+  if (name === "agreements") renderAgreements();
+}
+
+// ── AGREEMENT SUB-VIEWS ──
+function switchAgreementView(name) {
+  ["action","all","completed"].forEach(n => {
+    document.getElementById("atab-"+n).classList.toggle("active", n===name);
+    document.getElementById("aview-"+n).classList.toggle("active", n===name);
+  });
+  if (name === "all") renderAgreementsAll();
+  if (name === "completed") renderAgreementsCompleted();
 }
 
 // ── BADGES ──
 function updateBadges() {
-  const count = ALL_PAYOUTS.filter(p => { const s = getComputedStatus(p); return s==="overdue"||s==="due"; }).length;
+  const payoutCount = ALL_PAYOUTS.filter(p => { const s = getComputedStatus(p); return s==="overdue"||s==="due"; }).length;
+  const agrDueCount = ALL_AGREEMENTS.filter(a => a.agreementStatus !== "Signed" && (a.dueStatus==="overdue"||a.dueStatus==="due")).length;
+  const count = payoutCount + agrDueCount;
   const badge = document.getElementById("badge-action");
   badge.textContent = count;
   badge.className = "tab-badge" + (count > 0 ? "" : " zero");
   document.getElementById("badge-all").textContent = ALL_PAYOUTS.length;
+
+  // Agreement badges
+  const agrActionCount = ALL_AGREEMENTS.filter(a => a.agreementStatus !== "Signed" && (a.dueStatus === "due" || a.dueStatus === "overdue")).length;
+  const agrBadge = document.getElementById("badge-agreements");
+  if (agrBadge) {
+    agrBadge.textContent = agrActionCount;
+    agrBadge.className = "tab-badge" + (agrActionCount > 0 ? "" : " zero");
+  }
 }
 
 // ── POPULATE USER DROPDOWN ──
@@ -1286,50 +1650,26 @@ async function populateUserDropdown() {
 populateUserDropdown();
 
 // ── SESSION MANAGEMENT ──
-const SESSION_INACTIVITY_MS = 5 * 60 * 1000; // 5 minutes
-let activityTimer = null;
+const SESSION_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours from login
 
 function saveSession() {
-  const session = { username: USERNAME, pin: PIN, role: ROLE, savedAt: Date.now() };
-  sessionStorage.setItem("sp_session", JSON.stringify(session));
+  const session = { username: USERNAME, pin: PIN, role: ROLE, loginAt: Date.now() };
+  localStorage.setItem("sp_session", JSON.stringify(session));
 }
 
 function clearSession() {
-  sessionStorage.removeItem("sp_session");
-}
-
-function resetActivityTimer() {
-  clearTimeout(activityTimer);
-  activityTimer = setTimeout(() => {
-    clearSession();
-    doLogout();
-    document.getElementById("login-error").textContent = "Session expired due to inactivity.";
-  }, SESSION_INACTIVITY_MS);
-}
-
-function startActivityTracking() {
-  ["mousemove","keydown","click","touchstart","scroll"].forEach(evt =>
-    document.addEventListener(evt, resetActivityTimer, { passive: true })
-  );
-  resetActivityTimer();
-}
-
-function stopActivityTracking() {
-  ["mousemove","keydown","click","touchstart","scroll"].forEach(evt =>
-    document.removeEventListener(evt, resetActivityTimer)
-  );
-  clearTimeout(activityTimer);
+  localStorage.removeItem("sp_session");
 }
 
 // ── AUTO-RESTORE SESSION ON PAGE LOAD ──
 (async function tryRestoreSession() {
   try {
-    const raw = sessionStorage.getItem("sp_session");
+    const raw = localStorage.getItem("sp_session");
     if (!raw) return;
     const session = JSON.parse(raw);
     if (!session.username || !session.pin || !session.role) return;
-    // Check inactivity — if last save was within 5 min, restore
-    if (Date.now() - session.savedAt > SESSION_INACTIVITY_MS) {
+    // Session valid for 24 hours from login
+    if (Date.now() - session.loginAt > SESSION_DURATION_MS) {
       clearSession();
       return;
     }
@@ -1342,6 +1682,374 @@ function stopActivityTracking() {
     clearSession();
   }
 })();
+
+
+// ════════════════════════════════════════════════════════════
+// AGREEMENT TRACKING
+// ════════════════════════════════════════════════════════════
+
+const AGREEMENT_STATUS_INFO = {
+  "Not Drafted": { cls: "not-drafted", label: "Not Drafted" },
+  "Drafted":     { cls: "drafted",     label: "Drafted" },
+  "Shared":      { cls: "shared",      label: "Shared" },
+  "Signed":      { cls: "signed",      label: "Signed" },
+};
+
+function agreementBadgeHtml(status, dueStatus) {
+  const info = AGREEMENT_STATUS_INFO[status] || AGREEMENT_STATUS_INFO["Not Drafted"];
+  let dueTag = "";
+  if (status !== "Signed") {
+    if (dueStatus === "overdue") dueTag = `<span class="agreement-due-tag overdue">Overdue</span>`;
+    else if (dueStatus === "due") dueTag = `<span class="agreement-due-tag due">Due</span>`;
+  }
+  return `<span class="agreement-badge ${info.cls}">${info.label}</span>${dueTag}`;
+}
+
+// ── MAIN AGREEMENTS TAB (default = Action needed sub-view) ──
+function renderAgreements() {
+  renderAgreementStats();
+  renderAgreementsAction();
+  // Pre-render the other sub-views too so badges/counts are correct
+  renderAgreementsAll();
+  renderAgreementsCompleted();
+}
+
+function renderAgreementStats() {
+  const total      = ALL_AGREEMENTS.length;
+  const notDrafted = ALL_AGREEMENTS.filter(a => a.agreementStatus === "Not Drafted").length;
+  const drafted    = ALL_AGREEMENTS.filter(a => a.agreementStatus === "Drafted").length;
+  const shared     = ALL_AGREEMENTS.filter(a => a.agreementStatus === "Shared").length;
+  const signed     = ALL_AGREEMENTS.filter(a => a.agreementStatus === "Signed").length;
+  const overdue    = ALL_AGREEMENTS.filter(a => a.agreementStatus !== "Signed" && a.dueStatus === "overdue").length;
+
+  const r = document.getElementById("agreement-stats-row");
+  if (!r) return;
+  r.innerHTML = `
+    <div class="stat-card"><div class="stat-label">Total agreements</div><div class="stat-val">${total}</div></div>
+    <div class="stat-card"><div class="stat-label">Not drafted</div><div class="stat-val">${notDrafted}</div></div>
+    <div class="stat-card"><div class="stat-label">Awaiting signatures</div><div class="stat-val">${drafted + shared}</div><div class="stat-sub">${shared} shared</div></div>
+    <div class="stat-card"><div class="stat-label">Signed</div><div class="stat-val green">${signed}</div><div class="stat-sub${overdue?" red":""}">${overdue ? overdue + " overdue" : "all clear"}</div></div>
+  `;
+}
+
+// ── ACTION NEEDED SUB-VIEW ──
+function renderAgreementsAction() {
+  const items = ALL_AGREEMENTS
+    .filter(a => a.agreementStatus !== "Signed")
+    .sort((a,b) => {
+      // overdue first, then due, then ok; then by invest date
+      const rank = { overdue: 0, due: 1, ok: 2 };
+      const r = (rank[a.dueStatus]||2) - (rank[b.dueStatus]||2);
+      if (r !== 0) return r;
+      return new Date(a.investDate) - new Date(b.investDate);
+    });
+
+  // Alerts
+  const overdue = items.filter(a => a.dueStatus === "overdue");
+  const due     = items.filter(a => a.dueStatus === "due");
+  let alertsHtml = "";
+  if (overdue.length) alertsHtml += `<div class="alert danger"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>${overdue.length} agreement${overdue.length>1?"s are":" is"} overdue — 3+ days since deal start with signatures pending.</div>`;
+  if (due.length)    alertsHtml += `<div class="alert warning"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${due.length} agreement${due.length>1?"s":""} due for drafting/signing.</div>`;
+  const alertsEl = document.getElementById("agreement-alerts-area");
+  if (alertsEl) alertsEl.innerHTML = alertsHtml;
+
+  const el = document.getElementById("agreement-action-list");
+  if (!el) return;
+
+  if (!items.length) {
+    el.innerHTML = `<div class="empty-state">
+      <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      <h3>All clear</h3><p>No agreements need action right now.</p>
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = items.map(a => agreementCardHtml(a)).join("");
+}
+
+// ── ALL AGREEMENTS SUB-VIEW ──
+function renderAgreementsAll() {
+  const search = (document.getElementById("agreement-search")?.value || "").toLowerCase();
+  const fStatus = document.getElementById("agreement-filter-status")?.value || "";
+
+  let items = [...ALL_AGREEMENTS];
+  if (search) items = items.filter(a => a.partnerName.toLowerCase().includes(search) || (a.afpId||a.partnerId).toLowerCase().includes(search));
+  if (fStatus) items = items.filter(a => a.agreementStatus === fStatus);
+
+  items.sort((a,b) => new Date(b.investDate) - new Date(a.investDate));
+
+  const el = document.getElementById("agreement-all-list");
+  if (!el) return;
+
+  if (!items.length) {
+    el.innerHTML = `<div class="empty-state"><h3>No agreements found</h3><p>Try a different filter.</p></div>`;
+    return;
+  }
+
+  el.innerHTML = items.map(a => agreementCardHtml(a)).join("");
+}
+
+// ── COMPLETED SUB-VIEW ──
+function renderAgreementsCompleted() {
+  const items = ALL_AGREEMENTS.filter(a => a.agreementStatus === "Signed")
+    .sort((a,b) => new Date(b.investDate) - new Date(a.investDate));
+
+  const badge = document.getElementById("badge-agreement-completed");
+  if (badge) {
+    badge.textContent = items.length;
+    badge.className = "tab-badge" + (items.length > 0 ? "" : " zero");
+  }
+  const actionBadge = document.getElementById("badge-agreement-action");
+  if (actionBadge) {
+    const count = ALL_AGREEMENTS.filter(a => a.agreementStatus !== "Signed" && (a.dueStatus === "due" || a.dueStatus === "overdue")).length;
+    actionBadge.textContent = count;
+    actionBadge.className = "tab-badge" + (count > 0 ? "" : " zero");
+  }
+
+  const el = document.getElementById("agreement-completed-list");
+  if (!el) return;
+
+  if (!items.length) {
+    el.innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><h3>No completed agreements yet</h3><p>Fully signed agreements will appear here.</p></div>`;
+    return;
+  }
+
+  el.innerHTML = items.map(a => agreementCardHtml(a, true)).join("");
+}
+
+// ── AGREEMENT CARD ──
+function agreementCardHtml(a, completedView, showTypeBadge, ctx) {
+  ctx = ctx || "agr"; // unique prefix per render context to avoid duplicate IDs
+  const cardClass = a.agreementStatus !== "Signed" && a.dueStatus === "overdue" ? "overdue"
+    : a.agreementStatus !== "Signed" && a.dueStatus === "due" ? "due" : "";
+
+  // Parse date locally to avoid UTC→IST timezone shift
+  const daysSince = a.investDate ? (() => {
+    const parts = a.investDate.substring(0,10).split("-");
+    const d = new Date(+parts[0], +parts[1]-1, +parts[2]);
+    const t = new Date(TODAY); t.setHours(0,0,0,0);
+    return Math.floor((t - d) / 86400000);
+  })() : 0;
+
+  // ── Body content varies by status + role ──
+  let bodyHtml = "";
+
+  // Admin: Drive link form (Not Drafted) or shown link + edit (Drafted+)
+  if (ROLE === "admin") {
+    if (a.agreementStatus === "Not Drafted") {
+      bodyHtml += `
+        <div class="agr-row">
+          <div class="agr-field" style="flex:2">
+            <label>Drive Link <span style="color:var(--danger)">*</span></label>
+            <input type="text" id="${ctx}-drivelink-${a.partnerId}" placeholder="https://drive.google.com/..." />
+          </div>
+          <div class="agr-field" style="flex:1.5">
+            <label>Remark (visible to Finance until shared)</label>
+            <input type="text" id="${ctx}-remark-${a.partnerId}" placeholder="e.g. double-check PAN before sharing" />
+          </div>
+          <button class="btn-agr primary" onclick="submitAgreementLink('${a.partnerId}','${ctx}')">Save Draft Link</button>
+        </div>
+        <div class="agr-form-error" id="${ctx}-err-drivelink-${a.partnerId}" style="font-size:11px;color:var(--danger)"></div>
+      `;
+    } else {
+      bodyHtml += `
+        <div class="agr-row">
+          <a href="${a.driveLink}" target="_blank" class="agr-link">📄 Open agreement in Drive →</a>
+          <button class="btn-agr ghost" style="margin-left:auto" onclick="toggleEditLink('${a.partnerId}','${ctx}')">Edit link / remark</button>
+        </div>
+        <div id="${ctx}-edit-link-${a.partnerId}" style="display:none">
+          <div class="agr-row">
+            <div class="agr-field" style="flex:2">
+              <label>Drive Link</label>
+              <input type="text" id="${ctx}-drivelink-${a.partnerId}" value="${a.driveLink}" />
+            </div>
+            <div class="agr-field" style="flex:1.5">
+              <label>Remark</label>
+              <input type="text" id="${ctx}-remark-${a.partnerId}" value="${a.remark||''}" />
+            </div>
+            <button class="btn-agr primary" onclick="submitAgreementLink('${a.partnerId}','${ctx}')">Update</button>
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  // Remark — visible to everyone until Shared
+  if (a.remark && (a.agreementStatus === "Drafted") && ROLE !== "admin") {
+    bodyHtml += `<div class="agr-remark">📝 ${a.remark}</div>`;
+  } else if (a.remark && a.agreementStatus === "Drafted" && ROLE === "admin") {
+    // admin already sees it in edit form, but show inline note too
+    bodyHtml += `<div class="agr-remark">📝 Remark (visible to Finance): ${a.remark}</div>`;
+  }
+
+  // Drive link for non-admin roles once drafted
+  if (ROLE !== "admin" && a.driveLink) {
+    bodyHtml += `<div class="agr-row"><a href="${a.driveLink}" target="_blank" class="agr-link">📄 Open agreement in Drive →</a></div>`;
+  }
+
+  // Email for sharing — Finance/Admin, only while Drafted (about to share)
+  if ((ROLE === "finance" || ROLE === "admin") && a.agreementStatus === "Drafted") {
+    bodyHtml += `
+      <div class="agr-row">
+        <div style="font-size:12px;color:var(--muted)">Partner email for sharing:</div>
+        <button class="agr-email-copy" onclick="copyAgreementEmail('${a.partnerEmail}', this)">${a.partnerEmail || "—"} 📋</button>
+        <button class="btn-agr primary" style="margin-left:auto" onclick="submitMarkShared('${a.partnerId}')">Mark as Shared</button>
+      </div>
+    `;
+  }
+
+  // Signature status row — shown only once Shared or fully Signed (mandatory steps, no skipping)
+  if (a.agreementStatus === "Shared" || a.agreementStatus === "Signed") {
+    const internalPill = a.internalSigned
+      ? `<span class="agr-sign-pill done">✓ Internal sign done${a.internalSignedBy ? " by "+a.internalSignedBy : ""}</span>`
+      : `<span class="agr-sign-pill pending">○ Internal sign pending</span>`;
+    const partnerPill = a.partnerSigned
+      ? `<span class="agr-sign-pill done">✓ Partner sign done</span>`
+      : `<span class="agr-sign-pill pending">○ Partner sign pending</span>`;
+
+    let signActions = "";
+    // Sign role / admin — Sign by Me (only once Shared)
+    if ((ROLE === "sign" || ROLE === "admin") && !a.internalSigned && a.agreementStatus === "Shared") {
+      signActions += `<button class="btn-agr success" onclick="submitSignInternal('${a.partnerId}')">✓ Sign by Me</button>`;
+    }
+    // Finance/admin — Partner Signed (only once Shared)
+    if ((ROLE === "finance" || ROLE === "admin") && !a.partnerSigned && a.agreementStatus === "Shared") {
+      signActions += `<button class="btn-agr primary" onclick="submitPartnerSigned('${a.partnerId}')">✓ Partner Signed</button>`;
+    }
+
+    bodyHtml += `
+      <div class="agr-sign-row">
+        ${internalPill}
+        ${partnerPill}
+        ${signActions ? `<div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">${signActions}</div>` : ""}
+      </div>
+    `;
+  }
+
+  if (!bodyHtml) {
+    bodyHtml = `<div style="font-size:12px;color:var(--muted)">No action available for your role.</div>`;
+  }
+
+  return `<div class="agreement-card ${cardClass}">
+    <div class="agr-header">
+      <div class="ac-avatar">${initials(a.partnerName)}</div>
+      <div class="agr-info">
+        <div class="agr-name">${a.partnerName}</div>
+        <div class="agr-meta">${showTypeBadge ? `<span class="agreement-badge" style="background:var(--mist);color:#6d28d9">📄 Agreement</span> &nbsp;·&nbsp; ` : ""}${a.afpId||a.partnerId} &nbsp;·&nbsp; Deal started ${fmtDate(a.investDate)} (${daysSince}d ago)</div>
+      </div>
+      <div style="text-align:right">
+        ${agreementBadgeHtml(a.agreementStatus, a.dueStatus)}
+      </div>
+    </div>
+    <div class="agr-body">${bodyHtml}</div>
+  </div>`;
+}
+
+function toggleEditLink(partnerId, ctx) {
+  ctx = ctx || "agr";
+  const el = document.getElementById(ctx + "-edit-link-" + partnerId);
+  if (el) el.style.display = el.style.display === "none" ? "block" : "none";
+}
+
+function copyAgreementEmail(email, btn) {
+  if (!email) return;
+  navigator.clipboard.writeText(email).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = "Copied ✓";
+    setTimeout(() => { btn.textContent = orig; }, 1500);
+  });
+}
+
+// ── ACTIONS ──
+async function submitAgreementLink(partnerId, ctx) {
+  ctx = ctx || "agr";
+  const linkInput = document.getElementById(ctx + "-drivelink-" + partnerId);
+  const remarkInput = document.getElementById(ctx + "-remark-" + partnerId);
+  const errEl = document.getElementById(ctx + "-err-drivelink-" + partnerId);
+  const link = linkInput.value.trim();
+  const remark = remarkInput ? remarkInput.value.trim() : "";
+
+  if (!link) {
+    if (errEl) errEl.textContent = "Drive link is required.";
+    linkInput.focus();
+    return;
+  }
+  if (errEl) errEl.textContent = "";
+
+  if (SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
+    const a = ALL_AGREEMENTS.find(x => x.partnerId === partnerId);
+    if (a) { a.agreementStatus = "Drafted"; a.driveLink = link; a.remark = remark; }
+    renderAgreements(); updateBadges();
+    showToast("Draft link saved ✓");
+    return;
+  }
+
+  setLoading(true, "Saving…");
+  try {
+    const res = await api({ action: "setAgreementLink", partnerId, driveLink: link, remark });
+    if (res.ok) { showToast("Draft link saved ✓"); await refreshData(); }
+    else showToast(res.error || "Failed", "error");
+  } catch(e) { showToast("Network error", "error"); }
+  setLoading(false);
+}
+
+async function submitMarkShared(partnerId) {
+  if (SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
+    const a = ALL_AGREEMENTS.find(x => x.partnerId === partnerId);
+    if (a) { a.agreementStatus = "Shared"; a.sharedBy = USERNAME; a.sharedAt = new Date().toISOString(); }
+    renderAgreements(); updateBadges();
+    showToast("Marked as shared ✓");
+    return;
+  }
+  setLoading(true, "Updating…");
+  try {
+    const res = await api({ action: "markAgreementShared", partnerId });
+    if (res.ok) { showToast("Marked as shared ✓"); await refreshData(); }
+    else showToast(res.error || "Failed", "error");
+  } catch(e) { showToast("Network error", "error"); }
+  setLoading(false);
+}
+
+async function submitPartnerSigned(partnerId) {
+  if (SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
+    const a = ALL_AGREEMENTS.find(x => x.partnerId === partnerId);
+    if (a) {
+      a.partnerSigned = true; a.partnerSignedAt = new Date().toISOString();
+      if (a.internalSigned) a.agreementStatus = "Signed";
+    }
+    renderAgreements(); updateBadges();
+    showToast("Partner signature recorded ✓");
+    return;
+  }
+  setLoading(true, "Updating…");
+  try {
+    const res = await api({ action: "markPartnerSigned", partnerId });
+    if (res.ok) { showToast("Partner signature recorded ✓"); await refreshData(); }
+    else showToast(res.error || "Failed", "error");
+  } catch(e) { showToast("Network error", "error"); }
+  setLoading(false);
+}
+
+async function submitSignInternal(partnerId) {
+  if (SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
+    const a = ALL_AGREEMENTS.find(x => x.partnerId === partnerId);
+    if (a) {
+      a.internalSigned = true; a.internalSignedBy = USERNAME; a.internalSignedAt = new Date().toISOString();
+      if (a.partnerSigned) a.agreementStatus = "Signed";
+    }
+    renderAgreements(); updateBadges();
+    showToast("Signed ✓");
+    return;
+  }
+  setLoading(true, "Signing…");
+  try {
+    const res = await api({ action: "signInternal", partnerId });
+    if (res.ok) { showToast("Signed ✓"); await refreshData(); }
+    else showToast(res.error || "Failed", "error");
+  } catch(e) { showToast("Network error", "error"); }
+  setLoading(false);
+}
+
 
 document.addEventListener("keydown", e => { if (e.key === "Escape") { document.getElementById("partner-modal-bg").style.display="none"; document.body.style.overflow=""; } });
 
