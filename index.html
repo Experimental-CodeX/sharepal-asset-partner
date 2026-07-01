@@ -447,7 +447,13 @@ tbody tr:hover td { background: #f9faff; }
     <!-- ── DEALS TAB ── -->
     <div class="section" id="section-partners">
       <div class="stats-row" id="deals-summary" style="margin-bottom:20px"></div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px" id="deals-summary-row2"></div>
+      <!-- deals breakdown popover -->
+      <div id="deals-breakdown-popover" style="display:none;position:relative;z-index:10;margin-top:-8px;margin-bottom:16px">
+        <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px;box-shadow:0 8px 24px rgba(0,0,0,0.08)">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:12px">Deal breakdown</div>
+          <div id="deals-breakdown-inner" style="display:flex;flex-wrap:wrap;gap:10px"></div>
+        </div>
+      </div>
       <div class="filter-row" style="margin-bottom:16px;align-items:center">
         <input type="text" id="partner-search" placeholder="Search name or ID…" oninput="renderPartners()" style="min-width:200px">
         <select id="partner-date-range" onchange="handlePartnerRangeChange()">
@@ -533,7 +539,7 @@ tbody tr:hover td { background: #f9faff; }
         </div>
         <!-- Admin-only contact info -->
         <div id="modal-contact" style="display:none;padding:14px 24px;background:#fafbff;border-bottom:1px solid var(--border);gap:24px;flex-wrap:wrap;align-items:center"></div>
-        <div id="modal-stats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-bottom:1px solid var(--border)"></div>
+        <div id="modal-stats" style="display:grid;grid-template-columns:repeat(5,1fr);gap:0;border-bottom:1px solid var(--border)"></div>
         <div style="padding:20px 24px">
           <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Payout Schedule</div>
           <div style="overflow-x:auto">
@@ -586,6 +592,45 @@ const TODAY = new Date();
 TODAY.setHours(0, 0, 0, 0);
 
 // ── UTILITIES ──
+// ── INTEREST RATE HELPERS ────────────────────────────────────────────────────
+// For EMI: solve for monthly rate r using Newton-Raphson on EMI formula.
+// EMI = P*r*(1+r)^n / ((1+r)^n - 1)  →  find r such that f(r)=0
+// For Flat/Yearly: direct formula (monthly payment IS pure interest).
+function calcInterestRate(p) {
+  if (!p.invested || !p.monthly) return null;
+  const isEmi = p.payType && p.payType.toLowerCase().includes("emi");
+  const P = p.invested, emi = p.monthly, n = p.tenure;
+
+  if (isEmi) {
+    // Newton-Raphson with finite-difference derivative to find monthly rate r
+    // Equation: emi*(1+r)^n - emi - P*r*(1+r)^n = 0
+    let r = 0.015; // initial guess
+    for (let i = 0; i < 200; i++) {
+      const pow = Math.pow(1 + r, n);
+      const f   = emi * (pow - 1) - P * r * pow;
+      const dr  = 1e-6;
+      const pow2 = Math.pow(1 + r + dr, n);
+      const df  = (emi * (pow2 - 1) - P * (r + dr) * pow2 - f) / dr;
+      if (Math.abs(df) < 1e-20) break;
+      const r2 = r - f / df;
+      if (r2 <= 0) { r = 0.001; continue; }
+      if (Math.abs(r2 - r) < 1e-12) { r = r2; break; }
+      r = r2;
+    }
+    return (r * 12 * 100).toFixed(2);
+  } else if (p.model === "Yearly") {
+    return (p.monthly / p.invested * 100).toFixed(2);
+  } else {
+    return (p.monthly * 12 / p.invested * 100).toFixed(2);
+  }
+}
+
+function calcInterestRateBadge(p) {
+  const rate = calcInterestRate(p);
+  if (!rate) return "";
+  return `<span style="display:inline-flex;align-items:center;justify-content:center;background:var(--blue);color:#fff;font-family:'Bricolage Grotesque',sans-serif;font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;letter-spacing:0.3px">${rate}% p.a.</span>`;
+}
+
 function fmtINR(n) {
   return "₹" + Math.round(n).toLocaleString("en-IN");
 }
@@ -598,10 +643,10 @@ function initials(name) {
   return name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
 }
 function daysDiff(dueDate) {
-  // Parse the ISO date string as a local date (avoid UTC-to-IST shift)
+  // dueDate is "YYYY-MM-DD" from Apps Script (local timezone) — parse as local midnight
   const parts = dueDate.substring(0, 10).split("-");
-  const d = new Date(+parts[0], +parts[1] - 1, +parts[2]); // local midnight
-  const todayMidnight = new Date(TODAY); todayMidnight.setHours(0,0,0,0);
+  const d = new Date(+parts[0], +parts[1] - 1, +parts[2]);
+  const todayMidnight = new Date(TODAY); todayMidnight.setHours(0, 0, 0, 0);
   return Math.floor((todayMidnight - d) / 86400000);
 }
 function getComputedStatus(p) {
@@ -923,26 +968,33 @@ function renderStats() {
   const due       = ALL_PAYOUTS.filter(p => getComputedStatus(p) === "due");
   const processed = ALL_PAYOUTS.filter(p => getComputedStatus(p) === "processed");
   const upcoming  = ALL_PAYOUTS.filter(p => getComputedStatus(p) === "upcoming");
+
+  // Agreement stats for action tab
+  const agrOverdue    = ALL_AGREEMENTS.filter(a => a.agreementStatus !== "Signed" && a.dueStatus === "overdue");
+  const agrDue        = ALL_AGREEMENTS.filter(a => a.agreementStatus !== "Signed" && a.dueStatus === "due");
+  const agrSigned     = ALL_AGREEMENTS.filter(a => a.agreementStatus === "Signed");
+  const agrPending    = ALL_AGREEMENTS.filter(a => a.agreementStatus !== "Signed");
+
   document.getElementById("stats-row").innerHTML = `
     <div class="stat-card">
-      <div class="stat-label">Overdue</div>
+      <div class="stat-label">Payouts overdue</div>
       <div class="stat-val red">${overdue.length}</div>
       <div class="stat-sub red">${fmtINR(overdue.reduce((a,p)=>a+p.amount,0))} pending</div>
     </div>
     <div class="stat-card">
-      <div class="stat-label">Due today</div>
+      <div class="stat-label">Payouts due today</div>
       <div class="stat-val amber">${due.length}</div>
       <div class="stat-sub amber">${fmtINR(due.reduce((a,p)=>a+p.amount,0))} to send</div>
     </div>
     <div class="stat-card">
-      <div class="stat-label">Processed</div>
+      <div class="stat-label">Payouts processed</div>
       <div class="stat-val green">${processed.length}</div>
       <div class="stat-sub">${fmtINR(processed.reduce((a,p)=>a+p.amount,0))} sent</div>
     </div>
     <div class="stat-card">
-      <div class="stat-label">Total payouts</div>
-      <div class="stat-val">${ALL_PAYOUTS.length}</div>
-      <div class="stat-sub">${upcoming.length} upcoming</div>
+      <div class="stat-label">Agreements pending</div>
+      <div class="stat-val${agrOverdue.length ? " red" : agrDue.length ? " amber" : ""}">${agrPending.length}</div>
+      <div class="stat-sub${agrOverdue.length ? " red" : ""}">${agrOverdue.length ? agrOverdue.length + " overdue" : agrSigned.length + " signed"}</div>
     </div>
   `;
 }
@@ -1359,12 +1411,21 @@ function renderDealsSummary(filteredPartners) {
   const rangeLabel = rangeLabels[rangeVal] || "All time";
   const showingAll = !rangeVal;
 
+  // Store breakdown for popover
+  const t12 = partners.filter(p => p.tenure === 12).length;
+  const t24 = partners.filter(p => p.tenure === 24).length;
+  const t36 = partners.filter(p => p.tenure === 36).length;
+  const tOther = partners.filter(p => ![12,24,36].includes(p.tenure)).length;
+  const monthlyPartners = partners.filter(p => p.model && p.model.toLowerCase().includes("monthly"));
+  const yearlyPartners  = partners.filter(p => p.model && p.model.toLowerCase().includes("yearly"));
+  window._dealsBreakdown = { emiPartners, flatPartners, overduePartners, monthlyPartners, yearlyPartners, t12, t24, t36, tOther };
+
   const r1 = document.getElementById("deals-summary");
   if (r1) r1.innerHTML = `
-    <div class="stat-card">
-      <div class="stat-label">Deals ${showingAll?"(total)":"in range"}</div>
+    <div class="stat-card" onclick="toggleDealsBreakdown()" style="cursor:pointer;user-select:none">
+      <div class="stat-label">Deals ${showingAll?"(total)":"in range"} <span style="font-size:10px;color:var(--blue)">▾</span></div>
       <div class="stat-val">${partners.length}</div>
-      ${!showingAll?`<div class="stat-sub">${rangeLabel}</div>`:""}
+      <div class="stat-sub" style="color:var(--blue)">click for breakdown</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">Invested ${showingAll?"(total)":"in range"}</div>
@@ -1379,13 +1440,40 @@ function renderDealsSummary(filteredPartners) {
       <div class="stat-val">${activeThisMonth} <span style="font-size:13px;font-weight:400;color:var(--muted)">partners</span></div>
     </div>
   `;
+  // Close popover when data refreshes
+  const pop = document.getElementById("deals-breakdown-popover");
+  if (pop) pop.style.display = "none";
+}
 
-  const r2 = document.getElementById("deals-summary-row2");
-  if (r2) r2.innerHTML = `
-    <div class="stat-card"><div class="stat-label">EMI deals</div><div class="stat-val">${emiPartners.length}</div><div class="stat-sub">${fmtINR(emiPartners.reduce((a,p)=>a+p.invested,0))} invested</div></div>
-    <div class="stat-card"><div class="stat-label">Flat fixed interest deals</div><div class="stat-val">${flatPartners.length}</div><div class="stat-sub">${fmtINR(flatPartners.reduce((a,p)=>a+p.invested,0))} invested</div></div>
-    <div class="stat-card"><div class="stat-label">Partners with overdue</div><div class="stat-val${overduePartners.length?" red":""}">${overduePartners.length}</div><div class="stat-sub${overduePartners.length?" red":""}"> ${overduePartners.length ? overduePartners.length+" need attention" : "all clear"}</div></div>
+function toggleDealsBreakdown() {
+  const pop = document.getElementById("deals-breakdown-popover");
+  const inner = document.getElementById("deals-breakdown-inner");
+  if (!pop || !inner) return;
+  if (pop.style.display !== "none") { pop.style.display = "none"; return; }
+
+  const b = window._dealsBreakdown || {};
+  const card = (label, val, sub, color) => `
+    <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:12px 16px;min-width:110px">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:4px">${label}</div>
+      <div style="font-family:'Bricolage Grotesque',sans-serif;font-size:20px;font-weight:700;color:${color||"var(--ink)"};line-height:1">${val}</div>
+      ${sub ? `<div style="font-size:11px;color:var(--muted);margin-top:3px">${sub}</div>` : ""}
+    </div>`;
+
+  inner.innerHTML = `
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);width:100%;padding-bottom:2px">Payout type</div>
+    ${card("EMI deals", b.emiPartners?.length ?? 0, fmtINR(b.emiPartners?.reduce((a,p)=>a+p.invested,0)||0) + " invested")}
+    ${card("Flat fixed interest", b.flatPartners?.length ?? 0, fmtINR(b.flatPartners?.reduce((a,p)=>a+p.invested,0)||0) + " invested")}
+    ${card("Monthly payout", b.monthlyPartners?.length ?? 0, null)}
+    ${card("Yearly payout", b.yearlyPartners?.length ?? 0, null)}
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);width:100%;padding-top:4px;padding-bottom:2px">Tenure</div>
+    ${card("12 months", b.t12 ?? 0, null, "var(--blue)")}
+    ${card("24 months", b.t24 ?? 0, null, "var(--blue)")}
+    ${card("36 months", b.t36 ?? 0, null, "var(--blue)")}
+    ${b.tOther ? card("Other tenure", b.tOther, null, "var(--muted)") : ""}
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);width:100%;padding-top:4px;padding-bottom:2px">Status</div>
+    ${card("With overdue", b.overduePartners?.length ?? 0, null, b.overduePartners?.length ? "var(--danger)" : "var(--success)")}
   `;
+  pop.style.display = "block";
 }
 
 // ── PARTNERS / DEALS ──
@@ -1457,7 +1545,13 @@ function renderPartners() {
       </div>
       <div class="pc-body">
         <div class="pc-row"><span>Invested</span><span>${fmtINR(p.invested)}</span></div>
-        <div class="pc-row"><span>${p.model==="Yearly"?"Yearly":"Monthly"} payout</span><span>${fmtINR(p.monthly)}</span></div>
+        <div class="pc-row">
+          <span>${p.model==="Yearly"?"Yearly":"Monthly"} payout</span>
+          <span style="display:flex;align-items:center;gap:6px">
+            ${fmtINR(p.monthly)}
+            ${calcInterestRateBadge(p)}
+          </span>
+        </div>
         <div class="pc-row"><span>Tenure</span><span>${p.tenure} months</span></div>
         <div class="pc-row"><span>Payouts done</span><span>${p.processed} / ${p.payouts.length}</span></div>
         <div class="pc-row"><span>Payout model</span><span>${p.model||"Monthly"}${p.payType?(" · "+p.payType):""}</span></div>
@@ -1530,9 +1624,12 @@ function openPartnerModal(partnerId) {
     contactEl.style.display = "none";
   }
 
+  const totalObligation = payouts.reduce((a, x) => a + x.amount, 0);
+  const rateStr = calcInterestRate(p);
   document.getElementById("modal-stats").innerHTML = [
     { label: "Invested", val: fmtINR(p.invested), sub: "" },
-    { label: p.model==="Yearly" ? "Yearly payout" : "Monthly payout", val: fmtINR(p.monthly), sub: "" },
+    { label: p.model==="Yearly" ? "Yearly payout" : "Monthly payout", val: fmtINR(p.monthly), sub: rateStr ? rateStr + "% p.a." : "" },
+    { label: "Total payout", val: fmtINR(totalObligation), sub: p.payType || "" },
     { label: "Paid out", val: processed + "/" + payouts.length, sub: fmtINR(totalSent) + " sent" },
     { label: "Overdue", val: overdue || "0", sub: overdue ? "needs attention" : "all clear", danger: overdue > 0 },
   ].map(s => `<div style="padding:14px 16px;border-right:1px solid var(--border)">
