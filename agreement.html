@@ -443,7 +443,7 @@ tr:hover td{background:rgba(108,92,231,0.03)}
 }
 
 /* ── Agreement type selector ── */
-.type-selector{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.type-selector{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
 .type-card{
   background:var(--surface2);border:1.5px solid var(--border-hi);border-radius:12px;
   padding:20px 18px 16px;cursor:pointer;transition:all .18s;
@@ -466,6 +466,7 @@ tr:hover td{background:rgba(108,92,231,0.03)}
 .type-badge.emi{background:rgba(108,92,231,0.12);color:var(--accent-lt)}
 .type-badge.flat_monthly{background:rgba(0,206,201,0.1);color:var(--accent2)}
 .type-badge.flat_yearly{background:rgba(253,203,110,0.1);color:var(--accent3)}
+.type-badge.lump_sum{background:rgba(255,118,117,0.1);color:#ff7675}
 .type-select-btn{
   font-family:'Inter',sans-serif;font-size:12px;font-weight:600;
   padding:7px 16px;border-radius:8px;
@@ -488,6 +489,7 @@ tr:hover td{background:rgba(108,92,231,0.03)}
   border:1px solid rgba(0,206,201,0.2);border-radius:6px;
   padding:4px 10px;margin-top:4px;
 }
+@media(max-width:900px){.type-selector{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:680px){.type-selector{grid-template-columns:1fr}}
 </style>
 </head>
@@ -575,6 +577,15 @@ tr:hover td{background:rgba(108,92,231,0.03)}
       <div class="type-desc">Fixed yearly return only. Principal repaid as lump sum at end of tenure.</div>
       <div class="type-card-footer">
         <span class="type-badge flat_yearly">Yearly Return</span>
+        <button class="type-select-btn">Select →</button>
+      </div>
+    </div>
+    <div class="type-card" id="type-lump_sum" onclick="selectAgreeType('lump_sum')">
+      <div class="type-icon">💰</div>
+      <div class="type-name">Lump Sum Agreement</div>
+      <div class="type-desc">Single payout at maturity — principal + return paid together in one payment at end of tenure.</div>
+      <div class="type-card-footer">
+        <span class="type-badge lump_sum">Maturity Payout</span>
         <button class="type-select-btn">Select →</button>
       </div>
     </div>
@@ -1003,7 +1014,7 @@ tr:hover td{background:rgba(108,92,231,0.03)}
 // ── State ──
 let cur = 0;  // 0 = type selector
 const TOTAL = 5;
-let agreeType = 'emi'; // 'emi' | 'flat_monthly' | 'flat_yearly'
+let agreeType = 'emi'; // 'emi' | 'flat_monthly' | 'flat_yearly' | 'lump_sum'
 let amortData = [];
 let tenureVal = 0;
 let payoutVal = 0;
@@ -1061,12 +1072,12 @@ function selectAgreeType(type) {
   agreeType = type;
 
   // Highlight selected card
-  ['emi','flat_monthly','flat_yearly'].forEach(t => {
+  ['emi','flat_monthly','flat_yearly','lump_sum'].forEach(t => {
     document.getElementById('type-' + t).classList.toggle('selected', t === type);
   });
 
   // Update header pill
-  const labels = { emi:'EMI Payout', flat_monthly:'Flat Monthly Payout', flat_yearly:'Flat Yearly Payout' };
+  const labels = { emi:'EMI Payout', flat_monthly:'Flat Monthly Payout', flat_yearly:'Flat Yearly Payout', lump_sum:'Lump Sum Agreement' };
   document.getElementById('agree-type-label').textContent = labels[type];
 
   // Update Step 2 UI for this type
@@ -1083,16 +1094,18 @@ function updateStep2UI() {
   const isYearly  = agreeType === 'flat_yearly';
   const isEMI     = agreeType === 'emi';
   const isMonthly = agreeType === 'flat_monthly';
+  const isLump    = agreeType === 'lump_sum';
 
   // Payout label
   const payoutLabel = document.getElementById('payout-label');
   if (isEMI)     payoutLabel.innerHTML = 'EMI Amount (₹) <span class="req">*</span>';
   if (isMonthly) payoutLabel.innerHTML = 'Monthly Payout (₹) <span class="req">*</span>';
   if (isYearly)  payoutLabel.innerHTML = 'Yearly Payout (₹) <span class="req">*</span>';
+  if (isLump)    payoutLabel.innerHTML = 'Return Amount (₹) <span class="req">*</span>';
 
-  // Tenure pills — months for EMI/monthly, years for yearly
+  // Tenure pills — months for EMI/monthly, years for yearly/lump sum
   const tp = document.getElementById('tenure-pills');
-  if (isYearly) {
+  if (isYearly || isLump) {
     tp.innerHTML = `
       <div class="pill-opt" id="t12" onclick="selectTenure(12,this)">1 yr</div>
       <div class="pill-opt" id="t24" onclick="selectTenure(24,this)">2 yr</div>
@@ -1114,13 +1127,13 @@ function updateStep2UI() {
   // Summary labels
   const sumLbl = document.getElementById('sum-lbl-payout');
   if (sumLbl) {
-    sumLbl.textContent = isEMI ? 'Monthly EMI' : isMonthly ? 'Monthly Payout' : 'Yearly Payout';
+    sumLbl.textContent = isEMI ? 'Monthly EMI' : isMonthly ? 'Monthly Payout' : isLump ? 'Return Amount' : 'Yearly Payout';
   }
 
   // Table header
   const amortCol = document.getElementById('amort-col-payout');
   if (amortCol) {
-    amortCol.textContent = isYearly ? 'Yearly Payout' : 'Monthly Payout';
+    amortCol.textContent = isLump ? 'Lump Sum Payout' : isYearly ? 'Yearly Payout' : 'Monthly Payout';
   }
 
   // Show/hide remarks column header
@@ -1181,7 +1194,7 @@ function autoFillTxnAmount() {
   }
 }
 
-// ── Main calculation — handles all 3 agreement types ─────────────────────────
+// ── Main calculation — handles all 4 agreement types ─────────────────────────
 function calcEMI() {
   const P       = parseFloat(document.getElementById('loan_amount').value);
   const n       = parseInt(document.getElementById('tenure').value);
@@ -1259,6 +1272,20 @@ function calcEMI() {
 
     // Rate = yearly payout (return only) / principal * 100
     const ratePct = ((payout / P) * 100).toFixed(2);
+    renderSummary(fmtINR(payout), fmtINR(totalPayout), ratePct + '% p.a.');
+    renderSchedule(true);
+
+  } else if (agreeType === 'lump_sum') {
+    // ── Lump Sum: single payment at maturity — principal + return together ──
+    const years = n / 12; // n stored as months (12=1yr, 24=2yr, 36=3yr)
+    const pd = new Date(startDate);
+    pd.setFullYear(startDate.getFullYear() + years);
+    const rowPayout = payout + P;
+    amortData.push({num:1, date:fmtDate(pd), payout:rowPayout, remarks:'Return + Principal'});
+    const totalPayout = rowPayout;
+
+    // Rate = return / principal / years * 100 (implied annual rate)
+    const ratePct = ((payout / P) / years * 100).toFixed(2);
     renderSummary(fmtINR(payout), fmtINR(totalPayout), ratePct + '% p.a.');
     renderSchedule(true);
   }
@@ -1374,16 +1401,21 @@ function buildPreview() {
 
   // Tenure display string
   const isYearly   = agreeType === 'flat_yearly';
-  const tenureDisplay = isYearly
+  const isLump     = agreeType === 'lump_sum';
+  const tenureDisplay = (isYearly || isLump)
     ? (tenure === '12' ? '1 Year' : tenure === '24' ? '2 Years' : tenure === '36' ? '3 Years' : tenure + ' months')
     : tenure + ' months';
 
   // Agreement type names
-  const typeNames = { emi:'EMI Payout', flat_monthly:'Flat Monthly Payout', flat_yearly:'Flat Yearly Payout' };
+  const typeNames = { emi:'EMI Payout', flat_monthly:'Flat Monthly Payout', flat_yearly:'Flat Yearly Payout', lump_sum:'Lump Sum Agreement' };
   const typeName  = typeNames[agreeType] || 'EMI Payout';
   const typeSubtitle = agreeType === 'emi'
     ? '(Private Borrowing Arrangement – Asset Financing Model)'
-    : '(Private Borrowing Arrangement – Monthly Payout Model)';
+    : agreeType === 'lump_sum'
+      ? '(Private Borrowing Arrangement – Lump Sum Payout Model)'
+      : agreeType === 'flat_yearly'
+        ? '(Private Borrowing Arrangement – Yearly Payout Model)'
+        : '(Private Borrowing Arrangement – Monthly Payout Model)';
 
   // ── Sections 4 & 5 — differ by type ──
   let section4and5 = '';
@@ -1410,6 +1442,17 @@ function buildPreview() {
     <p>5.4 Early repayment of principal is permitted without penalty.</p>
     <p>5.5 All repayments shall be credited to the Lender's bank account as provided below:</p>
     <p>Account Holder Name: <span class="hl">${bankName}</span><br/>Account Number: <span class="hl">${bankAcc}</span><br/>IFSC Code: <span class="hl">${bankIfsc}</span></p>`;
+  } else if (agreeType === 'lump_sum') {
+    section4and5 = `
+    <h2>4. Return</h2>
+    <p>The Borrower shall pay the agreed return to the Lender as per the schedule detailed in Annexure I. The principal shall be repaid in full at the end of the tenure.</p>
+    <h2>5. Repayment Structure</h2>
+    <p>5.1 The Borrower shall pay the agreed lump sum payout to the Lender as per the schedule in Annexure I.</p>
+    <p>5.2 Principal Repayment: The entire Loan Amount shall be repaid by the Borrower to the Lender in a single payment at the end of the agreed tenure.</p>
+    <p>5.3 Payment schedule is provided in Annexure I.</p>
+    <p>5.4 Early repayment of principal is permitted without penalty.</p>
+    <p>5.5 All repayments shall be credited to the Lender's bank account as provided below:</p>
+    <p>Account Holder Name: <span class="hl">${bankName}</span><br/>Account Number: <span class="hl">${bankAcc}</span><br/>IFSC Code: <span class="hl">${bankIfsc}</span></p>`;
   } else {
     section4and5 = `
     <h2>4. Return</h2>
@@ -1428,11 +1471,13 @@ function buildPreview() {
     ? '<p>- Non-payment of or delay in payment of more than 15 days for consecutive EMIs<br/>- Insolvency or breach of agreement</p>'
     : agreeType === 'flat_monthly'
       ? '<p>- Non-payment or delay in monthly payout by more than 15 days from due date for 2 consecutive months<br/>- Non-repayment of principal at end of tenure<br/>- Insolvency or breach of agreement</p>'
-      : '<p>- Non-payment or delay in yearly payout by more than 30 days from due date<br/>- Non-repayment of principal at end of tenure<br/>- Insolvency or breach of agreement</p>';
+      : agreeType === 'lump_sum'
+        ? '<p>- Non-payment or delay in lump sum payout by more than 30 days from due date<br/>- Non-repayment of principal at end of tenure<br/>- Insolvency or breach of agreement</p>'
+        : '<p>- Non-payment or delay in yearly payout by more than 30 days from due date<br/>- Non-repayment of principal at end of tenure<br/>- Insolvency or breach of agreement</p>';
 
   // ── Annexure I — differs by type ──
   const showRemarks  = agreeType !== 'emi';
-  const payoutColHdr = isYearly ? 'Yearly Payout' : 'Monthly Payout';
+  const payoutColHdr = isLump ? 'Lump Sum Payout' : isYearly ? 'Yearly Payout' : 'Monthly Payout';
   const remarksHdr   = showRemarks ? '<th>Remarks</th>' : '';
 
   let annexRows = '';
@@ -1519,7 +1564,7 @@ function buildPreview() {
     <p>Borrower indemnifies lender against losses arising from breach.<br/>The loan will be secured by hypothecation of assets.<br/>The Borrower shall provide complete details of assets hypothecated (Annexure II), including:<br/>- Asset Name<br/>- Serial Number<br/>- Asset Value</p>
 
     <h2>10. Limitation of Liability and Termination</h2>
-    <p>Borrower liability limited to outstanding loan and agreed returns.<br/>This Agreement may be terminated:<br/>- By mutual consent of both parties.<br/>${agreeType === 'emi' ? '- By the Lender, if the Borrower defaults on repayment for 2 consecutive months.' : agreeType === 'flat_monthly' ? '- By the Lender, upon default in 2 consecutive monthly payout obligations.' : '- By the Lender, upon default in 2 consecutive yearly payout obligations.'}<br/>- By the Borrower, upon full repayment of outstanding principal and returns.</p>
+    <p>Borrower liability limited to outstanding loan and agreed returns.<br/>This Agreement may be terminated:<br/>- By mutual consent of both parties.<br/>${agreeType === 'emi' ? '- By the Lender, if the Borrower defaults on repayment for 2 consecutive months.' : agreeType === 'flat_monthly' ? '- By the Lender, upon default in 2 consecutive monthly payout obligations.' : agreeType === 'lump_sum' ? '- By the Lender, upon default in lump sum payout obligations.' : '- By the Lender, upon default in 2 consecutive yearly payout obligations.'}<br/>- By the Borrower, upon full repayment of outstanding principal and returns.</p>
 
     <h2>11. Dispute Resolution and Miscellaneous</h2>
     <p>Disputes shall first be resolved amicably, failing which arbitration under Arbitration and Conciliation Act, 1996 in Bangalore.<br/>Amendments must be in writing and signed by both parties.<br/>Notices shall be sent to the addresses mentioned above.<br/>This Agreement is executed in duplicate, with each party retaining one copy.</p>
@@ -1550,7 +1595,7 @@ function buildPreview() {
     <div style="height:52px"></div>
 
     <h2>Annexure I</h2>
-    ${agreeType !== 'emi' ? '<p style="font-size:11px;color:#888;margin-bottom:6px">The principal shall be repaid in full at the end of the tenure. ' + (agreeType === 'flat_yearly' ? 'Yearly payouts shown below.' : 'Monthly payouts shown below.') + '</p>' : ''}
+    ${agreeType !== 'emi' ? '<p style="font-size:11px;color:#888;margin-bottom:6px">The principal shall be repaid in full at the end of the tenure. ' + (isLump ? 'Lump sum payout (principal + return) shown below.' : isYearly ? 'Yearly payouts shown below.' : 'Monthly payouts shown below.') + '</p>' : ''}
     <table>
       <thead>
         <tr><th>Payment #</th><th>Payment Date</th><th>${payoutColHdr}</th>${remarksHdr}</tr>
@@ -2329,7 +2374,7 @@ async function buildDocxBlob() {
 
   // Annexure I — type-aware columns
   const showDocxRemarks = agreeType !== 'emi';
-  const payoutColLabel  = agreeType === 'flat_yearly' ? 'Yearly Payout' : 'Monthly Payout';
+  const payoutColLabel  = agreeType === 'lump_sum' ? 'Lump Sum Payout' : agreeType === 'flat_yearly' ? 'Yearly Payout' : 'Monthly Payout';
   // Widths: with remarks 4 cols, without 3 cols
   const aw1 = Math.round(W*.10);
   const aw2 = showDocxRemarks ? Math.round(W*.36) : Math.round(W*.44);
@@ -2376,7 +2421,7 @@ async function buildDocxBlob() {
 
   const body = [
     para(run('LOAN AGREEMENT',{bold:true,size:36,color:'0d0d20',caps:true}),{align:'center',before:0,after:60}),
-    para(run(agreeType==='emi'?'(Private Borrowing Arrangement \u2013 Asset Financing Model)':'(Private Borrowing Arrangement \u2013 Monthly Payout Model)',{italic:true,size:20,color:'666666'}),{align:'center',before:0,after:240}),
+    para(run(agreeType==='emi'?'(Private Borrowing Arrangement \u2013 Asset Financing Model)':agreeType==='lump_sum'?'(Private Borrowing Arrangement \u2013 Lump Sum Payout Model)':agreeType==='flat_yearly'?'(Private Borrowing Arrangement \u2013 Yearly Payout Model)':'(Private Borrowing Arrangement \u2013 Monthly Payout Model)',{italic:true,size:20,color:'666666'}),{align:'center',before:0,after:240}),
     pMix([{text:'This Loan Agreement ('},{text:'\u201CAgreement\u201D',bold:true},{text:') is executed on the '},{text:effDateTxt,bold:true},{text:' (\u201CEffective Date\u201D).'}],{before:0,after:160}),
     h2('Parties'),
     tbl([tr([tc([p('Repium Ventures LLP (\u201CBorrower\u201D)',{bold:true,size:21}),p('A Limited Liability Partnership registered under the LLP Act, 2008',{size:20}),p('GST: 29ABKFR2691H1ZO  |  UDYAM: UDYAM-KR-03-0472355',{size:20}),p('#100, SJR Commercial Complex, Gear School Road, Bellandur, Bengaluru, Karnataka \u2013 560103',{size:20})],W,'F6F6FC')])],[W]),
@@ -2402,7 +2447,7 @@ async function buildDocxBlob() {
     pMix([{text:'Transaction ID: '},{text:txnId,bold:true}],{before:0,after:80}),
     p('The Borrower hereby acknowledges receipt of the above amount in full and confirms that the funds have been credited.',{before:0,after:160}),
     h2('3. Tenure'),
-    pMix([{text:(agreeType==='flat_yearly'?(tenure==='12'?'1 Year':tenure==='24'?'2 Years':'3 Years'):tenure+' months'),bold:true},{text:' from Effective Date.'}]),
+    pMix([{text:((agreeType==='flat_yearly'||agreeType==='lump_sum')?(tenure==='12'?'1 Year':tenure==='24'?'2 Years':'3 Years'):tenure+' months'),bold:true},{text:' from Effective Date.'}]),
     // ── Sections 4 & 5: type-aware ──
     ...(agreeType === 'emi' ? [
       h2('4. Return'),
@@ -2422,6 +2467,18 @@ async function buildDocxBlob() {
       p('The Borrower shall pay the agreed return to the Lender as per the schedule detailed in Annexure I. The principal shall be repaid in full at the end of the tenure.'),
       h2('5. Repayment Structure'),
       p('5.1 The Borrower shall pay the agreed monthly payout to the Lender as per the schedule in Annexure I.'),
+      p('5.2 Principal Repayment: The entire Loan Amount shall be repaid by the Borrower to the Lender in a single payment at the end of the agreed tenure.'),
+      p('5.3 Payment schedule is provided in Annexure I.'),
+      p('5.4 Early repayment of principal is permitted without penalty.'),
+      p('5.5 All repayments shall be credited to the Lender\u2019s bank account as provided below:'),
+      pMix([{text:'Account Holder: '},{text:bankName,bold:true}],{before:40,after:20}),
+      pMix([{text:'Account Number: '},{text:bankAcc,bold:true}],{before:0,after:20}),
+      pMix([{text:'IFSC Code: '},{text:bankIfsc,bold:true}],{before:0,after:80}),
+    ] : agreeType === 'lump_sum' ? [
+      h2('4. Return'),
+      p('The Borrower shall pay the agreed return to the Lender as per the schedule detailed in Annexure I. The principal shall be repaid in full at the end of the tenure.'),
+      h2('5. Repayment Structure'),
+      p('5.1 The Borrower shall pay the agreed lump sum payout to the Lender as per the schedule in Annexure I.'),
       p('5.2 Principal Repayment: The entire Loan Amount shall be repaid by the Borrower to the Lender in a single payment at the end of the agreed tenure.'),
       p('5.3 Payment schedule is provided in Annexure I.'),
       p('5.4 Early repayment of principal is permitted without penalty.'),
@@ -2454,6 +2511,10 @@ async function buildDocxBlob() {
       p('\u2013 Non-payment or delay in monthly payout by more than 15 days from due date for 2 consecutive months'),
       p('\u2013 Non-repayment of principal at end of tenure'),
       p('\u2013 Insolvency or breach of agreement'),
+    ] : agreeType === 'lump_sum' ? [
+      p('\u2013 Non-payment or delay in lump sum payout by more than 30 days from due date'),
+      p('\u2013 Non-repayment of principal at end of tenure'),
+      p('\u2013 Insolvency or breach of agreement'),
     ] : [
       p('\u2013 Non-payment or delay in yearly payout by more than 30 days from due date'),
       p('\u2013 Non-repayment of principal at end of tenure'),
@@ -2474,6 +2535,8 @@ async function buildDocxBlob() {
       p('\u2013 By the Lender, if the Borrower defaults on repayment for 2 consecutive months.'),
     ] : agreeType === 'flat_monthly' ? [
       p('\u2013 By the Lender, upon default in 2 consecutive monthly payout obligations.'),
+    ] : agreeType === 'lump_sum' ? [
+      p('\u2013 By the Lender, upon default in lump sum payout obligations.'),
     ] : [
       p('\u2013 By the Lender, upon default in 2 consecutive yearly payout obligations.'),
     ]),
@@ -2595,8 +2658,8 @@ function restoreFromHistory(id) {
   if (rec.agreeType) {
     agreeType = rec.agreeType;
     const tc = document.getElementById('type-' + rec.agreeType);
-    if (tc) { ['emi','flat_monthly','flat_yearly'].forEach(t => document.getElementById('type-'+t)?.classList.remove('selected')); tc.classList.add('selected'); }
-    const labels = { emi:'EMI Payout', flat_monthly:'Flat Monthly Payout', flat_yearly:'Flat Yearly Payout' };
+    if (tc) { ['emi','flat_monthly','flat_yearly','lump_sum'].forEach(t => document.getElementById('type-'+t)?.classList.remove('selected')); tc.classList.add('selected'); }
+    const labels = { emi:'EMI Payout', flat_monthly:'Flat Monthly Payout', flat_yearly:'Flat Yearly Payout', lump_sum:'Lump Sum Agreement' };
     document.getElementById('agree-type-label').textContent = labels[rec.agreeType] || 'EMI Payout';
     updateStep2UI();
   }
@@ -2819,7 +2882,7 @@ function renderHistList() {
         <span class="hist-tag yellow">${tenure}</span>
         <span class="hist-tag green">${payout}</span>
         ${rec.lender_pan ? `<span class="hist-tag">PAN: ${rec.lender_pan}</span>` : ''}
-        <span class="hist-tag" style="background:rgba(108,92,231,0.08);color:var(--accent-lt)">${{emi:'EMI',flat_monthly:'Flat Monthly',flat_yearly:'Flat Yearly'}[rec.agreeType]||'EMI'}</span>
+        <span class="hist-tag" style="background:rgba(108,92,231,0.08);color:var(--accent-lt)">${{emi:'EMI',flat_monthly:'Flat Monthly',flat_yearly:'Flat Yearly',lump_sum:'Lump Sum'}[rec.agreeType]||'EMI'}</span>
       </div>
       <div class="hist-divider"></div>
       <div class="hist-actions">
