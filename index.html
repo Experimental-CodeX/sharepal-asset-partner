@@ -601,7 +601,14 @@ function calcInterestRate(p) {
   const isEmi = p.payType && p.payType.toLowerCase().includes("emi");
   const P = p.invested, emi = p.monthly, n = p.tenure;
 
-  if (isEmi) {
+  const isLumpSum = p.model && p.model.toLowerCase().includes("lump");
+  if (isLumpSum) {
+    // Monthly compounding: A = P(1 + r/12)^n → r/12 = (A/P)^(1/n) - 1 → r = 12*((A/P)^(1/n)-1)
+    const A = p.totalPayout || (p.invested + p.monthly);
+    const P = p.invested, n = p.tenure; // n = tenure in months
+    const r = 12 * (Math.pow(A / P, 1 / n) - 1);
+    return (r * 100).toFixed(2);
+  } else if (isEmi) {
     // Newton-Raphson with finite-difference derivative to find monthly rate r
     // Equation: emi*(1+r)^n - emi - P*r*(1+r)^n = 0
     let r = 0.015; // initial guess
@@ -859,7 +866,34 @@ async function refreshData() {
       if (rb) rb.textContent = USERNAME || "User";
       if (rb) rb.className = "role-badge " + ROLE;
       ALL_PARTNERS   = res.partners;
-      ALL_PAYOUTS    = res.payouts;
+      // Safety: collapse Lump Sum partners that erroneously have multiple payout rows
+      // (happens when old Apps Script version is deployed — remove after redeploy)
+      const lumpSumPartnerIds = new Set(
+        (res.partners || [])
+          .filter(p => p.model && p.model.toLowerCase().includes("lump"))
+          .map(p => p.id)
+      );
+      ALL_PAYOUTS = (res.payouts || []).filter(pay => {
+        if (!lumpSumPartnerIds.has(pay.partnerId)) return true;
+        // Only keep payout #1 for lump sum (the last one = maturity date)
+        // Since old backend sends them monthly, keep only the last one
+        return false; // will re-add below
+      });
+      lumpSumPartnerIds.forEach(pid => {
+        const rows = (res.payouts || []).filter(pay => pay.partnerId === pid);
+        if (!rows.length) return;
+        // Take the last row (highest payoutNum = maturity date) and override fields
+        const last = rows[rows.length - 1];
+        const partner = (res.partners || []).find(p => p.id === pid);
+        ALL_PAYOUTS.push({
+          ...last,
+          payoutNum:   1,
+          totalPayouts: 1,
+          payoutModel: "Lump Sum",
+          includesPrincipal: true,
+          amount: Math.round(partner?.totalPayout || last.amount),
+        });
+      });
       ALL_AGREEMENTS = res.agreements || [];
       if (!USER_ROLES.length) await fetchUserRoles();
       renderAll();
@@ -887,7 +921,18 @@ function buildClientPayouts(partners) {
     const isFlat   = p.payType && p.payType.toLowerCase().includes("flat");
     const isYearly = p.model  && p.model.toLowerCase().includes("yearly");
 
-    if (isYearly) {
+    const isLumpSum = p.model && p.model.toLowerCase().includes("lump");
+    if (isLumpSum) {
+      // Single payout at tenure end = principal + all accrued interest
+      const due    = new Date(base); due.setMonth(due.getMonth() + p.tenure);
+      const amount = Math.round(p.totalPayout) || (Math.round(p.invested) + Math.round(p.monthly));
+      payouts.push({
+        key: p.id+"-1", partnerId: p.id, afpId: p.afpId||"", partnerName: p.name,
+        payoutNum: 1, tenure: p.tenure, totalPayouts: 1,
+        dueDate: due.toISOString(), amount,
+        isLastPayout: true, includesPrincipal: true, payoutModel: "Lump Sum",
+      });
+    } else if (isYearly) {
       const numPayouts = Math.round(p.tenure / 12);
       for (let i = 1; i <= numPayouts; i++) {
         const due    = new Date(base); due.setMonth(due.getMonth() + (i * 12));
@@ -932,6 +977,7 @@ function loadDemoData() {
     {name:"Kunal Agarwal",         id:"NO-ID-MRSHUBHAMAGARWAL",invested:125000,tenure:12,monthly:17500,investDate:"2026-05-29",model:"Yearly", payType:"Flat fixed interest"},
     {name:"RAMYA NARAYANAMURTHY",  id:"AFP1780137016779F",  invested:269000, tenure:12, monthly:3138,  investDate:"2026-05-30", model:"Monthly", payType:"Flat fixed interest"},
     {name:"Jaikrishna Sharma",     id:"AFP1780809035128F",  invested:57500,  tenure:12, monthly:671,   investDate:"2026-06-07", model:"Monthly", payType:"Flat fixed interest"},
+    {name:"R M Seshagiri Rao",      id:"NO-ID-RMSESHAGIRI",  invested:500000, tenure:24, monthly:214751, totalPayout:714751, investDate:"2026-07-02", model:"Lump Sum", payType:"Lump Sum"},
   ];
   ALL_PARTNERS = raw.map(p => ({ ...p, email: p.name.toLowerCase().replace(/[^a-z]/g,"")+"@example.com", phone: "9999999999" }));
   ALL_PAYOUTS = buildClientPayouts(ALL_PARTNERS);
@@ -1033,7 +1079,7 @@ function payoutActionCardHtml(p, canEdit) {
       <div class="ac-avatar">${initials(p.partnerName)}</div>
       <div class="ac-info">
         <div class="ac-name">${p.partnerName}</div>
-        <div class="ac-meta"><span class="agreement-badge" style="background:var(--mist);color:var(--blue)">💰 Payout</span> &nbsp;·&nbsp; ${p.afpId||p.partnerId||"No AFP ID"} &nbsp;·&nbsp; Payout #${p.payoutNum} of ${p.totalPayouts||p.tenure} &nbsp;·&nbsp; ${p.payoutModel==="Yearly"?"Yearly":"Monthly"} &nbsp;·&nbsp; Due ${fmtDate(p.dueDate)}${p.includesPrincipal ? " &nbsp;·&nbsp; <strong style='color:#1d4ed8'>Includes principal return</strong>" : ""}</div>
+        <div class="ac-meta"><span class="agreement-badge" style="background:var(--mist);color:var(--blue)">💰 Payout</span> &nbsp;·&nbsp; ${p.afpId||p.partnerId||"No AFP ID"} &nbsp;·&nbsp; Payout #${p.payoutNum} of ${p.totalPayouts||p.tenure} &nbsp;·&nbsp; ${p.payoutModel==="Yearly"?"Yearly":p.payoutModel==="Lump Sum"?"Lump Sum":"Monthly"} &nbsp;·&nbsp; Due ${fmtDate(p.dueDate)}${p.includesPrincipal ? " &nbsp;·&nbsp; <strong style='color:#1d4ed8'>Includes principal return</strong>" : ""}</div>
       </div>
       <div class="ac-right">
         <div class="ac-amount">${fmtINR(p.amount)}</div>
@@ -1323,7 +1369,7 @@ function renderAll() {
     }
     return `<tr>
       <td><div style="font-weight:600">${p.partnerName}</div><div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace">${p.afpId||p.partnerId||"No AFP ID"}</div></td>
-      <td>#${p.payoutNum}/${p.totalPayouts||p.tenure}${p.payoutModel==="Yearly"?'<span style="font-size:10px;font-weight:700;background:#f5f3ff;color:#6d28d9;border:1px solid #ddd6fe;border-radius:4px;padding:1px 5px;margin-left:5px">Yearly</span>':""}</td>
+      <td>#${p.payoutNum}/${p.totalPayouts||p.tenure}${p.payoutModel==="Yearly"?'<span style="font-size:10px;font-weight:700;background:#f5f3ff;color:#6d28d9;border:1px solid #ddd6fe;border-radius:4px;padding:1px 5px;margin-left:5px">Yearly</span>':p.payoutModel==="Lump Sum"?'<span style="font-size:10px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:4px;padding:1px 5px;margin-left:5px">Lump Sum</span>':""}</td>
       <td>${fmtDate(p.dueDate)}</td>
       <td style="font-weight:600">${fmtINR(p.amount)}${p.includesPrincipal ? `<span style="font-size:10px;font-weight:700;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:4px;padding:1px 6px;margin-left:6px;vertical-align:middle">+Principal</span>` : ""}</td>
       <td><span class="status-pill ${pillMap[s]}">${pillLabel[s]}</span></td>
@@ -1546,7 +1592,7 @@ function renderPartners() {
       <div class="pc-body">
         <div class="pc-row"><span>Invested</span><span>${fmtINR(p.invested)}</span></div>
         <div class="pc-row">
-          <span>${p.model==="Yearly"?"Yearly":"Monthly"} payout</span>
+          <span>${p.model==="Yearly"?"Yearly payout":p.model==="Lump Sum"?"Final Payout":"Monthly payout"}</span>
           <span style="display:flex;align-items:center;gap:6px">
             ${fmtINR(p.monthly)}
             ${calcInterestRateBadge(p)}
@@ -1628,7 +1674,7 @@ function openPartnerModal(partnerId) {
   const rateStr = calcInterestRate(p);
   document.getElementById("modal-stats").innerHTML = [
     { label: "Invested", val: fmtINR(p.invested), sub: "" },
-    { label: p.model==="Yearly" ? "Yearly payout" : "Monthly payout", val: fmtINR(p.monthly), sub: rateStr ? rateStr + "% p.a." : "" },
+    { label: p.model==="Yearly" ? "Yearly payout" : p.model==="Lump Sum" ? "Final Payout" : "Monthly payout", val: p.model==="Lump Sum" ? fmtINR(p.monthly) : fmtINR(p.monthly), sub: rateStr ? rateStr + "% p.a." : "" },
     { label: "Total payout", val: fmtINR(totalObligation), sub: p.payType || "" },
     { label: "Paid out", val: processed + "/" + payouts.length, sub: fmtINR(totalSent) + " sent" },
     { label: "Overdue", val: overdue || "0", sub: overdue ? "needs attention" : "all clear", danger: overdue > 0 },
