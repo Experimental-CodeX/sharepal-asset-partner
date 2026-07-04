@@ -115,6 +115,48 @@ a { text-decoration: none; color: inherit; }
 /* ── AGREEMENT STATUS BADGES ── */
 .agreement-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 100px; }
 .agreement-badge.not-drafted { background: var(--mist); color: var(--muted); }
+
+/* ── UPCOMING TAB ── */
+.upcoming-win-pill {
+  padding: 5px 14px; border-radius: 100px; border: 1.5px solid var(--border);
+  background: #fff; color: var(--muted); font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.15s;
+}
+.upcoming-win-pill:hover { border-color: var(--blue); color: var(--blue); }
+.upcoming-win-pill.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+.upcoming-group-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px; background: var(--mist); border-radius: var(--radius);
+  margin-bottom: 8px; margin-top: 16px;
+}
+.upcoming-group-head:first-child { margin-top: 0; }
+.upcoming-group-title { font-size: 13px; font-weight: 700; color: var(--ink); }
+.upcoming-group-meta { font-size: 12px; color: var(--muted); }
+.upcoming-group-total { font-family: 'Bricolage Grotesque', sans-serif; font-size: 14px; font-weight: 700; color: var(--ink); }
+.upcoming-row {
+  display: grid; grid-template-columns: 1fr auto auto auto;
+  align-items: center; gap: 12px;
+  padding: 12px 16px; background: #fff; border: 1px solid var(--border);
+  border-radius: var(--radius); margin-bottom: 6px;
+  transition: box-shadow 0.15s;
+}
+.upcoming-row:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.upcoming-row.overdue-row { border-left: 3px solid var(--danger); }
+.upcoming-row.principal-row { border-left: 3px solid #f59e0b; }
+.upcoming-row.lumpsum-row { border-left: 3px solid #f59e0b; }
+.upcoming-name { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 2px; }
+.upcoming-meta { font-size: 11px; color: var(--muted); }
+.upcoming-amount { font-family: 'Bricolage Grotesque', sans-serif; font-size: 16px; font-weight: 700; color: var(--ink); text-align: right; }
+.upcoming-date { font-size: 11px; color: var(--muted); text-align: right; white-space: nowrap; }
+.upcoming-flag {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 100px;
+  white-space: nowrap;
+}
+.flag-principal { background: #fef3c7; color: #92400e; }
+.flag-lumpsum   { background: #fef3c7; color: #92400e; }
+.flag-overdue   { background: var(--danger-bg); color: var(--danger); }
+.flag-regular   { display: none; }
 .agreement-badge.drafted     { background: var(--warning-bg); color: var(--warning); }
 .agreement-badge.shared      { background: var(--info-bg); color: var(--info-text); }
 .agreement-badge.signed      { background: var(--success-bg); color: var(--success); }
@@ -381,6 +423,9 @@ tbody tr:hover td { background: #f9faff; }
       <button class="tab" id="tab-partners" onclick="switchTab('partners')">
         👥 Deals
       </button>
+      <button class="tab" id="tab-upcoming" onclick="switchTab('upcoming')">
+        📅 Upcoming <span class="tab-badge zero" id="badge-upcoming">0</span>
+      </button>
       <button class="tab" id="tab-agreements" onclick="switchTab('agreements')">
         📄 Agreements <span class="tab-badge" id="badge-agreements">0</span>
       </button>
@@ -442,6 +487,48 @@ tbody tr:hover td { background: #f9faff; }
           <tbody id="all-tbody"></tbody>
         </table>
       </div>
+    </div>
+
+    <!-- ── UPCOMING PAYOUTS TAB ── -->
+    <div class="section" id="section-upcoming">
+
+      <!-- Window selector -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+        <span style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Window:</span>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center" id="upcoming-window-pills">
+          <button class="upcoming-win-pill" data-days="30" onclick="setUpcomingWindow(30,this)">30 days</button>
+          <button class="upcoming-win-pill" data-days="60" onclick="setUpcomingWindow(60,this)">60 days</button>
+          <button class="upcoming-win-pill active" data-days="120" onclick="setUpcomingWindow(120,this)">120 days</button>
+          <button class="upcoming-win-pill" data-days="180" onclick="setUpcomingWindow(180,this)">180 days</button>
+          <div style="display:flex;align-items:center;gap:5px;margin-left:4px">
+            <input type="number" id="upcoming-custom-days" placeholder="Custom" min="1" max="730"
+              style="width:80px;padding:5px 10px;border:1.5px solid var(--border);border-radius:100px;font-size:12px;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;color:var(--ink);outline:none;text-align:center"
+              onkeydown="if(event.key==='Enter')applyCustomWindow()"
+              onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border)'"/>
+            <button class="upcoming-win-pill" onclick="applyCustomWindow()" style="padding:5px 10px">Go</button>
+          </div>
+        </div>
+        <span id="upcoming-window-label" style="font-size:12px;color:var(--muted);margin-left:auto"></span>
+      </div>
+
+      <!-- Summary cards -->
+      <div class="stats-row" id="upcoming-stats" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px"></div>
+
+      <!-- Bar chart -->
+      <div style="background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 24px;margin-bottom:20px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:16px">Monthly cash outflow</div>
+        <div id="upcoming-chart" style="width:100%;overflow-x:auto"></div>
+        <!-- Legend -->
+        <div style="display:flex;gap:16px;margin-top:12px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><div style="width:12px;height:12px;border-radius:2px;background:var(--blue)"></div>Regular payout</div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><div style="width:12px;height:12px;border-radius:2px;background:#f59e0b"></div>Includes principal</div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><div style="width:12px;height:12px;border-radius:2px;background:var(--danger)"></div>Overdue</div>
+        </div>
+      </div>
+
+      <!-- Grouped list -->
+      <div id="upcoming-list"></div>
+
     </div>
 
     <!-- ── DEALS TAB ── -->
@@ -806,12 +893,14 @@ async function bootApp() {
   const tAction     = document.getElementById("tab-action");
   const tAll        = document.getElementById("tab-all");
   const tPartners   = document.getElementById("tab-partners");
+  const tUpcoming   = document.getElementById("tab-upcoming");
   const tAgreements = document.getElementById("tab-agreements");
   // Detach all first (avoids innerHTML wipe destroying references)
-  [tAction, tAll, tPartners, tAgreements].forEach(t => tabsEl.removeChild(t));
+  [tAction, tAll, tPartners, tUpcoming, tAgreements].forEach(t => tabsEl.removeChild(t));
   if (ROLE === "viewer" || ROLE === "sign") {
     tabsEl.appendChild(tPartners);
     tabsEl.appendChild(tAll);
+    tabsEl.appendChild(tUpcoming);
     tabsEl.appendChild(tAgreements);
     tabsEl.appendChild(tAction);
     switchTab("partners");
@@ -819,6 +908,7 @@ async function bootApp() {
     tabsEl.appendChild(tAction);
     tabsEl.appendChild(tAll);
     tabsEl.appendChild(tPartners);
+    tabsEl.appendChild(tUpcoming);
     tabsEl.appendChild(tAgreements);
     switchTab("action");
   }
@@ -901,6 +991,7 @@ async function refreshData() {
       renderStats();
       renderPartners();
       renderAgreements();
+      renderUpcoming();
       updateBadges();
     } else {
       showToast("Failed to load data: " + res.error, "error");
@@ -1005,7 +1096,7 @@ function loadDemoData() {
     };
   });
 
-  renderAll(); renderAction(); renderStats(); renderPartners(); renderAgreements(); updateBadges();
+  renderAll(); renderAction(); renderStats(); renderPartners(); renderAgreements(); renderUpcoming(); updateBadges();
 }
 
 // ── STATS ──
@@ -1716,13 +1807,14 @@ function closePartnerModal(e) {
 
 // ── TABS ──
 function switchTab(name) {
-  ["action","all","partners","agreements"].forEach(n => {
+  ["action","all","partners","upcoming","agreements"].forEach(n => {
     document.getElementById("tab-"+n).classList.toggle("active", n===name);
     document.getElementById("section-"+n).classList.toggle("active", n===name);
   });
   if (name === "all") renderAll();
   if (name === "partners") renderPartners();
   if (name === "agreements") renderAgreements();
+  if (name === "upcoming") renderUpcoming();
 }
 
 // ── AGREEMENT SUB-VIEWS ──
@@ -2191,6 +2283,445 @@ async function submitSignInternal(partnerId) {
     else showToast(res.error || "Failed", "error");
   } catch(e) { showToast("Network error", "error"); }
   setLoading(false);
+}
+
+
+
+// ════════════════════════════════════════════════════════════
+// UPCOMING PAYOUTS TAB
+// ════════════════════════════════════════════════════════════
+
+let UPCOMING_DAYS = 120;
+
+function setUpcomingWindow(days, el) {
+  UPCOMING_DAYS = days;
+  _upcomingGroupOpen = {}; // reset collapse state
+  document.querySelectorAll(".upcoming-win-pill").forEach(p => p.classList.remove("active"));
+  if (el) el.classList.add("active");
+  const customInput = document.getElementById("upcoming-custom-days");
+  if (customInput) customInput.value = "";
+  renderUpcoming();
+}
+
+function applyCustomWindow() {
+  const input = document.getElementById("upcoming-custom-days");
+  const days = parseInt(input?.value);
+  if (!days || days < 1 || days > 730) { if(input) input.style.borderColor="var(--danger)"; return; }
+  if(input) input.style.borderColor="var(--border)";
+  UPCOMING_DAYS = days;
+  _upcomingGroupOpen = {}; // reset collapse state
+  document.querySelectorAll(".upcoming-win-pill").forEach(p => p.classList.remove("active"));
+  renderUpcoming();
+}
+
+function renderUpcoming() {
+  const todayMid = new Date(TODAY); todayMid.setHours(0,0,0,0);
+  const windowEnd = new Date(todayMid); windowEnd.setDate(windowEnd.getDate() + UPCOMING_DAYS);
+
+  // Separate overdue vs upcoming-in-window (exclude processed)
+  const overdue  = ALL_PAYOUTS.filter(p => getComputedStatus(p) === "overdue");
+  const upcoming = ALL_PAYOUTS.filter(p => {
+    if (getComputedStatus(p) === "processed") return false;
+    const parts = p.dueDate.substring(0,10).split("-");
+    const d = new Date(+parts[0], +parts[1]-1, +parts[2]);
+    return d >= todayMid && d <= windowEnd;
+  });
+
+  const all = [...overdue, ...upcoming];
+
+  // ── Update window label ──
+  const lbl = document.getElementById("upcoming-window-label");
+  if (lbl) lbl.textContent = `${fmtDate(todayMid.toISOString())} → ${fmtDate(windowEnd.toISOString())}`;
+
+  // ── Update tab badge ──
+  const badge = document.getElementById("badge-upcoming");
+  if (badge) {
+    badge.textContent = all.length;
+    badge.className = "tab-badge" + (all.length > 0 ? "" : " zero");
+  }
+
+  // ── Summary stats ──
+  const totalAmount = all.reduce((s,p) => s+p.amount, 0);
+  // Partners affected = unique deals (partners with payouts in window)
+  const uniquePartners = new Set(all.map(p => p.partnerId)).size;
+  const uniquePartnerNames = [...new Set(all.map(p => p.partnerId))];
+  const overdueAmt = overdue.reduce((s,p) => s+p.amount, 0);
+  // Find heaviest month
+  const byMonth = {};
+  upcoming.forEach(p => {
+    const key = p.dueDate.substring(0,7); // YYYY-MM
+    byMonth[key] = (byMonth[key]||0) + p.amount;
+  });
+  const heaviestMonth = Object.entries(byMonth).sort((a,b) => b[1]-a[1])[0];
+  const heaviestLabel = heaviestMonth
+    ? new Date(heaviestMonth[0]+"-01").toLocaleDateString("en-IN",{month:"short",year:"numeric"}) + ` (${fmtINR(heaviestMonth[1])})`
+    : "—";
+
+  const statsEl = document.getElementById("upcoming-stats");
+  if (statsEl) statsEl.innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">Total payouts due</div>
+      <div class="stat-val">${all.length}</div>
+      <div class="stat-sub">${overdue.length ? overdue.length + " overdue" : "none overdue"}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total amount</div>
+      <div class="stat-val" style="font-size:20px">${fmtINR(totalAmount)}</div>
+      ${overdueAmt ? `<div class="stat-sub red">${fmtINR(overdueAmt)} overdue</div>` : ""}
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Deals with payouts due</div>
+      <div class="stat-val">${uniquePartners}</div>
+      <div class="stat-sub">${all.filter(p=>p.includesPrincipal||p.payoutModel==="Lump Sum").length} with principal</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Heaviest month</div>
+      <div class="stat-val" style="font-size:14px;line-height:1.3">${heaviestLabel}</div>
+    </div>
+  `;
+
+  // ── Bar chart ──
+  renderUpcomingChart(overdue, upcoming, todayMid, windowEnd);
+
+  // ── Grouped list ──
+  renderUpcomingList(overdue, upcoming, windowEnd);
+}
+
+// ── Nice round step for Y-axis ──────────────────────────────────
+function niceStep(maxVal, steps) {
+  const raw = maxVal / steps;
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const factors = [1, 2, 2.5, 5, 10];
+  for (const f of factors) {
+    if (f * mag >= raw) return Math.ceil(raw / (f * mag)) * f * mag;
+  }
+  return mag * 10;
+}
+
+function renderUpcomingChart(overdue, upcoming, todayMid, windowEnd) {
+  const chartEl = document.getElementById("upcoming-chart");
+  if (!chartEl) return;
+
+  // ── Build month buckets ──────────────────────────────────────
+  const months = [];
+  let cursor = new Date(todayMid.getFullYear(), todayMid.getMonth(), 1);
+  const endMonth = new Date(windowEnd.getFullYear(), windowEnd.getMonth(), 1);
+  while (cursor <= endMonth) {
+    months.push(cursor.getFullYear() + "-" + String(cursor.getMonth()+1).padStart(2,"0"));
+    cursor.setMonth(cursor.getMonth()+1);
+  }
+
+  // ── Count payouts per bucket ─────────────────────────────────
+  const regular = {}, principal = {}, payoutCount = {};
+  months.forEach(m => { regular[m]=0; principal[m]=0; payoutCount[m]=0; });
+  const overdueTotal  = overdue.reduce((s,p)=>s+p.amount,0);
+  const overdueCount  = overdue.length;
+  const overdueReg    = overdue.filter(p=>!p.includesPrincipal&&p.payoutModel!=="Lump Sum").reduce((s,p)=>s+p.amount,0);
+  const overduePri    = overdueTotal - overdueReg;
+
+  upcoming.forEach(p => {
+    const m = p.dueDate.substring(0,7);
+    if (!(m in regular)) return;
+    payoutCount[m]++;
+    if (p.includesPrincipal || p.payoutModel === "Lump Sum") {
+      principal[m] = (principal[m]||0) + p.amount;
+    } else {
+      regular[m] = (regular[m]||0) + p.amount;
+    }
+  });
+
+  // ── Y-axis: nice round steps ─────────────────────────────────
+  const dataMax = Math.max(overdueTotal, ...months.map(m => (regular[m]||0)+(principal[m]||0)), 1);
+  const step    = niceStep(dataMax, 4);
+  const maxVal  = step * 4; // always show 4 guide lines at even intervals
+  const STEPS   = 4;
+
+  // ── Partial-month labels (Option B) ─────────────────────────
+  // First month: starts at todayMid, not month start
+  // Last month: ends at windowEnd, not month end
+  function monthLabel(m, idx) {
+    const isFirst = idx === 0;
+    const isLast  = idx === months.length - 1;
+    const d = new Date(m + "-01");
+    const shortMo = d.toLocaleDateString("en-IN", {month:"short"});
+    const yr = "'" + String(d.getFullYear()).slice(2);
+    const lastDay = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
+
+    if (isFirst && isLast) {
+      // Window fits in one month
+      const s = todayMid.getDate(), e = windowEnd.getDate();
+      return [`${s}–${e} ${shortMo}`, yr];
+    }
+    if (isFirst && todayMid.getDate() > 1) {
+      return [`${todayMid.getDate()}–${lastDay} ${shortMo}`, yr];
+    }
+    if (isLast && windowEnd.getDate() < lastDay) {
+      return [`1–${windowEnd.getDate()} ${shortMo}`, yr];
+    }
+    return [`${shortMo} ${yr}`, ""];
+  }
+
+  // ── Layout ───────────────────────────────────────────────────
+  const LEFT_PAD = 56; // space for Y-axis labels on left
+  const BAR_W = 52, GAP = 14, H = 160, LABEL_H = 44, TOP_PAD = 32;
+  const CHART_H = TOP_PAD + H + LABEL_H;
+  const extraX  = overdueTotal > 0 ? BAR_W + GAP + 20 : 0;
+  const totalW  = LEFT_PAD + GAP + extraX + months.length * (BAR_W + GAP);
+
+  let bars = "", tooltipZones = "";
+  let xCursor = LEFT_PAD + GAP;
+
+  // ── Overdue bar ──────────────────────────────────────────────
+  if (overdueTotal > 0) {
+    const bh  = Math.round((overdueTotal / maxVal) * H);
+    const barY = TOP_PAD + H - bh;
+    const midX = xCursor + BAR_W / 2;
+    const tip = JSON.stringify({
+      title: "Overdue", total: overdueTotal, reg: overdueReg,
+      pri: overduePri, count: overdueCount, partial: ""
+    }).replace(/"/g,"&quot;");
+
+    bars += `<rect x="${xCursor}" y="${barY}" width="${BAR_W}" height="${bh}" fill="#f87171" rx="3" opacity="0.9"/>`;
+    bars += `<text x="${midX}" y="${barY - 7}" text-anchor="middle" font-size="11" font-weight="700" fill="#dc2626" font-family="sans-serif">${fmtINR(overdueTotal)}</text>`;
+    bars += `<text x="${midX}" y="${TOP_PAD+H+18}" text-anchor="middle" font-size="10" fill="#9ca3af" font-family="sans-serif">Overdue</text>`;
+    // Invisible hover zone
+    tooltipZones += `<rect x="${xCursor}" y="${TOP_PAD}" width="${BAR_W}" height="${H}" fill="transparent" class="chart-hover-zone" data-tip="${tip}" rx="3"/>`;
+    xCursor += BAR_W + GAP + 20;
+  }
+
+  // ── Month bars ───────────────────────────────────────────────
+  months.forEach((m, idx) => {
+    const reg   = regular[m]||0, pri = principal[m]||0;
+    const total = reg + pri;
+    const cnt   = payoutCount[m]||0;
+    const regH  = Math.max(0, Math.round((reg/maxVal)*H));
+    const priH  = Math.max(0, Math.round((pri/maxVal)*H));
+    const regY  = TOP_PAD + H - regH;
+    const priY  = TOP_PAD + H - regH - priH;
+    const topY  = total > 0 ? (priH > 0 ? priY : regY) : TOP_PAD + H;
+    const midX  = xCursor + BAR_W / 2;
+    const [ln1, ln2] = monthLabel(m, idx);
+    const isPartial = ln1.includes("–");
+    const tip = JSON.stringify({
+      title: ln1 + (ln2 ? " " + ln2 : ""), total, reg, pri, count: cnt,
+      partial: isPartial ? ln1 : ""
+    }).replace(/"/g,"&quot;");
+
+    if (priH > 0) {
+      bars += `<rect x="${xCursor}" y="${priY}" width="${BAR_W}" height="${priH}" fill="#f59e0b" rx="3"/>`;
+    }
+    if (regH > 0) {
+      bars += `<rect x="${xCursor}" y="${regY}" width="${BAR_W}" height="${regH}" fill="#1944E8" rx="${priH>0?0:3}"/>`;
+    }
+    if (total > 0) {
+      bars += `<text x="${midX}" y="${topY - 7}" text-anchor="middle" font-size="11" font-weight="700" fill="#1f2937" font-family="sans-serif">${fmtINR(total)}</text>`;
+    }
+    // Two-line month label: line1 = "Jul 4–31" or "Aug '26", line2 = "'26" if needed
+    bars += `<text x="${midX}" y="${TOP_PAD+H+18}" text-anchor="middle" font-size="${isPartial?9:10}" fill="${isPartial?"#f59e0b":"#6b7280"}" font-weight="${isPartial?"700":"400"}" font-family="sans-serif">${ln1}</text>`;
+    if (ln2) bars += `<text x="${midX}" y="${TOP_PAD+H+30}" text-anchor="middle" font-size="9" fill="#9ca3af" font-family="sans-serif">${ln2}</text>`;
+
+    // Invisible hover zone
+    tooltipZones += `<rect x="${xCursor}" y="${TOP_PAD}" width="${BAR_W}" height="${H}" fill="transparent" class="chart-hover-zone" data-tip="${tip}" rx="3"/>`;
+    xCursor += BAR_W + GAP;
+  });
+
+  // ── Y-axis guide lines — LEFT-aligned labels, no overlap ─────
+  let guides = "";
+  for (let i = 0; i <= STEPS; i++) {
+    const val = step * i;
+    const y   = Math.round(TOP_PAD + H - (val / maxVal) * H);
+    const isTop = i === STEPS;
+    guides += `<line x1="${LEFT_PAD}" y1="${y}" x2="${totalW}" y2="${y}" stroke="${isTop?"#cbd5e1":"#e5e7eb"}" stroke-width="${isTop?1.5:1}" stroke-dasharray="${i===0?'none':'4,3'}"/>`;
+    // Label left of chart area — never overlaps bars
+    guides += `<text x="${LEFT_PAD - 6}" y="${y + 4}" text-anchor="end" font-size="10" fill="#94a3b8" font-family="sans-serif">${fmtINR(val)}</text>`;
+  }
+
+  const svgW = Math.max(totalW, 360);
+  chartEl.innerHTML = `<div style="position:relative">
+    <svg width="${svgW}" height="${CHART_H}" style="display:block;overflow:visible" viewBox="0 0 ${svgW} ${CHART_H}">
+      ${guides}
+      ${bars}
+      ${tooltipZones}
+      <line x1="${LEFT_PAD}" y1="${TOP_PAD+H}" x2="${totalW}" y2="${TOP_PAD+H}" stroke="#cbd5e1" stroke-width="1.5"/>
+    </svg>
+    <div id="chart-tooltip" style="
+      display:none;position:absolute;pointer-events:none;z-index:50;
+      background:#1e293b;color:#fff;border-radius:10px;padding:12px 16px;
+      font-family:'Hanken Grotesk',sans-serif;font-size:12px;line-height:1.6;
+      box-shadow:0 8px 24px rgba(0,0,0,0.2);min-width:180px;max-width:240px;
+    "></div>
+  </div>`;
+
+  // ── Hover tooltip via JS events ──────────────────────────────
+  chartEl.querySelectorAll(".chart-hover-zone").forEach(zone => {
+    zone.addEventListener("mouseenter", e => {
+      const tip = JSON.parse(zone.getAttribute("data-tip").replace(/&quot;/g,'"'));
+      const tt  = document.getElementById("chart-tooltip");
+      if (!tt) return;
+      const rows = [
+        `<div style="font-weight:700;font-size:13px;margin-bottom:8px;color:#f1f5f9">${tip.title}</div>`,
+        `<div style="display:flex;justify-content:space-between;gap:16px"><span style="color:#94a3b8">Total</span><span style="font-weight:700">${fmtINR(tip.total)}</span></div>`,
+        tip.reg  ? `<div style="display:flex;justify-content:space-between;gap:16px"><span style="color:#818cf8">↳ Regular</span><span>${fmtINR(tip.reg)}</span></div>`  : "",
+        tip.pri  ? `<div style="display:flex;justify-content:space-between;gap:16px"><span style="color:#fbbf24">↳ Principal</span><span>${fmtINR(tip.pri)}</span></div>` : "",
+        `<div style="display:flex;justify-content:space-between;gap:16px;margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.1)"><span style="color:#94a3b8">Payouts</span><span>${tip.count}</span></div>`,
+        tip.partial ? `<div style="margin-top:6px;font-size:10px;color:#64748b;font-style:italic">Partial month: ${tip.partial}</div>` : "",
+      ].join("");
+      tt.innerHTML = rows;
+      tt.style.display = "block";
+    });
+    zone.addEventListener("mousemove", e => {
+      const tt  = document.getElementById("chart-tooltip");
+      const box = chartEl.getBoundingClientRect();
+      const ttW = 240, ttH = 130;
+      let left = e.clientX - box.left + 12;
+      let top  = e.clientY - box.top  - 20;
+      // Flip left if near right edge
+      if (left + ttW > box.width) left = e.clientX - box.left - ttW - 12;
+      if (top < 0) top = 4;
+      if (tt) { tt.style.left = left + "px"; tt.style.top = top + "px"; }
+    });
+    zone.addEventListener("mouseleave", () => {
+      const tt = document.getElementById("chart-tooltip");
+      if (tt) tt.style.display = "none";
+    });
+  });
+}
+
+// Format a date as "4 Jul" (day then month)
+function fmtDayMonth(dateStr) {
+  const parts = dateStr.substring(0,10).split("-");
+  const d = new Date(+parts[0], +parts[1]-1, +parts[2]);
+  return d.getDate() + " " + d.toLocaleDateString("en-IN",{month:"short"});
+}
+
+let _upcomingGroupOpen = {}; // tracks collapse state per group key
+
+function toggleUpcomingGroup(key) {
+  _upcomingGroupOpen[key] = !_upcomingGroupOpen[key];
+  const rows = document.getElementById("upcoming-rows-" + key);
+  const arrow = document.getElementById("upcoming-arrow-" + key);
+  if (!rows) return;
+  if (_upcomingGroupOpen[key]) {
+    rows.style.display = "block";
+    if (arrow) arrow.textContent = "▾";
+  } else {
+    rows.style.display = "none";
+    if (arrow) arrow.textContent = "▸";
+  }
+}
+
+function renderUpcomingList(overdue, upcoming, windowEnd) {
+  const listEl = document.getElementById("upcoming-list");
+  if (!listEl) return;
+
+  // Last month key — for partial month label (fix 3)
+  const sortedKeys = [...new Set(upcoming.map(p => p.dueDate.substring(0,7)))].sort();
+  const lastMonthKey = sortedKeys[sortedKeys.length - 1] || "";
+
+  let html = "";
+
+  // ── Overdue group (not collapsible — always show) ──
+  if (overdue.length) {
+    const total = overdue.reduce((s,p)=>s+p.amount,0);
+    html += `<div class="upcoming-group-head" style="background:#fef2f2;border:1px solid #fecaca">
+      <div>
+        <div class="upcoming-group-title" style="color:#dc2626">⚠ Overdue</div>
+        <div class="upcoming-group-meta">${overdue.length} payout${overdue.length>1?"s":""} past due — process immediately</div>
+      </div>
+      <div class="upcoming-group-total" style="color:#dc2626">${fmtINR(total)}</div>
+    </div>`;
+    overdue.sort((a,b) => a.dueDate.localeCompare(b.dueDate))
+      .forEach(p => { html += upcomingRowHtml(p, "overdue"); });
+  }
+
+  // ── Group upcoming by month — collapsible ──
+  const byMonth = {};
+  upcoming.sort((a,b) => a.dueDate.localeCompare(b.dueDate)).forEach(p => {
+    const key = p.dueDate.substring(0,7);
+    if (!byMonth[key]) byMonth[key] = [];
+    byMonth[key].push(p);
+  });
+
+  const monthEntries = Object.entries(byMonth);
+  monthEntries.forEach(([monthKey, payouts], idx) => {
+    const total        = payouts.reduce((s,p)=>s+p.amount,0);
+    const hasPrincipal = payouts.some(p => p.includesPrincipal || p.payoutModel==="Lump Sum");
+    const isLast       = monthKey === lastMonthKey;
+    const monthD       = new Date(monthKey + "-01");
+    const monthFull    = monthD.toLocaleDateString("en-IN",{month:"long",year:"numeric"});
+
+    // Fix 3: partial label only on LAST month, if windowEnd is not month-end
+    const lastDayOfMonth = new Date(monthD.getFullYear(), monthD.getMonth()+1, 0).getDate();
+    let partialTag = "";
+    if (isLast && windowEnd && windowEnd.getDate() < lastDayOfMonth) {
+      // Fix 2: "day month" format e.g. "1–31 Oct" → use "1 Oct – 31 Oct" style
+      const endDay   = windowEnd.getDate();
+      const moShort  = monthD.toLocaleDateString("en-IN",{month:"short"});
+      partialTag = ` <span style="font-size:10px;font-weight:700;background:#e0f2fe;color:#0369a1;padding:2px 8px;border-radius:100px;vertical-align:middle">up to ${endDay} ${moShort}</span>`;
+    }
+
+    const principalTag = hasPrincipal ? ` <span style="font-size:10px;font-weight:700;background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:100px;vertical-align:middle">Includes principal</span>` : "";
+
+    // Default: first group open, rest collapsed
+    if (_upcomingGroupOpen[monthKey] === undefined) {
+      _upcomingGroupOpen[monthKey] = (idx === 0);
+    }
+    const isOpen = _upcomingGroupOpen[monthKey];
+    const arrow  = isOpen ? "▾" : "▸";
+
+    html += `
+    <div class="upcoming-group-head${hasPrincipal?" upcoming-group-head-warn":""}"
+         onclick="toggleUpcomingGroup('${monthKey}')"
+         style="cursor:pointer;user-select:none">
+      <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">
+        <span id="upcoming-arrow-${monthKey}" style="font-size:12px;color:var(--muted);flex-shrink:0">${arrow}</span>
+        <div>
+          <div class="upcoming-group-title">${monthFull}${partialTag}${principalTag}</div>
+          <div class="upcoming-group-meta">${payouts.length} payout${payouts.length>1?"s":""}</div>
+        </div>
+      </div>
+      <div class="upcoming-group-total">${fmtINR(total)}</div>
+    </div>
+    <div id="upcoming-rows-${monthKey}" style="display:${isOpen?"block":"none"}">
+      ${payouts.map(p => upcomingRowHtml(p, "upcoming")).join("")}
+    </div>`;
+  });
+
+  if (!overdue.length && !upcoming.length) {
+    html = `<div class="empty-state">
+      <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      <h3>All clear</h3><p>No payouts due in the next ${UPCOMING_DAYS} days.</p>
+    </div>`;
+  }
+
+  listEl.innerHTML = html;
+}
+
+function upcomingRowHtml(p, type) {
+  const isOverdue   = type === "overdue";
+  const isPrincipal = p.includesPrincipal || p.payoutModel === "Lump Sum";
+  const isLumpSum   = p.payoutModel === "Lump Sum";
+  const days = Math.abs(daysDiff(p.dueDate));
+
+  const rowClass = isOverdue ? "overdue-row" : isPrincipal ? "principal-row" : "";
+
+  let flag = "";
+  if (isOverdue)        flag = `<span class="upcoming-flag flag-overdue">Overdue by ${Math.abs(daysDiff(p.dueDate))}d</span>`;
+  else if (isLumpSum)   flag = `<span class="upcoming-flag flag-lumpsum">💰 Lump Sum + Principal</span>`;
+  else if (isPrincipal) flag = `<span class="upcoming-flag flag-principal">Includes Principal</span>`;
+
+  const modelBadge = p.payoutModel === "Lump Sum" ? "Lump Sum"
+    : p.payoutModel === "Yearly" ? "Yearly"
+    : p.payType?.toLowerCase().includes("emi") ? "EMI" : "Flat";
+
+  return `<div class="upcoming-row ${rowClass}">
+    <div>
+      <div class="upcoming-name">${p.partnerName}</div>
+      <div class="upcoming-meta">${p.afpId||p.partnerId} &nbsp;·&nbsp; Payout #${p.payoutNum}/${p.totalPayouts||p.tenure} &nbsp;·&nbsp; ${modelBadge} &nbsp;·&nbsp; ${flag}</div>
+    </div>
+    <div class="upcoming-date">${fmtDate(p.dueDate)}</div>
+    <div class="upcoming-amount">${fmtINR(p.amount)}</div>
+  </div>`;
 }
 
 
