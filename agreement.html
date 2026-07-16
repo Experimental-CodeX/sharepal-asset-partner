@@ -1551,8 +1551,8 @@ function buildPreview() {
 
     ${section4and5}
 
-    <h2>6. TDS under Section 194A</h2>
-    <p>The Borrower shall deduct TDS under Section 194A of the Income Tax Act, 1961 on return payments and provide the Lender with necessary certificates (Form 16A).</p>
+    <h2>6. TAX DEDUCTION AT SOURCE (TDS)</h2>
+    <p>The Borrower shall deduct TDS as per applicable provisions under income tax laws on return payments and provide the Lender with necessary certificates.</p>
 
     <h2>7. Utilization of Funds</h2>
     <p>Funds shall be used strictly for asset procurement and business operations.</p>
@@ -2435,7 +2435,7 @@ async function buildDocxBlob() {
       ? [p('\u2022   EMI: Monthly repayment consisting of principal and return.',{before:0,after:30})]
       : [p('\u2022   Payout: The agreed return amount payable by the Borrower to the Lender as per Annexure I.',{before:0,after:30})]),
     p('\u2022   Assets: Tangible business assets of the Borrower hypothecated as security.',{before:0,after:30}),
-    p('\u2022   TDS: Tax Deducted at Source under Section 194A of the Income Tax Act, 1961.',{before:0,after:160}),
+    p('\u2022   TDS: Tax Deducted at Source as per applicable provisions under income tax laws.',{before:0,after:160}),
     h2('1. Purpose and Structure'),
     p('The Borrower is engaged in the rental asset business. The Lender provides a private loan for asset procurement and operations. This is not a deposit or investment product.'),
     h2('2. Loan Amount'),
@@ -2499,8 +2499,8 @@ async function buildDocxBlob() {
       pMix([{text:'Account Number: '},{text:bankAcc,bold:true}],{before:0,after:20}),
       pMix([{text:'IFSC Code: '},{text:bankIfsc,bold:true}],{before:0,after:80}),
     ]),
-    h2('6. TDS under Section 194A'),
-    p('The Borrower shall deduct TDS under Section 194A of the Income Tax Act, 1961 on return payments and provide the Lender with necessary certificates (Form 16A).'),
+    h2('6. TAX DEDUCTION AT SOURCE (TDS)'),
+    p('The Borrower shall deduct TDS as per applicable provisions under income tax laws on return payments and provide the Lender with necessary certificates.'),
     h2('7. Utilization of Funds'),
     p('Funds shall be used strictly for asset procurement and business operations.'),
     h2('8. Events of Default'),
