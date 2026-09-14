@@ -182,6 +182,7 @@ a { text-decoration: none; color: inherit; }
 .agr-field label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; }
 .agr-field input, .agr-field textarea, .agr-field select { padding: 9px 12px; border: 1.5px solid var(--border); border-radius: var(--radius); font-size: 13px; color: var(--ink); background: #fff; font-family: 'Hanken Grotesk', sans-serif; }
 .agr-field input:focus, .agr-field textarea:focus, .agr-field select:focus { outline: none; border-color: var(--blue); }
+.agr-field input:disabled, .agr-field select:disabled { background: var(--mist); color: var(--muted); cursor: not-allowed; }
 .agr-remark { background: var(--warning-bg); border: 1px solid var(--warning-border); border-radius: var(--radius); padding: 10px 14px; font-size: 12px; color: var(--warning); }
 .agr-sign-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
 .agr-sign-pill { display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 6px 12px; border-radius: 100px; font-weight: 600; }
@@ -299,10 +300,11 @@ a { text-decoration: none; color: inherit; }
 .filter-row select:focus, .filter-row input:focus { outline: none; border-color: var(--blue); }
 
 /* ── TABLE ── */
-.table-wrap { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+.table-wrap { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); overflow-x: auto; overflow-y: hidden; }
+.table-wrap table { min-width: 1100px; }
 table { width: 100%; border-collapse: collapse; }
 thead th { padding: 11px 14px; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; background: var(--mist); border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
-tbody td { padding: 11px 14px; border-bottom: 1px solid #f0f2fa; font-size: 13px; color: var(--ink); vertical-align: middle; }
+tbody td { padding: 11px 14px; border-bottom: 1px solid #f0f2fa; font-size: 13px; color: var(--ink); vertical-align: middle; white-space: nowrap; }
 tbody tr:last-child td { border-bottom: none; }
 tbody tr:hover td { background: #f9faff; }
 .txn-code { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--success); }
@@ -460,6 +462,15 @@ tbody tr:hover td { background: #f9faff; }
       <div class="stats-row" id="stats-row"></div>
       <div id="alerts-area"></div>
 
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap">
+        <div class="tabs" style="margin-bottom:0" id="action-type-filter">
+          <button class="tab active" data-val="all" onclick="setActionFilter('all')">All</button>
+          <button class="tab" data-val="payout" onclick="setActionFilter('payout')">💰 Payout</button>
+          <button class="tab" data-val="agreement" onclick="setActionFilter('agreement')">📄 Agreement</button>
+        </div>
+        <button class="btn-secondary" id="action-sort-btn" onclick="toggleActionSort()" style="margin-left:auto">↓ Due date: earliest first</button>
+      </div>
+
       <div class="section-head" id="your-tasks-head" style="display:none">Your Tasks</div>
       <div id="your-tasks-list"></div>
 
@@ -491,7 +502,7 @@ tbody tr:hover td { background: #f9faff; }
           <option value="upcoming">Upcoming</option>
           <option value="processed">Processed</option>
         </select>
-        <input type="text" id="filter-search" placeholder="Search name or ID…" oninput="renderAll()" style="min-width:200px">
+        <input type="text" id="filter-search" placeholder="Search name, ID or mobile…" oninput="renderAll()" style="min-width:200px">
         <div style="margin-left:auto;display:flex;gap:8px">
           <button class="btn-secondary" onclick="exportAllPayouts('csv')" title="Export the currently filtered rows as CSV">⬇ CSV</button>
           <button class="btn-secondary" onclick="exportAllPayouts('xlsx')" title="Export the currently filtered rows as Excel">⬇ Excel</button>
@@ -573,7 +584,7 @@ tbody tr:hover td { background: #f9faff; }
         </div>
       </div>
       <div class="filter-row" style="margin-bottom:16px;align-items:center">
-        <input type="text" id="partner-search" placeholder="Search name or ID…" oninput="renderPartners()" style="min-width:200px">
+        <input type="text" id="partner-search" placeholder="Search name, ID or mobile…" oninput="renderPartners()" style="min-width:200px">
         <select id="partner-date-range" onchange="handlePartnerRangeChange()">
           <option value="">All start dates</option>
           <option value="today">Started today</option>
@@ -593,6 +604,7 @@ tbody tr:hover td { background: #f9faff; }
           <option value="overdue">Has overdue</option>
           <option value="active">Active</option>
           <option value="completed">Completed</option>
+          <option value="missing">⚠ Missing details</option>
         </select>
         <select id="partner-sort" onchange="renderPartners()">
           <option value="date">Sort: Start date (latest)</option>
@@ -610,7 +622,7 @@ tbody tr:hover td { background: #f9faff; }
 
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">
         <div class="filter-row" style="margin-bottom:0">
-          <input type="text" id="ap-search" placeholder="Search partner name…" oninput="renderAssetPartners()" style="min-width:220px">
+          <input type="text" id="ap-search" placeholder="Search name, ID or mobile…" oninput="renderAssetPartners()" style="min-width:220px">
           <select id="ap-tds-filter" onchange="renderAssetPartners()">
             <option value="">All partners</option>
             <option value="applicable">TDS applicable (current FY)</option>
@@ -727,7 +739,7 @@ tbody tr:hover td { background: #f9faff; }
 
       <div class="agreement-view" id="aview-all">
         <div class="filter-row">
-          <input type="text" id="agreement-search" placeholder="Search name or ID…" oninput="renderAgreementsAll()" style="min-width:220px">
+          <input type="text" id="agreement-search" placeholder="Search name, ID or mobile…" oninput="renderAgreementsAll()" style="min-width:220px">
           <select id="agreement-filter-status" onchange="renderAgreementsAll()">
             <option value="">All statuses</option>
             <option value="Not Drafted">Not Drafted</option>
@@ -792,8 +804,8 @@ tbody tr:hover td { background: #f9faff; }
       <div id="add-partner-modal" style="background:#fff;border-radius:18px;max-width:820px;margin:0 auto;overflow:hidden;position:relative" onclick="event.stopPropagation()">
         <div style="padding:22px 24px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px">
           <div style="flex:1;min-width:0">
-            <div style="font-size:16px;font-weight:700;color:var(--ink)">Add New Funding</div>
-            <div style="font-size:12px;color:var(--muted);margin-top:2px">Adds a new row directly to the "All" sheet</div>
+            <div id="ap-modal-title" style="font-size:16px;font-weight:700;color:var(--ink)">Add New Funding</div>
+            <div id="ap-modal-subtitle" style="font-size:12px;color:var(--muted);margin-top:2px">Adds a new row directly to the "All" sheet</div>
           </div>
           <button onclick="closeAddPartnerModal()" style="background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;padding:4px 8px;border-radius:6px;line-height:1">×</button>
         </div>
@@ -802,6 +814,7 @@ tbody tr:hover td { background: #f9faff; }
           <div id="add-partner-error" style="display:none;font-size:12px;color:var(--danger);background:var(--danger-bg);border:1px solid var(--danger-border);border-radius:8px;padding:10px 14px;margin-bottom:14px"></div>
 
           <div class="form-section-title">Partner Info</div>
+          <div id="ap-identity-note" style="display:none;font-size:11px;color:var(--muted);background:var(--mist);border-radius:6px;padding:7px 10px;margin-bottom:10px">🔒 Name, AFP ID and Funding Terms are always locked — changing them would break the payout schedule. Contact/KYC/bank fields (phone, email, PAN, Aadhaar, address, bank account, IFSC) are only editable while blank — once set, they lock too, to prevent accidental or unauthorized changes to sensitive details. Contact an engineer if a locked field needs correcting.</div>
           <div class="agr-row">
             <div class="agr-field" style="flex:2">
               <label>Partner Name *</label>
@@ -938,12 +951,15 @@ const DEMO_USERS = [
 let ROLE     = null;
 let PIN      = null;
 let USERNAME = null;
+let ACTION_FILTER_TYPE = "all"; // "all" | "payout" | "agreement" — Action Needed tab
+let ACTION_SORT_DIR    = "asc"; // "asc" (earliest due first) | "desc" (latest due first)
 let ALL_PAYOUTS   = [];
 let ALL_PARTNERS  = [];
 let ALL_AGREEMENTS = [];
 let USER_ROLES = []; // [{username, role}] — for "Waiting on: <name>" labels
 let MODAL_PARTNER  = null; // currently open deal, for amortization toggle
 let MODAL_PAYOUTS  = [];   // that deal's payouts, cached for re-render on toggle
+let AP_EDIT_PARTNER_ID = null; // set while the Add Funding modal is being used to EDIT an existing deal
 let MODAL_VIEW     = "payouts"; // "payouts" | "amort"
 
 // ── TDS SETTINGS & ENGINE ──────────────────────────────────────────────────
@@ -1007,6 +1023,46 @@ function getTdsThreshold(fyLabel) {
 function getTdsRate() { return TDS_SETTINGS.rate ?? DEFAULT_TDS_RATE; }
 
 function normalizePartnerName(name) { return (name || "").trim().toLowerCase().replace(/\s+/g, " "); }
+
+// Fields needed to actually finalize a deal (KYC + bank + AFP ID) — used by
+// the "Missing details" filter so incomplete records are easy to find and
+// chase down instead of silently sitting unfinished.
+const REQUIRED_PARTNER_FIELDS = [
+  { key: "afpId",      label: "AFP ID" },
+  { key: "email",      label: "Email" },
+  { key: "phone",      label: "Phone" },
+  { key: "pan",        label: "PAN" },
+  { key: "aadhaar",    label: "Aadhaar" },
+  { key: "address",    label: "Address" },
+  { key: "bankAccount",label: "Bank Account" },
+  { key: "ifsc",       label: "IFSC" },
+];
+function getMissingPartnerFields(p) {
+  return REQUIRED_PARTNER_FIELDS.filter(f => !String(p[f.key] || "").trim()).map(f => f.label);
+}
+function partnerHasMissingDetails(p) {
+  return getMissingPartnerFields(p).length > 0;
+}
+
+// Shared search matcher: plain substring match on text fields, PLUS digit-only
+// matching so a search like "98765" or "98765 43210" also matches phone
+// numbers regardless of spacing/formatting. Requires 4+ search digits before
+// attempting digit matching, to avoid trivial false positives on short queries.
+function textMatchesSearch(search, ...fields) {
+  if (!search) return true;
+  const searchLower = search.toLowerCase();
+  const searchDigits = search.replace(/\D/g, "");
+  return fields.some(f => {
+    if (!f) return false;
+    const s = String(f).toLowerCase();
+    if (s.includes(searchLower)) return true;
+    if (searchDigits.length >= 4) {
+      const fieldDigits = s.replace(/\D/g, "");
+      if (fieldDigits && fieldDigits.includes(searchDigits)) return true;
+    }
+    return false;
+  });
+}
 
 function buildPartnerGroups() {
   const groups = {};
@@ -1657,6 +1713,7 @@ function loadDemoData() {
       partnerId: p.id, afpId: p.afpId || "", partnerName: p.name,
       investDate: p.investDate, agreementStatus, driveLink, remark,
       partnerEmail: p.email,
+      partnerPhone: p.phone,
       internalSigned, internalSignedBy: internalSigned ? "Deep" : "",
       internalSignedAt: internalSigned ? new Date().toISOString() : "",
       partnerSigned, partnerSignedAt: "",
@@ -1845,9 +1902,24 @@ function agreementWaitingCardHtml(a) {
   </div>`;
 }
 
+function setActionFilter(type) {
+  ACTION_FILTER_TYPE = type;
+  document.querySelectorAll("#action-type-filter .tab").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.val === type);
+  });
+  renderAction();
+}
+
+function toggleActionSort() {
+  ACTION_SORT_DIR = ACTION_SORT_DIR === "asc" ? "desc" : "asc";
+  const btn = document.getElementById("action-sort-btn");
+  if (btn) btn.innerHTML = ACTION_SORT_DIR === "asc" ? "↓ Due date: earliest first" : "↑ Due date: latest first";
+  renderAction();
+}
+
 function renderAction() {
-  const duePayouts = ALL_PAYOUTS.filter(p => { const s = getComputedStatus(p); return s === "overdue" || s === "due"; });
-  const dueAgreements = ALL_AGREEMENTS.filter(a => a.agreementStatus !== "Signed" && (a.dueStatus === "overdue" || a.dueStatus === "due"));
+  const duePayouts = ACTION_FILTER_TYPE === "agreement" ? [] : ALL_PAYOUTS.filter(p => { const s = getComputedStatus(p); return s === "overdue" || s === "due"; });
+  const dueAgreements = ACTION_FILTER_TYPE === "payout" ? [] : ALL_AGREEMENTS.filter(a => a.agreementStatus !== "Signed" && (a.dueStatus === "overdue" || a.dueStatus === "due"));
 
   // Split into "your tasks" (actionable by current role) vs "other due"
   const myPayouts    = (ROLE === "finance" || ROLE === "finance_admin" || ROLE === "admin") ? duePayouts : [];
@@ -1883,7 +1955,8 @@ function renderAction() {
     ].sort((x,y) => {
       if (x.overdue !== y.overdue) return x.overdue ? -1 : 1;
       if (x.type !== y.type) return x.type === "payout" ? -1 : 1;
-      return new Date(x.dueDate) - new Date(y.dueDate);
+      const diff = new Date(x.dueDate) - new Date(y.dueDate);
+      return ACTION_SORT_DIR === "asc" ? diff : -diff;
     });
 
     yourList.innerHTML = myItems.map(x =>
@@ -1924,7 +1997,8 @@ function renderAction() {
   ].sort((x,y) => {
     if (x.overdue !== y.overdue) return x.overdue ? -1 : 1;
     if (x.type !== y.type) return x.type === "payout" ? -1 : 1;
-    return new Date(x.dueDate) - new Date(y.dueDate);
+    const diff = new Date(x.dueDate) - new Date(y.dueDate);
+    return ACTION_SORT_DIR === "asc" ? diff : -diff;
   });
 
   otherList.innerHTML = otherItems.map(x =>
@@ -2060,7 +2134,8 @@ function getRangeBounds() {
 function getFilteredAllPayouts() {
   const range  = getRangeBounds();
   const status = document.getElementById("filter-status").value;
-  const search = document.getElementById("filter-search").value.toLowerCase();
+  const search = document.getElementById("filter-search").value.trim();
+  const partnerById = {}; ALL_PARTNERS.forEach(pt => { partnerById[pt.id] = pt; });
 
   return ALL_PAYOUTS.filter(p => {
     const s = getComputedStatus(p);
@@ -2070,7 +2145,8 @@ function getFilteredAllPayouts() {
       if (range.to   && d > range.to)   return false;
     }
     if (status && s !== status) return false;
-    if (search && !p.partnerName.toLowerCase().includes(search) && !p.partnerId.toLowerCase().includes(search)) return false;
+    const partner = partnerById[p.partnerId];
+    if (!textMatchesSearch(search, p.partnerName, p.partnerId, p.afpId, partner && partner.phone, partner && partner.email)) return false;
     return true;
   }).sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
 }
@@ -2106,7 +2182,7 @@ function renderAll() {
       <td><div style="font-weight:600">${p.partnerName}</div><div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace">${p.afpId||p.partnerId||"No AFP ID"}</div></td>
       <td>#${p.payoutNum}/${p.totalPayouts||p.tenure}${p.payoutModel==="Yearly"?'<span style="font-size:10px;font-weight:700;background:#f5f3ff;color:#6d28d9;border:1px solid #ddd6fe;border-radius:4px;padding:1px 5px;margin-left:5px">Yearly</span>':p.payoutModel==="Lump Sum"?'<span style="font-size:10px;font-weight:700;background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;border-radius:4px;padding:1px 5px;margin-left:5px">Lump Sum</span>':""}</td>
       <td>${fmtDate(p.dueDate)}</td>
-      <td style="text-align:right;font-weight:600">${fmtINR(p.amount)}${p.includesPrincipal ? `<span style="font-size:10px;font-weight:700;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:4px;padding:1px 6px;margin-left:6px;vertical-align:middle">+Principal</span>` : ""}</td>
+      <td style="text-align:right"><div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px"><span style="font-weight:600">${fmtINR(p.amount)}</span>${p.includesPrincipal ? `<span style="font-size:9px;font-weight:700;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:4px;padding:1px 6px">+Principal</span>` : ""}</div></td>
       <td style="text-align:center">${tdsCell}</td>
       <td style="text-align:right;font-weight:600">${netCell}</td>
       <td><span class="status-pill ${pillMap[s]}">${pillLabel[s]}</span></td>
@@ -2327,7 +2403,7 @@ function toggleDealsBreakdown() {
 
 // ── PARTNERS / DEALS ──
 function renderPartners() {
-  const search  = (document.getElementById("partner-search")?.value || "").toLowerCase();
+  const search  = (document.getElementById("partner-search")?.value || "").trim();
   const fStatus = document.getElementById("partner-filter-status")?.value || "";
   const sort    = document.getElementById("partner-sort")?.value || "date";
 
@@ -2353,10 +2429,11 @@ function renderPartners() {
 
   // other filters
   if (search) partners = partners.filter(p =>
-    p.name.toLowerCase().includes(search) || p.id.toLowerCase().includes(search));
+    textMatchesSearch(search, p.name, p.id, p.afpId, p.phone, p.email));
   if (fStatus === "overdue")   partners = partners.filter(p => p.overdue > 0);
   if (fStatus === "active")    partners = partners.filter(p => !p.allDone && p.overdue === 0);
   if (fStatus === "completed") partners = partners.filter(p => p.allDone);
+  if (fStatus === "missing")   partners = partners.filter(p => partnerHasMissingDetails(p));
 
   // sort
   if (sort === "name")     partners.sort((a,b) => a.name.localeCompare(b.name));
@@ -2379,13 +2456,17 @@ function renderPartners() {
     const investDateStr = p.investDate ? fmtDate(p.investDate) : "—";
     const agr  = ALL_AGREEMENTS.find(x => x.partnerId === p.id);
     const agrBadge = agr ? agreementBadgeHtml(agr.agreementStatus, agr.dueStatus) : "";
+    const missingFields = getMissingPartnerFields(p);
+    const missingBadge = missingFields.length
+      ? `<span title="Missing: ${missingFields.join(', ')}" style="display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;background:#fffbeb;color:#b45309;border:1px solid #fde68a;border-radius:100px;padding:2px 8px">⚠ Missing details</span>`
+      : "";
     return `<div class="partner-card" onclick="openPartnerModal('${p.id}')" style="cursor:pointer">
       <div class="pc-head">
         <div class="pc-avatar">${initials(p.name)}</div>
         <div style="flex:1;min-width:0">
           <div class="pc-name">${p.name}</div>
           <div class="pc-id">${p.afpId || p.id || "No AFP ID"}</div>
-          ${agrBadge ? `<div style="margin-top:4px">${agrBadge}</div>` : ""}
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">${agrBadge}${missingBadge}</div>
         </div>
         <div style="font-size:11px;color:var(--muted);text-align:right;flex-shrink:0">
           <div>Started</div>
@@ -2457,7 +2538,7 @@ function getAssetPartnerSummary(group) {
 }
 
 function renderAssetPartners() {
-  const search = (document.getElementById("ap-search")?.value || "").toLowerCase();
+  const search = (document.getElementById("ap-search")?.value || "").trim();
   const fyFilter = document.getElementById("ap-tds-filter")?.value || "";
 
   // Compute each group's summary exactly once per render (it was previously
@@ -2466,7 +2547,14 @@ function renderAssetPartners() {
   const allSummaries = Object.values(PARTNER_GROUPS).map(g => ({ group: g, summary: getAssetPartnerSummary(g) }));
 
   let rows = allSummaries;
-  if (search) rows = rows.filter(r => r.group.name.toLowerCase().includes(search));
+  if (search) rows = rows.filter(r => textMatchesSearch(
+    search,
+    r.group.name,
+    ...r.group.deals.map(d => d.id),
+    ...r.group.deals.map(d => d.afpId),
+    ...r.group.deals.map(d => d.phone),
+    ...r.group.deals.map(d => d.email),
+  ));
   if (fyFilter) rows = rows.filter(r => r.summary.fyStatus === fyFilter);
   rows = [...rows].sort((a,b) => b.summary.totalInvested - a.summary.totalInvested);
 
@@ -2650,9 +2738,9 @@ function openPartnerModal(partnerId) {
   document.getElementById("modal-name").textContent = p.name;
   document.getElementById("modal-meta").textContent = (p.afpId || p.id || "No AFP ID") + "  ·  Started " + fmtDate(p.investDate) + "  ·  " + p.tenure + " months · " + (p.model||"Monthly");
 
-  // Admin-only contact section
+  // Contact section — visible to every role
   const contactEl = document.getElementById("modal-contact");
-  if (ROLE === "admin") {
+  {
     const fields = [
       { icon: "📱", label: "Phone", val: p.phone || "—" },
       { icon: "✉️", label: "Email", val: p.email || "—" },
@@ -2664,12 +2752,14 @@ function openPartnerModal(partnerId) {
     contactEl.innerHTML = `
       <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--blue);margin-bottom:2px;width:100%;display:flex;align-items:center;justify-content:space-between;gap:6px">
         <div style="display:flex;align-items:center;gap:6px">
-          <span style="background:var(--blue);color:#fff;font-size:9px;padding:2px 7px;border-radius:100px">Admin only</span>
           Partner details
         </div>
-        <a href="${getAgreementUrl(p)}" target="_blank" style="display:inline-flex;align-items:center;gap:5px;background:var(--navy);color:#fff;font-size:11px;font-weight:700;text-transform:none;letter-spacing:normal;padding:6px 12px;border-radius:6px;text-decoration:none">
-          📄 Generate Agreement
-        </a>
+        <div style="display:flex;gap:8px">
+          ${(ROLE === "admin" || ROLE === "finance_admin") ? `<button onclick="openAddPartnerModal('${p.id}')" style="display:inline-flex;align-items:center;gap:5px;background:#fff;color:var(--ink);border:1.5px solid var(--border);font-size:11px;font-weight:700;text-transform:none;letter-spacing:normal;padding:6px 12px;border-radius:6px;cursor:pointer">🔄 Update Funding</button>` : ""}
+          <a href="${getAgreementUrl(p)}" target="_blank" style="display:inline-flex;align-items:center;gap:5px;background:var(--navy);color:#fff;font-size:11px;font-weight:700;text-transform:none;letter-spacing:normal;padding:6px 12px;border-radius:6px;text-decoration:none">
+            📄 Generate Agreement
+          </a>
+        </div>
       </div>
       ${fields.map(f => `
         <div style="display:flex;flex-direction:column;gap:2px;min-width:120px">
@@ -2678,8 +2768,6 @@ function openPartnerModal(partnerId) {
         </div>
       `).join("")}
     `;
-  } else {
-    contactEl.style.display = "none";
   }
 
   const totalObligation = payouts.reduce((a, x) => a + x.amount, 0);
@@ -2764,7 +2852,7 @@ function renderModalPayoutsView() {
     return `<tr style="${rowBg}">
       <td style="padding:10px 12px;border-bottom:1px solid #f0f2fa;font-weight:600">#${pay.payoutNum}/${pay.totalPayouts||pay.tenure}</td>
       <td style="padding:10px 12px;border-bottom:1px solid #f0f2fa">${fmtDate(pay.dueDate)}</td>
-      <td style="padding:10px 12px;border-bottom:1px solid #f0f2fa;text-align:right;font-weight:600">${fmtINR(pay.amount)}${pay.includesPrincipal ? `<span style="font-size:10px;font-weight:700;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:4px;padding:1px 6px;margin-left:6px;vertical-align:middle">+Principal</span>` : ""}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid #f0f2fa;text-align:right"><div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px"><span style="font-weight:600">${fmtINR(pay.amount)}</span>${pay.includesPrincipal ? `<span style="font-size:9px;font-weight:700;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:4px;padding:1px 6px">+Principal</span>` : ""}</div></td>
       <td style="padding:10px 12px;border-bottom:1px solid #f0f2fa;text-align:center">${tdsCell}</td>
       <td style="padding:10px 12px;border-bottom:1px solid #f0f2fa;text-align:right;font-weight:600">${netCell}</td>
       <td style="padding:10px 12px;border-bottom:1px solid #f0f2fa"><span class="status-pill ${pillMap[s]}">${pillLabel[s]}</span></td>
@@ -2851,12 +2939,18 @@ function syncPayTypeWithModel() {
   }
 }
 
-function openAddPartnerModal() {
+function openAddPartnerModal(editPartnerId) {
   if (ROLE !== "admin" && ROLE !== "finance_admin") return;
+
+  AP_EDIT_PARTNER_ID = editPartnerId || null;
+  const editing = !!AP_EDIT_PARTNER_ID;
+  const p = editing ? ALL_PARTNERS.find(x => x.id === AP_EDIT_PARTNER_ID) : null;
+  if (editing && !p) { showToast("Couldn't find that funding record", "error"); return; }
+
   // Reset form
   ["ap-name","ap-afpid","ap-email","ap-phone","ap-invested","ap-investdate","ap-txnid",
    "ap-monthly","ap-totalpayout","ap-pan","ap-aadhaar","ap-address","ap-bankacc","ap-ifsc"]
-    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+    .forEach(id => { const el = document.getElementById(id); if (el) { el.value = ""; el.disabled = false; el.title = ""; } });
   document.getElementById("ap-model").value = "Monthly";
   document.getElementById("ap-paytype").disabled = false;
   document.getElementById("ap-paytype").value = "EMI";
@@ -2867,6 +2961,73 @@ function openAddPartnerModal() {
   document.getElementById("ap-assets-list").innerHTML = "";
   AP_ASSET_ROW_ID = 0;
 
+  // Title / subtitle / submit label
+  document.getElementById("ap-modal-title").textContent = editing ? "Update Funding" : "Add New Funding";
+  document.getElementById("ap-modal-subtitle").textContent = editing
+    ? "Updates this deal's row in place — its payout schedule and any already-processed payouts stay linked"
+    : `Adds a new row directly to the "All" sheet`;
+  document.getElementById("ap-submit-btn").textContent = editing ? "Save Changes" : "Save Funding";
+  document.getElementById("ap-identity-note").style.display = editing ? "block" : "none";
+
+  if (editing) {
+    document.getElementById("ap-name").value = p.name || "";
+    document.getElementById("ap-afpid").value = p.afpId || "";
+    document.getElementById("ap-email").value = p.email || "";
+    document.getElementById("ap-phone").value = p.phone || "";
+    document.getElementById("ap-invested").value = p.invested || "";
+    document.getElementById("ap-investdate").value = p.investDate ? new Date(p.investDate).toISOString().slice(0,10) : "";
+    document.getElementById("ap-txnid").value = p.txnId || "";
+    document.getElementById("ap-model").value = p.model || "Monthly";
+    syncPayTypeWithModel();
+    document.getElementById("ap-paytype").value = p.payType || "EMI";
+    document.getElementById("ap-tenure").value = String(p.tenure || "12");
+    document.getElementById("ap-monthly").value = p.monthly || "";
+    document.getElementById("ap-totalpayout").value = p.totalPayout || "";
+    document.getElementById("ap-pan").value = p.pan || "";
+    document.getElementById("ap-aadhaar").value = p.aadhaar || "";
+    document.getElementById("ap-address").value = p.address || "";
+    document.getElementById("ap-bankacc").value = p.bankAccount || "";
+    document.getElementById("ap-ifsc").value = p.ifsc || "";
+
+    // Re-split the comma-joined asset lists back into individual rows
+    const names   = (p.assetNames   || "").split(",").map(s => s.trim());
+    const serials = (p.assetSerials || "").split(",").map(s => s.trim());
+    const values  = (p.assetValues  || "").split(",").map(s => s.trim());
+    const rowCount = Math.max(names.length, serials.length, values.length);
+    for (let i = 0; i < rowCount; i++) {
+      if (names[i] || serials[i] || values[i]) addAssetRow(names[i] || "", serials[i] || "", values[i] || "");
+    }
+
+    // "Fill missing details" fields — only unlocked when currently BLANK.
+    // Once a phone/bank/KYC field has a real value, it's just as sensitive
+    // as name/AFP ID (fraud risk if bank details get quietly changed) and
+    // gets locked the same way — the point of Update is filling in what's
+    // missing, not overwriting what's already correct.
+    const lockIfAlreadySet = {
+      "ap-email":   p.email,
+      "ap-phone":   p.phone,
+      "ap-pan":     p.pan,
+      "ap-aadhaar": p.aadhaar,
+      "ap-address": p.address,
+      "ap-bankacc": p.bankAccount,
+      "ap-ifsc":    p.ifsc,
+    };
+    Object.entries(lockIfAlreadySet).forEach(([id, val]) => {
+      const el = document.getElementById(id);
+      const hasValue = !!String(val || "").trim();
+      el.disabled = hasValue;
+      el.title = hasValue ? "Already set — contact an engineer to change" : "";
+    });
+
+    // Avoid stacking two full-screen overlays — hide the deal modal underneath
+    document.getElementById("partner-modal-bg").style.display = "none";
+  }
+
+  // Lock identity + funding-terms fields for edits — applied last, after
+  // syncPayTypeWithModel() above, so it isn't re-enabled by that call.
+  ["ap-name","ap-afpid","ap-invested","ap-investdate","ap-model","ap-paytype","ap-tenure","ap-monthly","ap-totalpayout"]
+    .forEach(id => { document.getElementById(id).disabled = editing; });
+
   document.getElementById("add-partner-modal-bg").style.display = "block";
   document.body.style.overflow = "hidden";
 }
@@ -2875,9 +3036,15 @@ function closeAddPartnerModal(e) {
   if (e && e.target !== document.getElementById("add-partner-modal-bg")) return;
   document.getElementById("add-partner-modal-bg").style.display = "none";
   document.body.style.overflow = "";
+  // If this was opened as an edit from within the deal modal, restore that view
+  if (AP_EDIT_PARTNER_ID) {
+    const returnId = AP_EDIT_PARTNER_ID;
+    AP_EDIT_PARTNER_ID = null;
+    openPartnerModal(returnId);
+  }
 }
 
-function addAssetRow() {
+function addAssetRow(prefillName, prefillSerial, prefillValue) {
   const rowId = "ap-asset-" + (AP_ASSET_ROW_ID++);
   const wrap = document.getElementById("ap-assets-list");
   const row = document.createElement("div");
@@ -2886,15 +3053,15 @@ function addAssetRow() {
   row.innerHTML = `
     <div class="agr-field" style="flex:1.5">
       <label>Hypothecated Asset Name</label>
-      <input type="text" class="ap-asset-name" placeholder="e.g. iPhone 15 Pro" />
+      <input type="text" class="ap-asset-name" placeholder="e.g. iPhone 15 Pro" value="${prefillName || ""}" />
     </div>
     <div class="agr-field">
       <label>Serial Number</label>
-      <input type="text" class="ap-asset-serial" placeholder="e.g. SN12345678" />
+      <input type="text" class="ap-asset-serial" placeholder="e.g. SN12345678" value="${prefillSerial || ""}" />
     </div>
     <div class="agr-field">
       <label>Value (₹)</label>
-      <input type="number" class="ap-asset-value" placeholder="e.g. 120000" />
+      <input type="number" class="ap-asset-value" placeholder="e.g. 120000" value="${prefillValue || ""}" />
     </div>
     <button class="asset-row-remove" onclick="document.getElementById('${rowId}').remove()" title="Remove">×</button>
   `;
@@ -2925,6 +3092,7 @@ async function submitAddPartner() {
   errEl.style.display = "none";
   errEl.textContent = "";
 
+  const editing = !!AP_EDIT_PARTNER_ID;
   const name       = document.getElementById("ap-name").value.trim();
   const invested   = document.getElementById("ap-invested").value.trim();
   const investDate = document.getElementById("ap-investdate").value;
@@ -2948,7 +3116,7 @@ async function submitAddPartner() {
 
   const assets = collectAssetRows();
   const payload = {
-    action:       "addPartner",
+    action:       editing ? "updatePartner" : "addPartner",
     name, invested, investDate, model, payType, tenure, monthly,
     afpId:        document.getElementById("ap-afpid").value.trim(),
     email:        document.getElementById("ap-email").value.trim(),
@@ -2964,6 +3132,7 @@ async function submitAddPartner() {
     assetSerials: assets.assetSerials,
     assetValues:  assets.assetValues,
   };
+  if (editing) payload.partnerId = AP_EDIT_PARTNER_ID;
 
   if (SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
     showToast("Demo mode — connect Apps Script to save funding", "error");
@@ -2972,13 +3141,20 @@ async function submitAddPartner() {
 
   const btn = document.getElementById("ap-submit-btn");
   btn.disabled = true;
-  setLoading(true, "Saving funding…");
+  setLoading(true, editing ? "Saving changes…" : "Saving funding…");
   try {
     const res = await api(payload);
     if (res.ok) {
-      showToast("Funding added ✓");
-      closeAddPartnerModal();
+      showToast(editing ? "Funding updated ✓" : "Funding added ✓");
+      const returnId = editing ? AP_EDIT_PARTNER_ID : null;
+      // Clear edit state and hide the form directly — refresh BEFORE
+      // reopening the deal modal, so it shows the just-saved data rather
+      // than whatever was cached before the edit.
+      AP_EDIT_PARTNER_ID = null;
+      document.getElementById("add-partner-modal-bg").style.display = "none";
+      document.body.style.overflow = "";
       await refreshData();
+      if (returnId) openPartnerModal(returnId);
     } else {
       errEl.textContent = res.error || "Failed to save";
       errEl.style.display = "block";
@@ -3191,11 +3367,11 @@ function renderAgreementsAction() {
 
 // ── ALL AGREEMENTS SUB-VIEW ──
 function renderAgreementsAll() {
-  const search = (document.getElementById("agreement-search")?.value || "").toLowerCase();
+  const search = (document.getElementById("agreement-search")?.value || "").trim();
   const fStatus = document.getElementById("agreement-filter-status")?.value || "";
 
   let items = [...ALL_AGREEMENTS];
-  if (search) items = items.filter(a => a.partnerName.toLowerCase().includes(search) || (a.afpId||a.partnerId).toLowerCase().includes(search));
+  if (search) items = items.filter(a => textMatchesSearch(search, a.partnerName, a.afpId, a.partnerId, a.partnerPhone, a.partnerEmail));
   if (fStatus) items = items.filter(a => a.agreementStatus === fStatus);
 
   items.sort((a,b) => new Date(b.investDate) - new Date(a.investDate));
@@ -3310,13 +3486,15 @@ function agreementCardHtml(a, completedView, showTypeBadge, ctx) {
     bodyHtml += `<div class="agr-row"><a href="${a.driveLink}" target="_blank" class="agr-link">📄 Open agreement in Drive →</a></div>`;
   }
 
-  // Email for sharing — Finance/Finance Admin/Admin, only while Drafted (about to share)
-  if ((ROLE === "finance" || ROLE === "finance_admin" || ROLE === "admin") && a.agreementStatus === "Drafted") {
+  // Partner email — visible to every role; "Mark as Shared" action stays
+  // restricted to roles that can actually action it, and only while Drafted.
+  if (a.partnerEmail) {
+    const canMarkShared = (ROLE === "finance" || ROLE === "finance_admin" || ROLE === "admin") && a.agreementStatus === "Drafted";
     bodyHtml += `
       <div class="agr-row">
-        <div style="font-size:12px;color:var(--muted)">Partner email for sharing:</div>
-        <button class="agr-email-copy" onclick="copyAgreementEmail('${a.partnerEmail}', this)">${a.partnerEmail || "—"} 📋</button>
-        <button class="btn-agr primary" style="margin-left:auto" onclick="submitMarkShared('${a.partnerId}')">Mark as Shared</button>
+        <div style="font-size:12px;color:var(--muted)">Partner email:</div>
+        <button class="agr-email-copy" onclick="copyAgreementEmail('${a.partnerEmail}', this)">${a.partnerEmail} 📋</button>
+        ${canMarkShared ? `<button class="btn-agr primary" style="margin-left:auto" onclick="submitMarkShared('${a.partnerId}')">Mark as Shared</button>` : ""}
       </div>
     `;
   }
