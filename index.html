@@ -468,7 +468,10 @@ tbody tr:hover td { background: #f9faff; }
           <button class="tab" data-val="payout" onclick="setActionFilter('payout')">💰 Payout</button>
           <button class="tab" data-val="agreement" onclick="setActionFilter('agreement')">📄 Agreement</button>
         </div>
-        <button class="btn-secondary" id="action-sort-btn" onclick="toggleActionSort()" style="margin-left:auto">↓ Due date: earliest first</button>
+        <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+          <button class="btn-secondary" id="btn-bulk-payout" onclick="openBulkPayoutModal()" style="display:none;background:var(--navy);color:#fff;border-color:var(--navy)">💸 Process Payouts</button>
+          <button class="btn-secondary" id="action-sort-btn" onclick="toggleActionSort()">↓ Due date: earliest first</button>
+        </div>
       </div>
 
       <div class="section-head" id="your-tasks-head" style="display:none">Your Tasks</div>
@@ -924,6 +927,77 @@ tbody tr:hover td { background: #f9faff; }
         <div style="padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px">
           <button class="btn-agr ghost" onclick="closeAddPartnerModal()">Cancel</button>
           <button class="btn-agr primary" id="ap-submit-btn" onclick="submitAddPartner()">Save Funding</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── BULK PAYOUT PROCESSING MODAL (finance, finance_admin, admin) ── -->
+    <div id="bulk-payout-modal-bg" style="display:none;position:fixed;inset:0;background:rgba(3,13,49,0.55);z-index:100;overflow-y:auto;padding:32px 16px" onclick="closeBulkPayoutModal(event)">
+      <div style="background:#fff;border-radius:18px;max-width:980px;margin:0 auto;overflow:hidden;position:relative" onclick="event.stopPropagation()">
+        <div style="padding:22px 24px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:16px;font-weight:700;color:var(--ink)">Bulk Payout Processing</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">Select payouts to generate a bulk-upload file. Amounts are net of TDS.</div>
+          </div>
+          <button onclick="closeBulkPayoutModal()" style="background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;padding:4px 8px;border-radius:6px;line-height:1">×</button>
+        </div>
+
+        <div style="padding:14px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:12px;font-weight:600;color:var(--muted)">Showing:</span>
+            <span id="bp-view-label" style="font-size:12px;font-weight:700;color:var(--ink);background:var(--mist);padding:4px 10px;border-radius:100px">Overdue &amp; due today</span>
+          </div>
+          <div class="agr-field" style="flex:0 0 170px;margin:0">
+            <label style="font-size:10px">Or pick a specific due date</label>
+            <input type="date" id="bp-date-filter" onchange="onBulkPayoutDateChange()" />
+          </div>
+          <button class="btn-agr ghost" id="bp-date-clear" style="display:none" onclick="clearBulkPayoutDateFilter()">Reset to overdue &amp; due today</button>
+        </div>
+
+        <div id="bp-future-note" style="display:none;padding:10px 24px;background:#eff6ff;border-bottom:1px solid #bfdbfe;font-size:12.5px;color:#1e40af;align-items:flex-start;gap:8px">
+          <span style="font-size:15px;line-height:1">📅</span>
+          <span>These payouts are due in the future — <strong>schedule this batch for that date</strong> instead of processing it right away.</span>
+        </div>
+
+        <div style="padding:14px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;cursor:pointer">
+            <input type="checkbox" id="bp-select-all" onchange="toggleSelectAllBulkPayouts(this.checked)" style="width:16px;height:16px" />
+            Select all eligible
+          </label>
+          <div class="agr-field" style="flex:0 0 180px;margin:0">
+            <label style="font-size:10px">Payout Mode (applies to all)</label>
+            <select id="bp-payout-mode">
+              <option value="IMPS">IMPS</option>
+              <option value="NEFT">NEFT</option>
+              <option value="RTGS">RTGS</option>
+            </select>
+          </div>
+          <div id="bp-summary" style="margin-left:auto;font-size:13px;color:var(--muted)">0 selected · ₹0 total</div>
+        </div>
+
+        <div style="max-height:420px;overflow-y:auto;overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;min-width:820px">
+            <thead>
+              <tr>
+                <th style="width:36px;padding:8px 12px;background:var(--mist);border-bottom:1px solid var(--border)"></th>
+                <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;background:var(--mist);border-bottom:1px solid var(--border);white-space:nowrap">Partner</th>
+                <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;background:var(--mist);border-bottom:1px solid var(--border);white-space:nowrap">Due date</th>
+                <th style="text-align:right;padding:8px 12px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;background:var(--mist);border-bottom:1px solid var(--border);white-space:nowrap">Net payout</th>
+                <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;background:var(--mist);border-bottom:1px solid var(--border);white-space:nowrap">Bank account</th>
+                <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;background:var(--mist);border-bottom:1px solid var(--border);white-space:nowrap">IFSC</th>
+                <th style="text-align:left;padding:8px 12px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;background:var(--mist);border-bottom:1px solid var(--border);white-space:nowrap">Status</th>
+              </tr>
+            </thead>
+            <tbody id="bp-tbody"></tbody>
+          </table>
+        </div>
+
+        <div style="padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px">
+          <div style="font-size:11px;color:var(--muted)">Rows with missing or invalid bank details are excluded — fix them via Update Funding first.</div>
+          <div style="display:flex;gap:10px">
+            <button class="btn-agr ghost" onclick="closeBulkPayoutModal()">Close</button>
+            <button class="btn-agr primary" id="bp-generate-btn" onclick="generatePayoutFile()">⬇ Generate &amp; Download File</button>
+          </div>
         </div>
       </div>
     </div>
@@ -1498,6 +1572,10 @@ async function bootApp() {
   // Add Funding button — admin & finance_admin only
   const btnAddFunding = document.getElementById("btn-add-funding");
   btnAddFunding.style.display = (ROLE === "admin" || ROLE === "finance_admin") ? "inline-flex" : "none";
+
+  // Bulk Payout Processing button — finance, finance_admin & admin
+  const btnBulkPayout = document.getElementById("btn-bulk-payout");
+  if (btnBulkPayout) btnBulkPayout.style.display = (ROLE === "finance" || ROLE === "finance_admin" || ROLE === "admin") ? "inline-flex" : "none";
 
   // Date
   document.getElementById("topbar-date").textContent =
@@ -3165,6 +3243,218 @@ async function submitAddPartner() {
   }
   btn.disabled = false;
   setLoading(false);
+}
+
+// ── BULK PAYOUT PROCESSING ──
+// Prepares a bulk-upload file for whatever payout platform is used. This
+// ONLY generates a download — it never marks anything as processed and
+// never calls any external API. Finance still uploads the file on their
+// payout platform manually, executes the transfer there, and then marks
+// each payout processed here the normal way (with the real transaction ID)
+// once money has actually moved.
+const PAYOUT_UPLOAD_HEADERS = [
+  "Beneficiary Name (Mandatory) Special characters not supported",
+  "Beneficiary's Account Number (Mandatory) Typically 9-18 digits",
+  "IFSC Code (Mandatory) 11 digit code of the beneficiary\u2019s bank account. Eg. HDFC0004277",
+  "Payout Amount (Mandatory) Amount should be in rupees",
+  "Payout Mode (Mandatory) Select IMPS/NEFT/RTGS",
+  "Phone Number (Optional)",
+  "Email ID (Optional)",
+];
+
+let BULK_PAYOUT_ROWS = []; // built fresh each time the modal opens or the date filter changes
+let BP_SELECTED_DATE = null; // null = default "overdue & due today" view; else a specific "YYYY-MM-DD"
+
+function sanitizeBeneficiaryName(name) {
+  // Bulk-upload beneficiary names typically don't support special characters
+  // — keep letters, numbers, spaces and periods only, collapse repeated spaces.
+  return String(name || "").replace(/[^a-zA-Z0-9 .]/g, "").replace(/\s+/g, " ").trim();
+}
+function isValidBankAccount(acc) {
+  return /^\d{9,18}$/.test(String(acc || "").replace(/\s+/g, ""));
+}
+function isValidIfsc(ifsc) {
+  return /^[A-Z]{4}0[A-Z0-9]{6}$/.test(String(ifsc || "").trim().toUpperCase());
+}
+function sanitizePhoneForExport(phone) {
+  const digits = String(phone || "").replace(/\D/g, "");
+  return digits.length > 10 ? digits.slice(-10) : digits; // strip a leading country code if present
+}
+// Local YYYY-MM-DD (NOT toISOString, which shifts to UTC and can land on
+// the wrong calendar day for timezones ahead of UTC, like IST).
+function toLocalYMD(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+
+function openBulkPayoutModal() {
+  if (ROLE !== "finance" && ROLE !== "finance_admin" && ROLE !== "admin") return;
+
+  BP_SELECTED_DATE = null;
+  document.getElementById("bp-date-filter").value = "";
+  const today = new Date(); today.setHours(0,0,0,0);
+  const maxDate = new Date(today); maxDate.setDate(maxDate.getDate() + 15);
+  document.getElementById("bp-date-filter").min = toLocalYMD(today);
+  document.getElementById("bp-date-filter").max = toLocalYMD(maxDate);
+  document.getElementById("bp-date-clear").style.display = "none";
+  document.getElementById("bp-view-label").textContent = "Overdue & due today";
+  document.getElementById("bp-future-note").style.display = "none";
+
+  refreshBulkPayoutRows();
+  document.getElementById("bulk-payout-modal-bg").style.display = "block";
+  document.body.style.overflow = "hidden";
+}
+
+function onBulkPayoutDateChange() {
+  const val = document.getElementById("bp-date-filter").value;
+  BP_SELECTED_DATE = val || null;
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  if (BP_SELECTED_DATE) {
+    const picked = new Date(BP_SELECTED_DATE + "T00:00:00");
+    document.getElementById("bp-view-label").textContent = fmtDate(picked);
+    document.getElementById("bp-date-clear").style.display = "inline-flex";
+    document.getElementById("bp-future-note").style.display = picked > today ? "flex" : "none";
+  } else {
+    document.getElementById("bp-view-label").textContent = "Overdue & due today";
+    document.getElementById("bp-date-clear").style.display = "none";
+    document.getElementById("bp-future-note").style.display = "none";
+  }
+  refreshBulkPayoutRows();
+}
+
+function clearBulkPayoutDateFilter() {
+  document.getElementById("bp-date-filter").value = "";
+  onBulkPayoutDateChange();
+}
+
+function refreshBulkPayoutRows() {
+  let matching;
+  if (BP_SELECTED_DATE) {
+    matching = ALL_PAYOUTS.filter(p => {
+      if (getComputedStatus(p) === "processed") return false;
+      const d = new Date(p.dueDate); d.setHours(0,0,0,0);
+      return toLocalYMD(d) === BP_SELECTED_DATE;
+    });
+  } else {
+    matching = ALL_PAYOUTS.filter(p => {
+      const s = getComputedStatus(p);
+      return s === "overdue" || s === "due";
+    });
+  }
+  matching.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+
+  BULK_PAYOUT_ROWS = matching.map(p => {
+    const partner = ALL_PARTNERS.find(x => x.id === p.partnerId) || {};
+    const led = getTdsInfoForPayout(p);
+    const netAmount = led ? led.netPayout : p.amount;
+    const account = String(partner.bankAccount || "").trim();
+    const ifsc = String(partner.ifsc || "").trim().toUpperCase();
+    const name = sanitizeBeneficiaryName(partner.name || p.partnerName);
+
+    const problems = [];
+    if (!name) problems.push("Missing beneficiary name");
+    if (!account) problems.push("Missing bank account");
+    else if (!isValidBankAccount(account)) problems.push("Invalid bank account (must be 9\u201318 digits)");
+    if (!ifsc) problems.push("Missing IFSC");
+    else if (!isValidIfsc(ifsc)) problems.push("Invalid IFSC format");
+    if (!netAmount || netAmount <= 0) problems.push("Invalid amount");
+
+    return {
+      payout: p, partner, name, account, ifsc, netAmount,
+      phone: sanitizePhoneForExport(partner.phone),
+      email: String(partner.email || "").trim(),
+      eligible: problems.length === 0,
+      problems,
+      selected: false, // nothing pre-selected — finance chooses what goes in
+    };
+  });
+
+  document.getElementById("bp-select-all").checked = false;
+  renderBulkPayoutList();
+}
+
+function closeBulkPayoutModal(e) {
+  if (e && e.target !== document.getElementById("bulk-payout-modal-bg")) return;
+  document.getElementById("bulk-payout-modal-bg").style.display = "none";
+  document.body.style.overflow = "";
+}
+
+function renderBulkPayoutList() {
+  const tbody = document.getElementById("bp-tbody");
+  if (!BULK_PAYOUT_ROWS.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--muted)">No payouts for this view.</td></tr>`;
+    updateBulkPayoutSummary();
+    return;
+  }
+  tbody.innerHTML = BULK_PAYOUT_ROWS.map((r, i) => {
+    const s = getComputedStatus(r.payout);
+    const rowStyle = r.eligible ? "" : "background:#fff5f5;opacity:0.75";
+    const statusCell = r.eligible
+      ? `<span style="font-size:10px;font-weight:700;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;border-radius:4px;padding:2px 7px">Ready</span>`
+      : `<span title="${r.problems.join('; ')}" style="font-size:10px;font-weight:700;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:4px;padding:2px 7px">⚠ ${r.problems[0]}</span>`;
+    const maskedAccount = r.account ? (r.account.length > 4 ? "•••• " + r.account.slice(-4) : r.account) : "—";
+    return `<tr style="${rowStyle}">
+      <td style="padding:8px 12px;border-bottom:1px solid #f0f2fa"><input type="checkbox" ${r.selected ? "checked" : ""} ${r.eligible ? "" : "disabled"} onchange="BULK_PAYOUT_ROWS[${i}].selected=this.checked;updateBulkPayoutSummary()" style="width:16px;height:16px" /></td>
+      <td style="padding:8px 12px;border-bottom:1px solid #f0f2fa">
+        <div style="font-weight:600">${r.partner.name || r.payout.partnerName}</div>
+        <div style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace">${r.partner.afpId || r.payout.partnerId || "No AFP ID"}</div>
+      </td>
+      <td style="padding:8px 12px;border-bottom:1px solid #f0f2fa">${fmtDate(r.payout.dueDate)}${s === "overdue" ? ` <span style="font-size:10px;color:var(--danger)">overdue</span>` : ""}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #f0f2fa;text-align:right;font-weight:600">${fmtINR(r.netAmount)}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #f0f2fa;font-family:'JetBrains Mono',monospace;font-size:12px">${maskedAccount}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #f0f2fa;font-family:'JetBrains Mono',monospace;font-size:12px">${r.ifsc || "—"}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #f0f2fa">${statusCell}</td>
+    </tr>`;
+  }).join("");
+  updateBulkPayoutSummary();
+}
+
+function toggleSelectAllBulkPayouts(checked) {
+  BULK_PAYOUT_ROWS.forEach(r => { if (r.eligible) r.selected = checked; });
+  renderBulkPayoutList();
+}
+
+function updateBulkPayoutSummary() {
+  const selected = BULK_PAYOUT_ROWS.filter(r => r.eligible && r.selected);
+  const total = selected.reduce((a, r) => a + r.netAmount, 0);
+  document.getElementById("bp-summary").textContent = `${selected.length} selected · ${fmtINR(total)} total`;
+}
+
+function generatePayoutFile() {
+  const selected = BULK_PAYOUT_ROWS.filter(r => r.eligible && r.selected);
+  if (!selected.length) {
+    showToast("Select at least one payout first", "error");
+    return;
+  }
+  if (typeof XLSX === "undefined") {
+    showToast("Excel library failed to load — check your internet connection", "error");
+    return;
+  }
+
+  const confirmMsg = BP_SELECTED_DATE && document.getElementById("bp-future-note").style.display !== "none"
+    ? "These are future-dated payouts — schedule them for that date, don't process now.\n\nReview data manually before proceeding. Continue?"
+    : "Review data manually before processing payouts.\n\nContinue?";
+  if (!confirm(confirmMsg)) return;
+
+  const mode = document.getElementById("bp-payout-mode").value;
+  const rows = selected.map(r => [
+    r.name,
+    r.account,
+    r.ifsc,
+    Math.round(r.netAmount * 100) / 100, // rupees, numeric — never a formatted string
+    mode,
+    r.phone,
+    r.email,
+  ]);
+
+  const ws = XLSX.utils.aoa_to_sheet([PAYOUT_UPLOAD_HEADERS, ...rows]);
+  ws["!cols"] = [{ wch: 32 }, { wch: 33 }, { wch: 24 }, { wch: 28 }, { wch: 29 }, { wch: 20 }, { wch: 19 }];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Bank transfer + Bene details");
+  const stamp = new Date().toISOString().slice(0, 10);
+  XLSX.writeFile(wb, `bulk_payout_${stamp}.xlsx`);
+
+  showToast(`File downloaded — ${selected.length} payouts, ${fmtINR(selected.reduce((a,r)=>a+r.netAmount,0))} total.`);
 }
 
 // ── TABS ──
