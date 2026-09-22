@@ -369,6 +369,9 @@ tbody tr:hover td { background: #f9faff; }
   .tab { flex: 1; justify-content: center; font-size: 12px; padding: 7px 10px; }
 }
 </style>
+  <!-- Supabase client: session handling, live updates, database access.
+       Pinned to an exact version so it cannot change under you. -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 </head>
 <body>
 
@@ -1009,7 +1012,171 @@ tbody tr:hover td { background: #f9faff; }
 // ─────────────────────────────────────────────
 // CONFIGURATION — replace with your deployed URL
 // ─────────────────────────────────────────────
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxoPvmAN_dg9aLBZOKKsGSVLk_nifhR0Pt_dYzR5Gwg3-Mck7OucQrRVmSynZi7paV8IQ/exec";
+// ══════════════════════════════════════════════════════════════════════
+// SUPABASE CONFIGURATION
+//
+// Both values below are meant to be public — the anon key grants nothing
+// on its own. What protects the data is the security rules in the
+// database, which decide per person what they may read.
+// ══════════════════════════════════════════════════════════════════════
+const SUPABASE_URL      = "https://pzqtapcnerzprslinyom.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6cXRhcGNuZXJ6cHJzbGlueW9tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk5OTQyODgsImV4cCI6MjEwNTU3MDI4OH0.QwzD7u40091MXmuOgL9iY1SCOM1YeRtZKpV8H9GKfJo";
+
+// Kept only so the old "not configured yet" checks throughout this file
+// stay false. Nothing reads its value any more.
+const SCRIPT_URL = "supabase";
+
+let _sb = null;
+function sb() {
+  if (!_sb) {
+    if (!window.supabase || !window.supabase.createClient) {
+      throw new Error("Supabase library didn't load — check your connection and reload.");
+    }
+    _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: true, autoRefreshToken: true, storageKey: "sp_supabase_auth" },
+    });
+  }
+  return _sb;
+}
+
+// PostgREST returns at most 1000 rows per request. You have 1318 payouts, so
+// a single request would silently drop 318 of them. This pages through.
+async function fetchAllRows(table) {
+  const PAGE = 1000;
+  let out = [], from = 0;
+  for (;;) {
+    const { data, error } = await sb().from(table).select("*").range(from, from + PAGE - 1);
+    if (error) throw new Error(table + ": " + error.message);
+    out = out.concat(data || []);
+    if (!data || data.length < PAGE) break;
+    from += PAGE;
+  }
+  return out;
+}
+
+const _num = v => (v === null || v === undefined || v === "" ? 0 : Number(v));
+const _str = v => (v === null || v === undefined ? "" : String(v));
+
+// Rebuilds exactly the shape the rest of this file already expects, so no
+// screen, filter or calculation below needs to change.
+async function apiGetAll() {
+  const [deals, payouts, agreements, kycRows, bankRows] = await Promise.all([
+    fetchAllRows("deals"),
+    fetchAllRows("payouts"),
+    fetchAllRows("agreements"),
+    fetchAllRows("deal_kyc"),    // empty for roles that may not see these
+    fetchAllRows("deal_bank"),   // empty for roles that may not see these
+  ]);
+
+  const kycBy  = Object.fromEntries(kycRows.map(r => [r.deal_id, r]));
+  const bankBy = Object.fromEntries(bankRows.map(r => [r.deal_id, r]));
+  const dealBy = Object.fromEntries(deals.map(d => [d.id, d]));
+
+  const outPartners = deals.map(d => {
+    const k = kycBy[d.id] || {}, b = bankBy[d.id] || {};
+    return {
+      name:         _str(d.partner_name),
+      id:           d.id,
+      afpId:        _str(d.afp_id),
+      email:        _str(d.email),
+      phone:        _str(d.phone),
+      invested:     _num(d.amount_invested),
+      model:        _str(d.payout_model),
+      tenure:       d.tenure_months,
+      totalPayout:  _num(d.total_payout),
+      monthly:      _num(d.payout_amount),
+      investDate:   d.investment_date,          // "YYYY-MM-DD"
+      payType:      _str(d.payout_type),
+      txnId:        _str(d.transaction_id),
+      pan:          _str(k.pan),
+      aadhaar:      _str(k.aadhaar),
+      address:      _str(k.address),
+      bankAccount:  _str(b.bank_account),
+      ifsc:         _str(b.ifsc),
+      assetNames:   _str(d.asset_names),
+      assetSerials: _str(d.asset_serials),
+      assetValues:  _str(d.asset_values),
+      // "Is it filled in?" flags. These let the Missing details filter work
+      // for everyone without sending a PAN or bank account to someone who
+      // isn't allowed one.
+      hasPan:         d.has_pan,
+      hasAadhaar:     d.has_aadhaar,
+      hasAddress:     d.has_address,
+      hasBankAccount: d.has_bank_account,
+      hasIfsc:        d.has_ifsc,
+    };
+  });
+
+  const outPayouts = payouts.map(p => {
+    const d = dealBy[p.deal_id] || {};
+    const row = {
+      key:               p.id,
+      partnerId:         p.deal_id,
+      afpId:             _str(d.afp_id),
+      partnerName:       _str(d.partner_name),
+      payoutNum:         p.payout_num,
+      tenure:            d.tenure_months,
+      totalPayouts:      p.total_payouts,
+      dueDate:           p.due_date,            // "YYYY-MM-DD"
+      amount:            _num(p.amount),
+      isLastPayout:      p.is_last_payout,
+      includesPrincipal: p.includes_principal,
+      payoutModel:       _str(p.payout_model),
+      status:            _str(p.status),
+      transactionId:     _str(p.transaction_id),
+      markedBy:          _str(p.marked_by),
+      markedAt:          _str(p.marked_at),
+      note:              _str(p.note),
+    };
+    // Left unset when never recorded, so the "needs manual review" flag on
+    // older processed rows behaves exactly as it does today.
+    if (p.amount_paid  !== null && p.amount_paid  !== undefined) row.amountPaid = _num(p.amount_paid);
+    if (p.tds_deducted !== null && p.tds_deducted !== undefined) row.tdsDeductedActual = p.tds_deducted;
+    if (p.reconciliation_flag) row.reconciliationFlag = true;
+    return row;
+  });
+
+  const now = new Date();
+  const outAgreements = agreements.map(a => {
+    const d = dealBy[a.deal_id] || {};
+    const status = (a.internal_signed && a.partner_signed) ? "Signed" : _str(a.status);
+    let dueStatus = "ok";
+    if (status !== "Signed" && d.investment_date) {
+      const days = Math.floor((now - new Date(d.investment_date)) / 86400000);
+      dueStatus = days > 3 ? "overdue" : "due";
+    }
+    return {
+      partnerId:        a.deal_id,
+      afpId:            _str(d.afp_id),
+      partnerName:      _str(d.partner_name),
+      investDate:       d.investment_date ? new Date(d.investment_date + "T00:00:00Z").toISOString() : null,
+      agreementStatus:  status,
+      driveLink:        _str(a.drive_link),
+      remark:           _str(a.remark),
+      partnerEmail:     _str(a.partner_email) || _str(d.email),
+      partnerPhone:     _str(d.phone),
+      internalSigned:   !!a.internal_signed,
+      internalSignedBy: _str(a.internal_signed_by),
+      internalSignedAt: _str(a.internal_signed_at),
+      partnerSigned:    !!a.partner_signed,
+      partnerSignedAt:  _str(a.partner_signed_at),
+      sharedAt:         _str(a.shared_at),
+      sharedBy:         _str(a.shared_by),
+      dueStatus:        dueStatus,
+    };
+  });
+
+  return { ok: true, partners: outPartners, payouts: outPayouts,
+           agreements: outAgreements, role: ROLE, username: USERNAME };
+}
+
+async function _rpc(fn, args) {
+  const { data, error } = await sb().rpc(fn, args);
+  if (error) return { ok: false, error: error.message };
+  return data || { ok: false, error: "No response" };
+}
+
+const _bool = v => v === true || v === "true";
 
 // Demo-mode users — only used when SCRIPT_URL is not configured
 // Mirror these to the USERS array in Apps Script
@@ -1111,8 +1278,20 @@ const REQUIRED_PARTNER_FIELDS = [
   { key: "bankAccount",label: "Bank Account" },
   { key: "ifsc",       label: "IFSC" },
 ];
+// PAN, Aadhaar, address, bank account and IFSC are no longer sent to roles
+// that may not see them. So for those five, ask the database's "is it filled
+// in?" flag instead of looking at a value this person was never given —
+// otherwise finance would see every partner reported as missing a PAN.
+const SENSITIVE_FIELD_FLAGS = {
+  pan: "hasPan", aadhaar: "hasAadhaar", address: "hasAddress",
+  bankAccount: "hasBankAccount", ifsc: "hasIfsc",
+};
 function getMissingPartnerFields(p) {
-  return REQUIRED_PARTNER_FIELDS.filter(f => !String(p[f.key] || "").trim()).map(f => f.label);
+  return REQUIRED_PARTNER_FIELDS.filter(f => {
+    const flag = SENSITIVE_FIELD_FLAGS[f.key];
+    if (flag && p[flag] !== undefined) return !p[flag];
+    return !String(p[f.key] || "").trim();
+  }).map(f => f.label);
 }
 function partnerHasMissingDetails(p) {
   return getMissingPartnerFields(p).length > 0;
@@ -1459,17 +1638,36 @@ async function doLogin() {
 
   setLoading(true, "Signing in…");
   try {
-    const res = await fetch(SCRIPT_URL + "?action=verifyPin&username=" + encodeURIComponent(username) + "&pin=" + encodeURIComponent(pin)).then(r=>r.json());
+    const resp = await fetch(SUPABASE_URL + "/functions/v1/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: "Bearer " + SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify({ username, pin }),   // in the body, not the URL
+    });
+    const res = await resp.json();
     if (res.ok) {
-      ROLE = res.role; PIN = pin; USERNAME = res.username;
+      await sb().auth.setSession({
+        access_token: res.access_token,
+        refresh_token: res.refresh_token,
+      });
+      ROLE = res.role;
+      USERNAME = res.username;
+      PIN = null;                                // never kept
       localStorage.setItem("sp_last_user", USERNAME);
       saveSession();
       bootApp();
     } else {
-      err.textContent = res.error || "Wrong name or PIN. Try again.";
+      let msg = res.error || "Wrong name or PIN. Try again.";
+      if (res.attempts_left !== null && res.attempts_left !== undefined) {
+        msg += "  " + res.attempts_left + " attempt(s) left.";
+      }
+      err.textContent = msg;
     }
   } catch (e) {
-    err.textContent = "Connection error. Check Apps Script URL.";
+    err.textContent = "Connection error. Check your internet and try again.";
   }
   setLoading(false);
 }
@@ -1491,11 +1689,83 @@ function doLogout() {
   if (sel && sel.value) setTimeout(() => document.getElementById("pin-input").focus(), 50);
 }
 
-// ── API — everything via GET params to avoid CORS ──
+// ── API ──
+// Same call sites, same action names, same { ok, error } replies as before.
+// The difference is underneath: each one is a single checked database call
+// instead of a URL with your PIN in it.
 async function api(params) {
-  const qs = new URLSearchParams({ ...params, username: USERNAME || "", pin: PIN || "" }).toString();
-  const res = await fetch(SCRIPT_URL + "?" + qs);
-  return res.json();
+  try {
+    switch (params.action) {
+
+      case "getAll":
+        return await apiGetAll();
+
+      case "getUserRoles": {
+        const { data, error } = await sb().rpc("list_user_roles");
+        if (error) return { ok: false, error: error.message };
+        return { ok: true, users: data || [] };
+      }
+
+      case "markProcessed":
+        return await _rpc("mark_processed", {
+          p_payout_id:           params.payoutKey,
+          p_transaction_id:      params.transactionId || "",
+          p_amount_paid:         (params.amountPaid === "" || params.amountPaid == null)
+                                   ? null : Number(params.amountPaid),
+          p_note:                params.note || "",
+          p_tds_deducted:        _bool(params.tdsDeducted),
+          p_reconciliation_flag: _bool(params.reconciliationFlag),
+        });
+
+      case "undoPayout":
+        return await _rpc("undo_payout", { p_payout_id: params.payoutKey });
+
+      case "addPartner":
+        return await _rpc("add_deal", { p: {
+          name: params.name, afpId: params.afpId, email: params.email, phone: params.phone,
+          invested: params.invested, investDate: params.investDate, model: params.model,
+          payType: params.payType, tenure: params.tenure, monthly: params.monthly,
+          totalPayout: params.totalPayout, txnId: params.txnId,
+          pan: params.pan, aadhaar: params.aadhaar, address: params.address,
+          bankAccount: params.bankAccount, ifsc: params.ifsc,
+          assetNames: params.assetNames, assetSerials: params.assetSerials,
+          assetValues: params.assetValues,
+        }});
+
+      case "updatePartner":
+        return await _rpc("update_deal", { p: {
+          partnerId: params.partnerId,
+          email: params.email, phone: params.phone, txnId: params.txnId,
+          pan: params.pan, aadhaar: params.aadhaar, address: params.address,
+          bankAccount: params.bankAccount, ifsc: params.ifsc,
+          assetNames: params.assetNames, assetSerials: params.assetSerials,
+          assetValues: params.assetValues,
+        }});
+
+      case "setAgreementLink":
+        return await _rpc("set_agreement_link", {
+          p_deal_id: params.partnerId, p_drive_link: params.driveLink,
+          p_remark: params.remark || "",
+        });
+
+      case "markAgreementShared":
+        return await _rpc("mark_agreement_shared", { p_deal_id: params.partnerId });
+
+      case "markPartnerSigned":
+        return await _rpc("mark_partner_signed", { p_deal_id: params.partnerId });
+
+      case "signInternal":
+        return await _rpc("sign_internal", { p_deal_id: params.partnerId });
+
+      case "getAgreementData":
+        return await _rpc("get_agreement_data", { p_deal_id: params.partnerId });
+
+      default:
+        return { ok: false, error: "Unknown action: " + params.action };
+    }
+  } catch (e) {
+    return { ok: false, error: (e && e.message) ? e.message : String(e) };
+  }
 }
 
 // ── USER ROLES (for "Waiting on: <name>" labels) ──
@@ -1530,19 +1800,50 @@ function nameForAnyRole(roles) {
 const REFRESH_INTERVAL_MS = 60 * 1000; // 60 seconds
 let refreshTimer = null;
 
+// Live updates. When somebody marks a payout processed, everyone else's
+// screen follows within a second — instead of up to 60 seconds later, which
+// is how two people currently manage to process the same payout unaware.
+let _liveChannel = null;
+let _liveDebounce = null;
+
+function _liveRefresh() {
+  clearTimeout(_liveDebounce);
+  // Brief pause so a burst of changes triggers one reload, not twenty
+  _liveDebounce = setTimeout(() => {
+    if (document.visibilityState === "visible") refreshData();
+  }, 600);
+}
+
 function startAutoRefresh() {
   stopAutoRefresh();
+
+  try {
+    _liveChannel = sb().channel("sp-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "payouts"    }, _liveRefresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "agreements" }, _liveRefresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "deals"      }, _liveRefresh)
+      .subscribe();
+  } catch (e) {
+    _liveChannel = null;   // falls back to the timer below
+  }
+
+  // Safety net: a slow poll in case the live connection drops on a flaky
+  // network. Five minutes, versus every 60 seconds today.
   refreshTimer = setInterval(() => {
     if (document.visibilityState === "visible") refreshData();
-  }, REFRESH_INTERVAL_MS);
+  }, 5 * 60 * 1000);
 
-  // Refresh immediately when tab regains focus
   document.addEventListener("visibilitychange", handleVisibilityRefresh);
 }
 
 function stopAutoRefresh() {
   if (refreshTimer) clearInterval(refreshTimer);
   refreshTimer = null;
+  clearTimeout(_liveDebounce);
+  if (_liveChannel) {
+    try { sb().removeChannel(_liveChannel); } catch (e) {}
+    _liveChannel = null;
+  }
   document.removeEventListener("visibilitychange", handleVisibilityRefresh);
 }
 
@@ -2795,12 +3096,10 @@ function submitTdsSettings() {
 // Same-repo relative path — adjust AGREEMENT_PATH if agreement.html lives elsewhere
 const AGREEMENT_PATH = "agreement.html";
 function getAgreementUrl(p) {
-  const params = new URLSearchParams({
-    partner: p.id,
-    username: USERNAME || "",
-    pin: PIN || "",
-  });
-  return AGREEMENT_PATH + "?" + params.toString();
+  // Previously this put the PIN straight into the address bar, where it was
+  // saved in browser history and sent in referrer headers. The agreement page
+  // now shares this login automatically, so only the deal is named.
+  return AGREEMENT_PATH + "?" + new URLSearchParams({ partner: p.id }).toString();
 }
 
 // ── PARTNER MODAL ──
@@ -3517,10 +3816,10 @@ async function populateUserDropdown() {
     // live mode — fetch from Apps Script (returns names only, no PINs)
     try {
       sel.innerHTML = '<option value="">Loading…</option>';
-      const res = await fetch(SCRIPT_URL + "?action=getUsers").then(r => r.json());
-      if (res.ok && res.users) {
+      const { data, error } = await sb().rpc("list_usernames");   // names only
+      if (!error && Array.isArray(data)) {
         sel.innerHTML = '<option value="">— Select your name —</option>' +
-          res.users.map(u => `<option value="${u}">${u}</option>`).join("");
+          data.map(u => `<option value="${u}">${u}</option>`).join("");
       } else {
         sel.innerHTML = '<option value="">— Select your name —</option>';
       }
@@ -3541,12 +3840,17 @@ populateUserDropdown();
 const SESSION_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours from login
 
 function saveSession() {
-  const session = { username: USERNAME, pin: PIN, role: ROLE, loginAt: Date.now() };
+  // Note what is NOT here: the PIN. Today it sits in this browser in plain
+  // text for 24 hours. Now only a name and a role are remembered, and the
+  // actual credential is an expiring token the Supabase library refreshes
+  // and can revoke.
+  const session = { username: USERNAME, role: ROLE, loginAt: Date.now() };
   localStorage.setItem("sp_session", JSON.stringify(session));
 }
 
 function clearSession() {
   localStorage.removeItem("sp_session");
+  try { sb().auth.signOut(); } catch (e) { /* already signed out */ }
 }
 
 // ── AUTO-RESTORE SESSION ON PAGE LOAD ──
@@ -3555,16 +3859,19 @@ function clearSession() {
     const raw = localStorage.getItem("sp_session");
     if (!raw) return;
     const session = JSON.parse(raw);
-    if (!session.username || !session.pin || !session.role) return;
+    if (!session.username || !session.role) return;
     // Session valid for 24 hours from login
     if (Date.now() - session.loginAt > SESSION_DURATION_MS) {
       clearSession();
       return;
     }
-    // Restore state
+    // The name alone is not enough — there must still be a live token. If it
+    // expired or was revoked, this drops back to the login screen.
+    const { data } = await sb().auth.getSession();
+    if (!data || !data.session) { clearSession(); return; }
     USERNAME = session.username;
-    PIN      = session.pin;
     ROLE     = session.role;
+    PIN      = null;
     await bootApp();
   } catch(e) {
     clearSession();
