@@ -1923,6 +1923,27 @@ async function api(params) {
       case "dealHistory":
         return await _rpc("get_deal_history", { p_deal_id: params.partnerId });
 
+      case "addUser": {
+        // Creating a sign-in identity needs powers no browser should hold, so
+        // this goes to the server. The library attaches the signed-in session
+        // automatically, and the server asks the database who that really is.
+        const { data, error } = await sb().functions.invoke("admin-user", {
+          body: {
+            username: params.username, email: params.email,
+            role: params.newRole, pin: params.pin,
+          },
+        });
+        if (error) {
+          let msg = error.message || "Could not add this person.";
+          try {
+            const ctx = error.context ? await error.context.json() : null;
+            if (ctx && ctx.error) msg = ctx.error;
+          } catch (e) { /* keep the generic message */ }
+          return { ok: false, error: msg };
+        }
+        return data || { ok: false, error: "No response from the server." };
+      }
+
       case "listUsers":       return await _rpc("admin_list_users", {});
       case "setPin":          return await _rpc("admin_set_pin",    { p_username: params.username, p_pin: params.pin });
       case "unlockUser":      return await _rpc("admin_unlock_user",{ p_username: params.username });
@@ -3337,7 +3358,24 @@ async function renderTeamPeople() {
   if (!res.ok) { el.textContent = res.error || "Could not load."; return; }
 
   el.innerHTML =
-    `<div style="font-size:12px;color:var(--muted);margin-bottom:12px">
+    `<div style="border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:18px;background:var(--bg)">
+       <div style="font-weight:800;font-size:13px;margin-bottom:4px">Add a person</div>
+       <div style="font-size:11px;color:var(--muted);margin-bottom:10px">
+         The email is an internal label — no message is ever sent to it and they never need to know it.
+         They sign in with their name and PIN, like everyone else.
+       </div>
+       <div style="display:flex;gap:8px;flex-wrap:wrap">
+         <input id="nu-name"  placeholder="Full name"  style="flex:1 1 150px;padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-size:13px">
+         <input id="nu-email" placeholder="name@sharepal.in" style="flex:1 1 180px;padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-size:13px">
+         <select id="nu-role" style="flex:0 1 140px;padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-size:13px">
+           ${TEAM_ROLES.map(r => `<option value="${r}"${r === "viewer" ? " selected" : ""}>${r}</option>`).join("")}
+         </select>
+         <input id="nu-pin" placeholder="PIN (4–10 digits)" inputmode="numeric" autocomplete="off" style="flex:0 1 150px;padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-size:13px">
+         <button class="team-act" id="nu-btn" onclick="addNewUser()" style="padding:8px 14px">Add</button>
+       </div>
+       <div id="nu-error" style="display:none;color:#9d2a20;font-size:12px;margin-top:9px"></div>
+     </div>
+     <div style="font-size:12px;color:var(--muted);margin-bottom:12px">
        Switching someone off keeps their name on the payouts they processed and the
        agreements they signed, so your history stays readable — they just cannot sign in.
      </div>` +
@@ -3362,6 +3400,31 @@ async function renderTeamPeople() {
         </div>
       </div>`;
     }).join("");
+}
+
+async function addNewUser() {
+  const err = document.getElementById("nu-error");
+  err.style.display = "none";
+  const show = m => { err.textContent = m; err.style.display = "block"; };
+
+  const username = document.getElementById("nu-name").value.trim();
+  const email    = document.getElementById("nu-email").value.trim();
+  const newRole  = document.getElementById("nu-role").value;
+  const pin      = document.getElementById("nu-pin").value.trim();
+
+  if (!username)                 return show("Enter their full name.");
+  if (!email || !email.includes("@")) return show("Enter a valid email address.");
+  if (!/^[0-9]{4,10}$/.test(pin))     return show("The PIN must be 4 to 10 digits.");
+
+  const btn = document.getElementById("nu-btn");
+  btn.disabled = true; btn.textContent = "Adding…";
+  const res = await api({ action: "addUser", username, email, newRole, pin });
+  btn.disabled = false; btn.textContent = "Add";
+
+  if (!res.ok) return show(res.error || "Could not add this person.");
+
+  showToast(`${res.username} added as ${res.role} ✓ — give them their PIN in person`);
+  renderTeamPeople();
 }
 
 async function changeUserPin(username) {
