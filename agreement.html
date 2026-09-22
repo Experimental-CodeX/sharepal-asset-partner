@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&family=Inter:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <style>
 :root {
   --bg: #0b0b12;
@@ -2907,29 +2908,67 @@ function renderHistList() {
 }
 
 // ── SharePal Integration ────────────────────────────────────────────────────
-// SCRIPT_URL — same Apps Script deployment used by the Payout Tracker
-const SHAREPAL_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxoPvmAN_dg9aLBZOKKsGSVLk_nifhR0Pt_dYzR5Gwg3-Mck7OucQrRVmSynZi7paV8IQ/exec";
+const SUPABASE_URL      = "https://pzqtapcnerzprslinyom.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6cXRhcGNuZXJ6cHJzbGlueW9tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk5OTQyODgsImV4cCI6MjEwNTU3MDI4OH0.QwzD7u40091MXmuOgL9iY1SCOM1YeRtZKpV8H9GKfJo";
 
-// Session creds — passed via URL params from the Payout Tracker, or entered manually
-let SP_USERNAME = "";
-let SP_PIN = "";
+// Same storage key as the payout tracker, so being signed in there means being
+// signed in here. This page used to receive a username and PIN in its own web
+// address — visible in the address bar, saved in browser history, and sent to
+// any other site in referrer headers.
+let _sb = null;
+function sb() {
+  if (!_sb) {
+    if (!window.supabase || !window.supabase.createClient) {
+      throw new Error("Supabase library didn't load — check your connection and reload.");
+    }
+    _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: true, autoRefreshToken: true, storageKey: "sp_supabase_auth" },
+    });
+  }
+  return _sb;
+}
 
 function getUrlParam(name) {
   return new URLSearchParams(window.location.search).get(name);
 }
 
+async function isSignedIn() {
+  try {
+    const { data } = await sb().auth.getSession();
+    return !!(data && data.session);
+  } catch (e) { return false; }
+}
+
 async function spApi(params) {
-  const qs = new URLSearchParams({ ...params, username: SP_USERNAME, pin: SP_PIN }).toString();
-  const res = await fetch(SHAREPAL_SCRIPT_URL + "?" + qs);
-  return res.json();
+  try {
+    if (params.action === "getPartnerList") {
+      const { data, error } = await sb()
+        .from("deals")
+        .select("id,afp_id,partner_name,amount_invested")
+        .order("partner_name");
+      if (error) return { ok: false, error: error.message };
+      return { ok: true, partners: (data || []).map(d => ({
+        id: d.id, afpId: d.afp_id || "", name: d.partner_name,
+        invested: Number(d.amount_invested || 0),
+      })) };
+    }
+    if (params.action === "getAgreementData") {
+      const { data, error } = await sb().rpc("get_agreement_data", { p_deal_id: params.partnerId });
+      if (error) return { ok: false, error: error.message };
+      return data || { ok: false, error: "No response" };
+    }
+    return { ok: false, error: "Unknown action: " + params.action };
+  } catch (e) {
+    return { ok: false, error: (e && e.message) ? e.message : String(e) };
+  }
 }
 
 // Populate the partner dropdown on panel0
 async function populateSharePalPartners() {
   const sel = document.getElementById('sharepal-partner-select');
   const status = document.getElementById('sharepal-load-status');
-  if (!SP_USERNAME || !SP_PIN) {
-    status.textContent = 'Open this page from the SharePal Deals tab to enable auto-fill, or it will ask for credentials when you click Load.';
+  if (!(await isSignedIn())) {
+    status.textContent = 'Sign in to the SharePal Payout Tracker in another tab, then reload this page to enable auto-fill.';
     return;
   }
   try {
@@ -2953,11 +2992,11 @@ async function loadFromSharePal(partnerIdOverride) {
 
   if (!partnerId) { status.textContent = 'Select a partner first.'; return; }
 
-  // Ask for credentials if not present
-  if (!SP_USERNAME || !SP_PIN) {
-    SP_USERNAME = prompt('SharePal username (admin):') || '';
-    SP_PIN = prompt('SharePal PIN:') || '';
-    if (!SP_USERNAME || !SP_PIN) { status.textContent = 'Credentials required to load data.'; return; }
+  // No PIN prompt any more. Typing a PIN into a pop-up is exactly the habit
+  // that makes people vulnerable to a convincing fake one.
+  if (!(await isSignedIn())) {
+    status.textContent = 'Not signed in. Open the SharePal Payout Tracker, sign in there, then reload this page.';
+    return;
   }
 
   status.textContent = 'Loading…';
@@ -3038,13 +3077,10 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('panel0').classList.add('active');
   document.getElementById('panel1').classList.remove('active');
 
-  // ── SharePal auto-load via URL params ──
-  // Usage: agreement.html?partner=AFP123...&username=Deep&pin=1234
-  const urlPartner  = getUrlParam('partner');
-  const urlUsername = getUrlParam('username');
-  const urlPin      = getUrlParam('pin');
-  if (urlUsername) SP_USERNAME = urlUsername;
-  if (urlPin)      SP_PIN = urlPin;
+  // ── SharePal auto-load ──
+  // Usage: agreement.html?partner=AFP123...
+  // The login comes from the shared session, never from the address bar.
+  const urlPartner = getUrlParam('partner');
 
   populateSharePalPartners();
 
