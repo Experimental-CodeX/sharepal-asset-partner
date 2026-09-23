@@ -650,6 +650,7 @@ tbody tr:hover td { background: #f9faff; }
         </div>
         <button class="btn-agr ghost" id="btn-tds-settings" onclick="openTdsSettingsModal()" style="display:none">⚙️ TDS Settings</button>
         <button class="btn-agr ghost" id="btn-team" onclick="openTeamModal()" style="display:none">👥 Team &amp; security</button>
+        <button class="btn-agr ghost" id="btn-sync" onclick="openSyncModal()" style="display:none">🔗 Platform sync</button>
       </div>
 
       <div class="table-wrap">
@@ -777,6 +778,29 @@ tbody tr:hover td { background: #f9faff; }
     </div>
 
     <!-- ── PARTNER PAYOUT MODAL ── -->
+    <!-- ── PLATFORM SYNC ── -->
+    <div id="sync-modal-bg" style="display:none;position:fixed;inset:0;background:rgba(3,13,49,0.55);z-index:130;overflow-y:auto;padding:32px 16px" onclick="closeSyncModal(event)">
+      <div style="background:#fff;border-radius:18px;max-width:760px;margin:0 auto;overflow:hidden" onclick="event.stopPropagation()">
+        <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+          <div>
+            <div style="font-size:17px;font-weight:800">🔗 Platform sync</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">Telling the asset partner platform which agreements are signed</div>
+          </div>
+          <button onclick="closeSyncModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);line-height:1">×</button>
+        </div>
+        <div style="padding:20px 24px;max-height:64vh;overflow-y:auto">
+          <div id="sync-summary" style="font-size:13px;margin-bottom:14px"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+            <button class="team-act" onclick="runSync(true)">Dry run — show what would be sent</button>
+            <button class="team-act" id="sync-send-btn" onclick="runSync(false)">Send everything pending</button>
+            <button class="team-act" id="sync-backfill-btn" onclick="runBackfill()" style="display:none">Queue already-signed agreements</button>
+          </div>
+          <div id="sync-output" style="display:none;font-family:ui-monospace,monospace;font-size:11px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:11px;margin-bottom:16px;white-space:pre-wrap;word-break:break-word;max-height:220px;overflow-y:auto"></div>
+          <div id="sync-list"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- ── TEAM & SECURITY (admin only) ── -->
     <div id="team-modal-bg" style="display:none;position:fixed;inset:0;background:rgba(3,13,49,0.55);z-index:130;overflow-y:auto;padding:32px 16px" onclick="closeTeamModal(event)">
       <div style="background:#fff;border-radius:18px;max-width:760px;margin:0 auto;overflow:hidden" onclick="event.stopPropagation()">
@@ -1944,6 +1968,28 @@ async function api(params) {
         return data || { ok: false, error: "No response from the server." };
       }
 
+      case "listSyncs":       return await _rpc("list_syncs", {});
+      case "retrySync":       return await _rpc("retry_sync", { p_deal_id: params.dealId });
+      case "backfillSigned":  return await _rpc("backfill_signed_agreements", {});
+
+      case "pushSigned": {
+        // The API token lives on the server, never here. This page is public —
+        // anything written into it can be read by anyone who opens the site.
+        const payload = {};
+        if (params.dealId) payload.dealId = params.dealId;
+        if (params.dryRun) payload.dryRun = true;
+        const { data, error } = await sb().functions.invoke("push-agreement-signed", { body: payload });
+        if (error) {
+          let msg = error.message || "Could not reach the platform.";
+          try {
+            const ctx = error.context ? await error.context.json() : null;
+            if (ctx && ctx.error) msg = ctx.error;
+          } catch (e) { /* keep the generic message */ }
+          return { ok: false, error: msg };
+        }
+        return data || { ok: false, error: "No response from the server." };
+      }
+
       case "listUsers":       return await _rpc("admin_list_users", {});
       case "setPin":          return await _rpc("admin_set_pin",    { p_username: params.username, p_pin: params.pin });
       case "unlockUser":      return await _rpc("admin_unlock_user",{ p_username: params.username });
@@ -2111,6 +2157,12 @@ async function bootApp() {
   // Team & security — admin only
   const btnTeam = document.getElementById("btn-team");
   if (btnTeam) btnTeam.style.display = (ROLE === "admin") ? "inline-flex" : "none";
+
+  // Platform sync — anyone who can move an agreement along needs to see
+  // whether it actually reached the platform
+  const btnSync = document.getElementById("btn-sync");
+  if (btnSync) btnSync.style.display =
+    ["admin","finance_admin","finance","sign"].includes(ROLE) ? "inline-flex" : "none";
 
   // Show setup banner if not configured
   if (SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
@@ -3315,6 +3367,142 @@ async function submitTdsSettings() {
   renderAssetPartners();
   if (MODAL_PARTNER) { MODAL_PAYOUTS = ALL_PAYOUTS.filter(x => x.partnerId === MODAL_PARTNER.id); (MODAL_VIEW === "amort" ? renderModalAmortView : renderModalPayoutsView)(); }
   showToast("TDS settings saved for everyone ✓");
+}
+
+// ── PLATFORM SYNC ──
+// When an agreement is signed here, the asset partner platform is told, using
+// the AFP ID as its order_id. Deals whose ID looks like 9886137629-A were
+// created by hand in this tool and never existed as an order on the platform,
+// so they are marked "nothing to send" rather than quietly ignored.
+//
+// Every attempt is recorded, including the failures. A push that fails
+// silently leaves the two systems disagreeing about who has signed, and nobody
+// finds out until it matters.
+
+async function pushIfSigned(partnerId) {
+  const a = ALL_AGREEMENTS.find(x => x.partnerId === partnerId);
+  if (!a || a.agreementStatus !== "Signed") return;   // only when both signatures are in
+  try {
+    const res = await api({ action: "pushSigned", dealId: partnerId });
+    if (res.ok && res.sent > 0) {
+      showToast("Platform updated ✓");
+    } else if (res.ok && res.failed > 0) {
+      showToast("Signed here, but the platform didn't accept it — see Platform sync", "error");
+    }
+    // Nothing sent and nothing failed means it was a manual deal, or already
+    // sent. Neither is worth interrupting anyone about.
+  } catch (e) {
+    showToast("Signed here, but the platform could not be reached — see Platform sync", "error");
+  }
+}
+
+function openSyncModal() {
+  if (!["admin","finance_admin","finance","sign"].includes(ROLE)) return;
+  document.getElementById("sync-modal-bg").style.display = "block";
+  document.body.style.overflow = "hidden";
+  document.getElementById("sync-output").style.display = "none";
+  document.getElementById("sync-backfill-btn").style.display = (ROLE === "admin") ? "inline-flex" : "none";
+  renderSyncList();
+}
+function closeSyncModal(ev) {
+  if (ev && ev.target !== ev.currentTarget) return;
+  document.getElementById("sync-modal-bg").style.display = "none";
+  document.body.style.overflow = "";
+}
+
+const SYNC_LABEL = {
+  sent:    { text: "on the platform", bg: "#e8f3ec", fg: "#256d48" },
+  pending: { text: "waiting to send",  bg: "#fff8e6", fg: "#7a5800" },
+  failed:  { text: "not accepted",     bg: "#fbeceb", fg: "#9d2a20" },
+  skipped: { text: "nothing to send",  bg: "#eee",    fg: "#666" },
+};
+
+async function renderSyncList() {
+  const list = document.getElementById("sync-list");
+  const summary = document.getElementById("sync-summary");
+  list.innerHTML = "Loading…";
+  const res = await api({ action: "listSyncs" });
+  if (!res.ok) { list.textContent = res.error || "Could not load."; return; }
+
+  const pending = res.pending || 0, failed = res.failed || 0;
+  summary.innerHTML = failed > 0
+    ? `<span style="color:#9d2a20;font-weight:700">${failed} agreement(s) the platform did not accept.</span>
+       ${pending} waiting to send.`
+    : `${pending} waiting to send, none failed.`;
+
+  if (!res.syncs.length) {
+    list.innerHTML = "<div style='color:var(--muted);font-size:12px'>Nothing yet. This fills up as agreements are signed.</div>";
+    return;
+  }
+
+  list.innerHTML = res.syncs.map(s => {
+    const lbl = SYNC_LABEL[s.status] || SYNC_LABEL.pending;
+    const canRetry = (s.status === "failed");
+    return `<div style="padding:10px 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">
+        <b style="font-size:13px">${s.partner_name || s.deal_id}</b>
+        <span style="font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;background:${lbl.bg};color:${lbl.fg}">${lbl.text}</span>
+        <span style="font-size:11px;color:var(--muted)">${s.order_id ? "order " + s.order_id : s.deal_id}</span>
+        ${canRetry ? `<button class="team-act" style="margin-left:auto" onclick="retryOneSync('${s.deal_id}')">Retry</button>` : ""}
+      </div>
+      ${s.note ? `<div style="font-size:11px;color:var(--muted);margin-top:3px">${s.note}</div>` : ""}
+      ${s.response_code ? `<div style="font-size:11px;color:var(--muted);margin-top:3px">replied ${s.response_code}: ${String(s.response_body || "").slice(0,120)} · ${s.attempts} attempt(s)</div>` : ""}
+    </div>`;
+  }).join("");
+}
+
+async function runSync(dryRun) {
+  const out = document.getElementById("sync-output");
+  const btn = document.getElementById("sync-send-btn");
+  out.style.display = "block";
+  out.textContent = dryRun ? "Checking what would be sent…" : "Sending…";
+  if (!dryRun) { btn.disabled = true; btn.textContent = "Sending…"; }
+
+  const res = await api({ action: "pushSigned", dryRun: !!dryRun });
+
+  if (!dryRun) { btn.disabled = false; btn.textContent = "Send everything pending"; }
+
+  if (!res.ok) { out.textContent = "✗ " + (res.error || "Failed."); return; }
+
+  if (res.dryRun) {
+    out.textContent =
+      "NOTHING WAS SENT — this is only a preview.\n\n" +
+      "Endpoint: " + res.endpoint + "\n" +
+      "Token configured: " + (res.tokenConfigured ? "yes" : "NO — add SHAREPAL_API_TOKEN") + "\n\n" +
+      "Would send " + res.wouldSend + " request(s):\n" +
+      res.requests.map(r => "  POST  " + JSON.stringify(r.body) + "   (" + r.deal_id + ")").join("\n");
+    return;
+  }
+
+  out.textContent =
+    (res.message ? res.message + "\n\n" : "") +
+    "Sent: " + (res.sent || 0) + "   Failed: " + (res.failed || 0) + "\n\n" +
+    (res.results || []).map(r =>
+      (r.ok ? "  ✓ " : "  ✗ ") + r.deal_id + "  →  " + r.code + "  " + String(r.response || "").slice(0, 120)
+    ).join("\n");
+
+  renderSyncList();
+}
+
+async function retryOneSync(dealId) {
+  const res = await api({ action: "retrySync", dealId });
+  if (!res.ok) { showToast(res.error || "Could not retry", "error"); return; }
+  const push = await api({ action: "pushSigned", dealId });
+  if (push.ok && push.sent > 0) showToast("Sent ✓");
+  else if (push.ok && push.failed > 0) showToast("The platform still didn't accept it", "error");
+  else showToast(push.error || "Nothing was sent", "error");
+  renderSyncList();
+}
+
+async function runBackfill() {
+  if (!confirm(
+    "This queues every agreement already marked Signed so the platform can be told about them.\n\n" +
+    "It does not send anything by itself — you still press Send afterwards.\n\n" +
+    "Do a dry run first and check the list.")) return;
+  const res = await api({ action: "backfillSigned" });
+  if (!res.ok) { showToast(res.error || "Could not queue", "error"); return; }
+  showToast(`${res.pending} queued, ${res.skipped} manual deal(s) skipped ✓`);
+  renderSyncList();
 }
 
 // ── TEAM & SECURITY (admin only) ──
@@ -4795,7 +4983,7 @@ async function submitPartnerSigned(partnerId) {
   setLoading(true, "Updating…");
   try {
     const res = await api({ action: "markPartnerSigned", partnerId });
-    if (res.ok) { showToast("Partner signature recorded ✓"); await refreshData(); }
+    if (res.ok) { showToast("Partner signature recorded ✓"); await refreshData(); await pushIfSigned(partnerId); }
     else showToast(res.error || "Failed", "error");
   } catch(e) { showToast("Network error", "error"); }
   setLoading(false);
@@ -4815,7 +5003,7 @@ async function submitSignInternal(partnerId) {
   setLoading(true, "Signing…");
   try {
     const res = await api({ action: "signInternal", partnerId });
-    if (res.ok) { showToast("Signed ✓"); await refreshData(); }
+    if (res.ok) { showToast("Signed ✓"); await refreshData(); await pushIfSigned(partnerId); }
     else showToast(res.error || "Failed", "error");
   } catch(e) { showToast("Network error", "error"); }
   setLoading(false);
