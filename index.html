@@ -89,6 +89,19 @@ a { text-decoration: none; color: inherit; }
 .btn-refresh:hover { color: #fff; }
 .btn-refresh.spinning svg { animation: spin 0.8s linear; }
 .topbar-date { font-size: 12px; color: rgba(255,255,255,0.45); }
+.btn-top {
+  background: rgba(255,255,255,0.08); color: #fff;
+  border: 1px solid rgba(255,255,255,0.18); border-radius: 8px;
+  font-size: 12px; font-weight: 700; padding: 7px 12px; cursor: pointer;
+  white-space: nowrap;
+}
+.btn-top:hover { background: rgba(255,255,255,0.16); }
+/* On a narrow screen the labels are dropped and only the icon is kept, so the
+   top bar does not wrap onto two lines. */
+@media (max-width: 860px) {
+  .btn-top { font-size: 0; padding: 7px 9px; }
+  .btn-top::first-letter { font-size: 14px; }
+}
 
 .main { max-width: 1100px; margin: 0 auto; padding: 28px 24px; }
 
@@ -434,6 +447,8 @@ tbody tr:hover td { background: #f9faff; }
     <div class="topbar-right">
       <span class="topbar-date" id="topbar-date"></span>
       <button class="btn-add-funding" id="btn-add-funding" onclick="openAddPartnerModal()">+ Add Funding</button>
+      <button class="btn-top" id="btn-sync" onclick="openSyncModal()" title="Agreement status sent to the asset partner platform" style="display:none">🔗 Platform sync</button>
+      <button class="btn-top" id="btn-team" onclick="openTeamModal()" title="People, PINs and sign-in history" style="display:none">👥 Team</button>
       <button class="btn-refresh" id="btn-refresh" onclick="manualRefresh()" title="Refresh data">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
       </button>
@@ -649,8 +664,6 @@ tbody tr:hover td { background: #f9faff; }
           </select>
         </div>
         <button class="btn-agr ghost" id="btn-tds-settings" onclick="openTdsSettingsModal()" style="display:none">⚙️ TDS Settings</button>
-        <button class="btn-agr ghost" id="btn-team" onclick="openTeamModal()" style="display:none">👥 Team &amp; security</button>
-        <button class="btn-agr ghost" id="btn-sync" onclick="openSyncModal()" style="display:none">🔗 Platform sync</button>
       </div>
 
       <div class="table-wrap">
@@ -2161,8 +2174,11 @@ async function bootApp() {
   // Platform sync — anyone who can move an agreement along needs to see
   // whether it actually reached the platform
   const btnSync = document.getElementById("btn-sync");
-  if (btnSync) btnSync.style.display =
-    ["admin","finance_admin","finance","sign"].includes(ROLE) ? "inline-flex" : "none";
+  if (btnSync) {
+    btnSync.style.display =
+      ["admin","finance_admin","finance","sign"].includes(ROLE) ? "inline-flex" : "none";
+    if (btnSync.style.display !== "none") refreshSyncBadge();
+  }
 
   // Show setup banner if not configured
   if (SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
@@ -3389,11 +3405,32 @@ async function pushIfSigned(partnerId) {
     } else if (res.ok && res.failed > 0) {
       showToast("Signed here, but the platform didn't accept it — see Platform sync", "error");
     }
+    refreshSyncBadge();
     // Nothing sent and nothing failed means it was a manual deal, or already
     // sent. Neither is worth interrupting anyone about.
   } catch (e) {
     showToast("Signed here, but the platform could not be reached — see Platform sync", "error");
   }
+}
+
+// A push that failed should be visible without anyone going looking for it.
+async function refreshSyncBadge() {
+  try {
+    const res = await api({ action: "listSyncs" });
+    const btn = document.getElementById("btn-sync");
+    if (!btn || !res.ok) return;
+    const failed = res.failed || 0, pending = res.pending || 0;
+    if (failed > 0) {
+      btn.innerHTML = "🔗 Platform sync <b style='color:#ff8a80'>" + failed + "</b>";
+      btn.title = failed + " agreement(s) the platform did not accept";
+    } else if (pending > 0) {
+      btn.innerHTML = "🔗 Platform sync <b style='color:#ffd479'>" + pending + "</b>";
+      btn.title = pending + " waiting to be sent";
+    } else {
+      btn.innerHTML = "🔗 Platform sync";
+      btn.title = "Agreement status sent to the asset partner platform";
+    }
+  } catch (e) { /* a badge is not worth an error message */ }
 }
 
 function openSyncModal() {
@@ -3482,6 +3519,7 @@ async function runSync(dryRun) {
     ).join("\n");
 
   renderSyncList();
+  refreshSyncBadge();
 }
 
 async function retryOneSync(dealId) {
@@ -3492,6 +3530,7 @@ async function retryOneSync(dealId) {
   else if (push.ok && push.failed > 0) showToast("The platform still didn't accept it", "error");
   else showToast(push.error || "Nothing was sent", "error");
   renderSyncList();
+  refreshSyncBadge();
 }
 
 async function runBackfill() {
