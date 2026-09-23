@@ -372,6 +372,18 @@ tbody tr:hover td { background: #f9faff; }
   <!-- Supabase client: session handling, live updates, database access.
        Pinned to an exact version so it cannot change under you. -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  <style>
+    .team-tab{background:none;border:none;border-bottom:2px solid transparent;padding:9px 12px;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer}
+    .team-tab.active{color:var(--ink);border-bottom-color:var(--ink)}
+    .team-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--border);flex-wrap:wrap}
+    .team-row .tname{font-weight:700;font-size:14px;min-width:150px}
+    .team-act{background:#fff;border:1.5px solid var(--border);border-radius:6px;font-size:11px;font-weight:700;padding:5px 10px;cursor:pointer}
+    .team-act:hover{background:var(--bg)}
+    .team-pill{font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;background:var(--bg);color:var(--muted)}
+    .team-pill.locked{background:#fbeceb;color:#9d2a20}
+    .team-pill.off{background:#eee;color:#666}
+    .team-line{padding:7px 0;border-bottom:1px solid var(--border);font-size:12px}
+  </style>
 </head>
 <body>
 
@@ -637,6 +649,7 @@ tbody tr:hover td { background: #f9faff; }
           </select>
         </div>
         <button class="btn-agr ghost" id="btn-tds-settings" onclick="openTdsSettingsModal()" style="display:none">⚙️ TDS Settings</button>
+        <button class="btn-agr ghost" id="btn-team" onclick="openTeamModal()" style="display:none">👥 Team &amp; security</button>
       </div>
 
       <div class="table-wrap">
@@ -702,6 +715,7 @@ tbody tr:hover td { background: #f9faff; }
           <button onclick="closeTdsSettingsModal()" style="background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;padding:4px 8px;border-radius:6px;line-height:1">×</button>
         </div>
         <div style="padding:20px 24px">
+          <div id="tds-source-note" style="font-size:12px;padding:9px 11px;border-radius:7px;margin-bottom:16px"></div>
           <label class="form-label">TDS rate (%)</label>
           <input type="number" id="tds-rate-input" step="0.1" min="0" max="100" style="margin-bottom:18px" class="form-input">
 
@@ -763,6 +777,106 @@ tbody tr:hover td { background: #f9faff; }
     </div>
 
     <!-- ── PARTNER PAYOUT MODAL ── -->
+    <!-- ── TEAM & SECURITY (admin only) ── -->
+    <div id="team-modal-bg" style="display:none;position:fixed;inset:0;background:rgba(3,13,49,0.55);z-index:130;overflow-y:auto;padding:32px 16px" onclick="closeTeamModal(event)">
+      <div style="background:#fff;border-radius:18px;max-width:760px;margin:0 auto;overflow:hidden" onclick="event.stopPropagation()">
+        <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+          <div style="font-size:17px;font-weight:800">👥 Team &amp; security</div>
+          <button onclick="closeTeamModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);line-height:1">×</button>
+        </div>
+
+        <div style="display:flex;gap:4px;padding:12px 24px 0;border-bottom:1px solid var(--border)">
+          <button class="team-tab" id="team-tab-people"   onclick="switchTeamTab('people')">People</button>
+          <button class="team-tab" id="team-tab-signins"  onclick="switchTeamTab('signins')">Sign-in attempts</button>
+          <button class="team-tab" id="team-tab-activity" onclick="switchTeamTab('activity')">Activity</button>
+        </div>
+
+        <div style="padding:20px 24px;max-height:60vh;overflow-y:auto">
+          <div id="team-pane-people"></div>
+          <div id="team-pane-signins" style="display:none"></div>
+          <div id="team-pane-activity" style="display:none"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CORRECT A DETAIL (admin only, Known Issue #7) ── -->
+    <div id="correct-modal-bg" style="display:none;position:fixed;inset:0;background:rgba(3,13,49,0.55);z-index:130;overflow-y:auto;padding:32px 16px" onclick="closeCorrectModal(event)">
+      <div style="background:#fff;border-radius:18px;max-width:600px;margin:0 auto;overflow:hidden" onclick="event.stopPropagation()">
+        <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+          <div>
+            <div style="font-size:17px;font-weight:800">Correct a detail</div>
+            <div id="correct-subtitle" style="font-size:12px;color:var(--muted);margin-top:2px"></div>
+          </div>
+          <button onclick="closeCorrectModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);line-height:1">×</button>
+        </div>
+
+        <div style="padding:20px 24px">
+          <div style="background:#fff8e6;border:1px solid #f0d9a0;border-radius:8px;padding:10px 12px;font-size:12px;color:#7a5800;margin-bottom:18px">
+            This overwrites a value that is already filled in. The old value, your
+            reason and your name are recorded permanently and cannot be edited.
+          </div>
+
+          <label style="display:block;font-size:12px;font-weight:700;margin-bottom:5px">What needs fixing</label>
+          <select id="correct-field" onchange="onCorrectFieldChange()" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:7px;font-size:13px;margin-bottom:14px">
+            <optgroup label="Contact">
+              <option value="partner_name">Partner name</option>
+              <option value="email">Email</option>
+              <option value="phone">Phone</option>
+            </optgroup>
+            <optgroup label="Identity">
+              <option value="pan">PAN</option>
+              <option value="aadhaar">Aadhaar</option>
+              <option value="address">Address</option>
+            </optgroup>
+            <optgroup label="Bank">
+              <option value="bank_account">Bank account number</option>
+              <option value="ifsc">IFSC</option>
+              <option value="bank_name">Bank name</option>
+            </optgroup>
+            <optgroup label="Other">
+              <option value="transaction_id">Transaction ID</option>
+              <option value="asset_names">Asset names</option>
+              <option value="asset_serials">Asset serial numbers</option>
+              <option value="asset_values">Asset values</option>
+            </optgroup>
+            <optgroup label="Money — rebuilds the unpaid schedule">
+              <option value="__terms_invested">Amount invested</option>
+              <option value="__terms_monthly">Payout amount</option>
+              <option value="__terms_tenure">Tenure (months)</option>
+              <option value="__terms_totalPayout">Total payout</option>
+              <option value="__terms_investDate">Investment date</option>
+            </optgroup>
+          </select>
+
+          <div id="correct-terms-warning" style="display:none;background:#fdeceb;border:1px solid #f3c6c2;border-radius:8px;padding:10px 12px;font-size:12px;color:#8f2a20;margin-bottom:14px">
+            This changes what is owed. Payouts already marked processed are left
+            exactly as they are; only the unpaid part of the schedule is rebuilt.
+          </div>
+
+          <label style="display:block;font-size:12px;font-weight:700;margin-bottom:5px">Current value</label>
+          <div id="correct-current" style="padding:9px 11px;background:var(--bg);border:1px solid var(--border);border-radius:7px;font-size:13px;color:var(--muted);margin-bottom:14px;min-height:38px;word-break:break-word"></div>
+
+          <label style="display:block;font-size:12px;font-weight:700;margin-bottom:5px">Correct it to</label>
+          <input id="correct-new" type="text" autocomplete="off" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:7px;font-size:13px;margin-bottom:14px">
+
+          <label style="display:block;font-size:12px;font-weight:700;margin-bottom:5px">Why? <span style="font-weight:400;color:var(--muted)">(required, kept on record)</span></label>
+          <input id="correct-reason" type="text" placeholder="e.g. partner confirmed the correct account number by phone" autocomplete="off" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:7px;font-size:13px">
+
+          <div id="correct-error" style="display:none;color:var(--danger,#b3261e);font-size:12px;margin-top:12px"></div>
+
+          <div style="display:flex;gap:10px;margin-top:20px">
+            <button id="correct-submit" onclick="submitCorrection()" style="flex:1;padding:11px;background:var(--navy,#1b2a41);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">Save correction</button>
+            <button onclick="closeCorrectModal()" style="padding:11px 18px;background:#fff;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">Cancel</button>
+          </div>
+
+          <div style="margin-top:20px;border-top:1px solid var(--border);padding-top:14px">
+            <div style="font-size:12px;font-weight:700;margin-bottom:8px">Change history for this deal</div>
+            <div id="correct-history" style="font-size:12px;color:var(--muted);max-height:190px;overflow-y:auto"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div id="partner-modal-bg" style="display:none;position:fixed;inset:0;background:rgba(3,13,49,0.55);z-index:100;overflow-y:auto;padding:32px 16px" onclick="closePartnerModal(event)">
       <div id="partner-modal" style="background:#fff;border-radius:18px;max-width:760px;margin:0 auto;overflow:hidden;position:relative">
         <div id="modal-head" style="padding:22px 24px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px">
@@ -1229,7 +1343,37 @@ function loadTdsSettings() {
   }
 }
 function saveTdsSettings() {
+  // Still cached here so the numbers are on screen instantly at startup,
+  // before the shared copy has been fetched. The shared copy always wins.
   localStorage.setItem(TDS_SETTINGS_KEY, JSON.stringify(TDS_SETTINGS));
+}
+
+// ── Shared TDS settings (Known Issue #1) ──
+// These used to live only in each person's browser, which meant Divakar and
+// Sasi could be applying different thresholds to the same payouts and neither
+// would ever find out. There is now one copy, and everyone reads it.
+let TDS_SOURCE  = "local";   // "shared" once the database copy has been read
+let TDS_UPDATED = null;      // { by, at }
+
+async function loadTdsSettingsFromServer() {
+  try {
+    const { data, error } = await sb()
+      .from("tds_settings").select("*").eq("id", 1).maybeSingle();
+    if (error || !data) return;
+    const hasThresholds = data.thresholds && Object.keys(data.thresholds).length > 0;
+    if (hasThresholds) {
+      TDS_SETTINGS = {
+        rate: (data.rate !== null && data.rate !== undefined) ? Number(data.rate) : DEFAULT_TDS_RATE,
+        thresholds: data.thresholds,
+      };
+      TDS_SOURCE  = "shared";
+      TDS_UPDATED = { by: data.updated_by, at: data.updated_at };
+      localStorage.setItem(TDS_SETTINGS_KEY, JSON.stringify(TDS_SETTINGS));
+    } else {
+      // Nothing published yet — this browser's copy is still in charge.
+      TDS_SOURCE = "unpublished";
+    }
+  } catch (e) { /* keep whatever is already loaded */ }
 }
 
 // Indian financial year: 1 Apr – 31 Mar. e.g. 15 Jun 2026 → "FY26-27".
@@ -1760,6 +1904,54 @@ async function api(params) {
       case "getAgreementData":
         return await _rpc("get_agreement_data", { p_deal_id: params.partnerId });
 
+      case "saveTdsSettings":
+        return await _rpc("save_tds_settings", {
+          p_rate: Number(params.rate), p_thresholds: params.thresholds || {},
+        });
+
+      case "correctField":
+        return await _rpc("correct_deal_field", {
+          p_deal_id: params.partnerId, p_field: params.field,
+          p_new_value: params.newValue, p_reason: params.reason,
+        });
+
+      case "correctTerms":
+        return await _rpc("correct_deal_terms", {
+          p_deal_id: params.partnerId, p: params.changes, p_reason: params.reason,
+        });
+
+      case "dealHistory":
+        return await _rpc("get_deal_history", { p_deal_id: params.partnerId });
+
+      case "addUser": {
+        // Creating a sign-in identity needs powers no browser should hold, so
+        // this goes to the server. The library attaches the signed-in session
+        // automatically, and the server asks the database who that really is.
+        const { data, error } = await sb().functions.invoke("admin-user", {
+          body: {
+            username: params.username, email: params.email,
+            role: params.newRole, pin: params.pin,
+          },
+        });
+        if (error) {
+          let msg = error.message || "Could not add this person.";
+          try {
+            const ctx = error.context ? await error.context.json() : null;
+            if (ctx && ctx.error) msg = ctx.error;
+          } catch (e) { /* keep the generic message */ }
+          return { ok: false, error: msg };
+        }
+        return data || { ok: false, error: "No response from the server." };
+      }
+
+      case "listUsers":       return await _rpc("admin_list_users", {});
+      case "setPin":          return await _rpc("admin_set_pin",    { p_username: params.username, p_pin: params.pin });
+      case "unlockUser":      return await _rpc("admin_unlock_user",{ p_username: params.username });
+      case "setUserActive":   return await _rpc("admin_set_active", { p_username: params.username, p_active: params.active });
+      case "setUserRole":     return await _rpc("admin_set_role",   { p_username: params.username, p_role: params.newRole });
+      case "recentLogins":    return await _rpc("admin_recent_logins",  { p_limit: params.limit || 60 });
+      case "recentActivity":  return await _rpc("admin_recent_activity",{ p_limit: params.limit || 100 });
+
       default:
         return { ok: false, error: "Unknown action: " + params.action };
     }
@@ -1916,6 +2108,10 @@ async function bootApp() {
   const btnTdsSettings = document.getElementById("btn-tds-settings");
   if (btnTdsSettings) btnTdsSettings.style.display = (ROLE === "admin" || ROLE === "finance_admin") ? "inline-flex" : "none";
 
+  // Team & security — admin only
+  const btnTeam = document.getElementById("btn-team");
+  if (btnTeam) btnTeam.style.display = (ROLE === "admin") ? "inline-flex" : "none";
+
   // Show setup banner if not configured
   if (SCRIPT_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
     await fetchUserRoles();
@@ -1989,6 +2185,7 @@ async function refreshData() {
       });
       ALL_AGREEMENTS = res.agreements || [];
       if (!USER_ROLES.length) await fetchUserRoles();
+      await loadTdsSettingsFromServer();   // shared settings win over this browser's copy
       rebuildTdsData();
       renderAll();
       renderAction();
@@ -3042,9 +3239,27 @@ function closeAssetPartnerModal(e) {
 }
 
 // ── TDS SETTINGS MODAL ──
+function tdsSourceNote() {
+  if (TDS_SOURCE === "shared") {
+    const who = TDS_UPDATED && TDS_UPDATED.by ? TDS_UPDATED.by : "someone";
+    const when = TDS_UPDATED && TDS_UPDATED.at
+      ? new Date(TDS_UPDATED.at).toLocaleDateString("en-IN", { day:"numeric", month:"short", year:"numeric" })
+      : "";
+    return `Shared with the whole team. Last changed by ${who}${when ? " on " + when : ""}.`;
+  }
+  return "Not published yet — these numbers are currently only on this computer. "
+       + "Press Save to publish them so everyone uses the same figures.";
+}
+
 function openTdsSettingsModal() {
   if (ROLE !== "admin" && ROLE !== "finance_admin") return;
   document.getElementById("tds-rate-input").value = getTdsRate();
+  const note = document.getElementById("tds-source-note");
+  note.textContent = tdsSourceNote();
+  const shared = (TDS_SOURCE === "shared");
+  note.style.background = shared ? "#e8f3ec" : "#fff8e6";
+  note.style.border     = "1px solid " + (shared ? "#c5e2d0" : "#f0d9a0");
+  note.style.color      = shared ? "#256d48" : "#7a5800";
   renderTdsThresholdRows();
   document.getElementById("tds-new-fy").value = "";
   document.getElementById("tds-new-amount").value = "";
@@ -3081,15 +3296,372 @@ function addTdsThresholdRow() {
   fyInput.value = ""; amtInput.value = "";
   renderTdsThresholdRows();
 }
-function submitTdsSettings() {
+async function submitTdsSettings() {
   const rate = parseFloat(document.getElementById("tds-rate-input").value);
   TDS_SETTINGS.rate = isNaN(rate) ? DEFAULT_TDS_RATE : rate;
   saveTdsSettings();
+
+  // Publish to everyone, not just this browser
+  const res = await api({ action: "saveTdsSettings",
+                          rate: TDS_SETTINGS.rate, thresholds: TDS_SETTINGS.thresholds });
+  if (!res.ok) {
+    showToast(res.error || "Could not save TDS settings", "error");
+    return;
+  }
+  await loadTdsSettingsFromServer();
+
   rebuildTdsData();
   closeTdsSettingsModal();
   renderAssetPartners();
   if (MODAL_PARTNER) { MODAL_PAYOUTS = ALL_PAYOUTS.filter(x => x.partnerId === MODAL_PARTNER.id); (MODAL_VIEW === "amort" ? renderModalAmortView : renderModalPayoutsView)(); }
-  showToast("TDS settings saved ✓");
+  showToast("TDS settings saved for everyone ✓");
+}
+
+// ── TEAM & SECURITY (admin only) ──
+// Every one of these used to require me to write SQL for you. A tool only its
+// builder can operate has a single point of failure, and it is the builder.
+const TEAM_ROLES = ["admin","finance_admin","finance","sign","viewer"];
+let TEAM_TAB = "people";
+
+function openTeamModal() {
+  if (ROLE !== "admin") return;
+  document.getElementById("team-modal-bg").style.display = "block";
+  document.body.style.overflow = "hidden";
+  switchTeamTab("people");
+}
+function closeTeamModal(ev) {
+  if (ev && ev.target !== ev.currentTarget) return;
+  document.getElementById("team-modal-bg").style.display = "none";
+  document.body.style.overflow = "";
+}
+function switchTeamTab(tab) {
+  TEAM_TAB = tab;
+  ["people","signins","activity"].forEach(t => {
+    document.getElementById("team-pane-" + t).style.display = (t === tab) ? "block" : "none";
+    document.getElementById("team-tab-" + t).classList.toggle("active", t === tab);
+  });
+  if (tab === "people")   renderTeamPeople();
+  if (tab === "signins")  renderTeamSignins();
+  if (tab === "activity") renderTeamActivity();
+}
+
+function fmtWhen(v) {
+  if (!v) return "—";
+  return new Date(v).toLocaleString("en-IN",
+    { day:"numeric", month:"short", year:"numeric", hour:"numeric", minute:"2-digit" });
+}
+
+async function renderTeamPeople() {
+  const el = document.getElementById("team-pane-people");
+  el.innerHTML = "Loading…";
+  const res = await api({ action: "listUsers" });
+  if (!res.ok) { el.textContent = res.error || "Could not load."; return; }
+
+  el.innerHTML =
+    `<div style="border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:18px;background:var(--bg)">
+       <div style="font-weight:800;font-size:13px;margin-bottom:4px">Add a person</div>
+       <div style="font-size:11px;color:var(--muted);margin-bottom:10px">
+         The email is an internal label — no message is ever sent to it and they never need to know it.
+         They sign in with their name and PIN, like everyone else.
+       </div>
+       <div style="display:flex;gap:8px;flex-wrap:wrap">
+         <input id="nu-name"  placeholder="Full name"  style="flex:1 1 150px;padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-size:13px">
+         <input id="nu-email" placeholder="name@sharepal.in" style="flex:1 1 180px;padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-size:13px">
+         <select id="nu-role" style="flex:0 1 140px;padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-size:13px">
+           ${TEAM_ROLES.map(r => `<option value="${r}"${r === "viewer" ? " selected" : ""}>${r}</option>`).join("")}
+         </select>
+         <input id="nu-pin" placeholder="PIN (4–10 digits)" inputmode="numeric" autocomplete="off" style="flex:0 1 150px;padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-size:13px">
+         <button class="team-act" id="nu-btn" onclick="addNewUser()" style="padding:8px 14px">Add</button>
+       </div>
+       <div id="nu-error" style="display:none;color:#9d2a20;font-size:12px;margin-top:9px"></div>
+     </div>
+     <div style="font-size:12px;color:var(--muted);margin-bottom:12px">
+       Switching someone off keeps their name on the payouts they processed and the
+       agreements they signed, so your history stays readable — they just cannot sign in.
+     </div>` +
+    res.users.map(u => {
+      const pills =
+        `<span class="team-pill">${u.role}</span>` +
+        (u.locked ? `<span class="team-pill locked">locked</span>` : "") +
+        (u.is_active ? "" : `<span class="team-pill off">no access</span>`);
+      const roleSel = `<select onchange="changeUserRole('${u.username}', this.value)" style="font-size:11px;padding:4px 6px;border:1px solid var(--border);border-radius:6px">
+          ${TEAM_ROLES.map(r => `<option value="${r}"${r===u.role?" selected":""}>${r}</option>`).join("")}
+        </select>`;
+      return `<div class="team-row">
+        <div class="tname">${u.username}</div>
+        <div style="flex:1;display:flex;gap:6px;align-items:center;flex-wrap:wrap">${pills}
+          <span style="font-size:11px;color:var(--muted)">last signed in ${fmtWhen(u.last_login_at)}</span>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          ${roleSel}
+          <button class="team-act" onclick="changeUserPin('${u.username}')">Change PIN</button>
+          ${u.locked ? `<button class="team-act" onclick="unlockUser('${u.username}')">Unlock</button>` : ""}
+          <button class="team-act" onclick="toggleUserActive('${u.username}', ${!u.is_active})">${u.is_active ? "Switch off" : "Switch on"}</button>
+        </div>
+      </div>`;
+    }).join("");
+}
+
+async function addNewUser() {
+  const err = document.getElementById("nu-error");
+  err.style.display = "none";
+  const show = m => { err.textContent = m; err.style.display = "block"; };
+
+  const username = document.getElementById("nu-name").value.trim();
+  const email    = document.getElementById("nu-email").value.trim();
+  const newRole  = document.getElementById("nu-role").value;
+  const pin      = document.getElementById("nu-pin").value.trim();
+
+  if (!username)                 return show("Enter their full name.");
+  if (!email || !email.includes("@")) return show("Enter a valid email address.");
+  if (!/^[0-9]{4,10}$/.test(pin))     return show("The PIN must be 4 to 10 digits.");
+
+  const btn = document.getElementById("nu-btn");
+  btn.disabled = true; btn.textContent = "Adding…";
+  const res = await api({ action: "addUser", username, email, newRole, pin });
+  btn.disabled = false; btn.textContent = "Add";
+
+  if (!res.ok) return show(res.error || "Could not add this person.");
+
+  showToast(`${res.username} added as ${res.role} ✓ — give them their PIN in person`);
+  renderTeamPeople();
+}
+
+async function changeUserPin(username) {
+  const pin = prompt(
+    `New PIN for ${username}\n\n` +
+    `Digits only, 4 to 10. Six is meaningfully safer than four — ` +
+    `a million combinations instead of ten thousand.`);
+  if (pin === null) return;
+  const res = await api({ action: "setPin", username, pin: pin.trim() });
+  if (!res.ok) { showToast(res.error || "Could not change the PIN", "error"); return; }
+  showToast(`${username}'s PIN changed to ${res.digits} digits ✓ — tell them in person, not over chat`);
+  renderTeamPeople();
+}
+
+async function unlockUser(username) {
+  const res = await api({ action: "unlockUser", username });
+  if (!res.ok) { showToast(res.error || "Could not unlock", "error"); return; }
+  showToast(`${username} unlocked ✓`);
+  renderTeamPeople();
+}
+
+async function toggleUserActive(username, active) {
+  if (!active && !confirm(`Switch off access for ${username}?\n\nThey will not be able to sign in. Their past work stays on record.`)) return;
+  const res = await api({ action: "setUserActive", username, active });
+  if (!res.ok) { showToast(res.error || "Could not change access", "error"); return; }
+  showToast(active ? `${username} can sign in again ✓` : `${username} switched off ✓`);
+  renderTeamPeople();
+}
+
+async function changeUserRole(username, newRole) {
+  const res = await api({ action: "setUserRole", username, newRole });
+  if (!res.ok) { showToast(res.error || "Could not change role", "error"); renderTeamPeople(); return; }
+  showToast(`${username}: ${res.from} → ${res.to} ✓`);
+  renderTeamPeople();
+}
+
+async function renderTeamSignins() {
+  const el = document.getElementById("team-pane-signins");
+  el.innerHTML = "Loading…";
+  const res = await api({ action: "recentLogins", limit: 80 });
+  if (!res.ok) { el.textContent = res.error || "Could not load."; return; }
+
+  const fails = res.failures_last_24h || 0;
+  const banner = fails > 10
+    ? `<div style="background:#fbeceb;border:1px solid #f3c6c2;color:#9d2a20;border-radius:8px;padding:10px 12px;font-size:12px;margin-bottom:14px">
+         <b>${fails} failed sign-ins in the last 24 hours.</b> A run of failures against one
+         name usually means somebody is guessing. Check the list below, and change that
+         person's PIN if the attempts weren't theirs.
+       </div>`
+    : `<div style="font-size:12px;color:var(--muted);margin-bottom:14px">${fails} failed sign-in(s) in the last 24 hours.</div>`;
+
+  el.innerHTML = banner + (res.attempts.length
+    ? res.attempts.map(a => `<div class="team-line">
+        <span style="color:${a.success ? "#256d48" : "#9d2a20"};font-weight:700">${a.success ? "✓" : "✗"}</span>
+        <b>${a.username || "(no name)"}</b>
+        <span style="color:var(--muted)"> · ${fmtWhen(a.at)} · ${a.ip || "no IP"} · ${a.reason || ""}</span>
+      </div>`).join("")
+    : "<div style='color:var(--muted);font-size:12px'>Nothing recorded yet.</div>");
+}
+
+async function renderTeamActivity() {
+  const el = document.getElementById("team-pane-activity");
+  el.innerHTML = "Loading…";
+  const res = await api({ action: "recentActivity", limit: 120 });
+  if (!res.ok) { el.textContent = res.error || "Could not load."; return; }
+  if (!res.activity.length) {
+    el.innerHTML = "<div style='color:var(--muted);font-size:12px'>Nothing recorded yet.</div>";
+    return;
+  }
+  el.innerHTML = res.activity.map(a => {
+    const d = a.details || {};
+    let what = a.action;
+    if (a.action === "payout.processed")         what = `marked a payout processed (₹${d.amount_paid ?? "?"})`;
+    else if (a.action === "payout.undone")       what = "undid a processed payout";
+    else if (a.action === "deal.created")        what = `added a deal — ${d.name ?? ""}`;
+    else if (a.action === "deal.updated")        what = "filled in blank fields";
+    else if (a.action === "deal.field_corrected")what = `corrected <b>${d.field}</b>: “${d.old_value ?? ""}” → “${d.new_value ?? ""}”`;
+    else if (a.action === "deal.terms_corrected")what = "corrected deal terms";
+    else if (a.action === "agreement.link_set")  what = "attached an agreement";
+    else if (a.action === "agreement.shared")    what = "shared an agreement";
+    else if (a.action === "agreement.internal_signed") what = "signed an agreement internally";
+    else if (a.action === "agreement.partner_signed")  what = "recorded a partner signature";
+    else if (a.action === "user.pin_changed")    what = `changed a PIN (${d.pin_length ?? "?"} digits)`;
+    else if (a.action === "user.unlocked")       what = "released a lockout";
+    else if (a.action === "user.deactivated")    what = "switched off access";
+    else if (a.action === "user.reactivated")    what = "restored access";
+    else if (a.action === "user.role_changed")   what = `changed a role: ${d.from} → ${d.to}`;
+    else if (a.action === "tds_settings.saved")  what = "changed TDS settings";
+    else if (a.action === "data.cutover_load")   what = "loaded the data from the spreadsheet";
+    const why = d.reason ? `<div style="color:var(--muted);font-style:italic">“${d.reason}”</div>` : "";
+    return `<div class="team-line">
+      <div>${what} <span style="color:var(--muted)">· ${a.entity_id || ""}</span></div>
+      <div style="color:var(--muted);font-size:11px">${a.who || "?"} · ${fmtWhen(a.at)}</div>${why}</div>`;
+  }).join("");
+}
+
+// ── CORRECT A DETAIL (admin only, Known Issue #7) ──
+// update_deal() fills blanks but refuses to overwrite, which is the right rule
+// and stays. This is the deliberate way round it: admin only, a reason is
+// required, and the old value is kept forever. A correction made here is safer
+// than the same correction typed into the spreadsheet, where nobody can tell
+// it ever happened.
+let CORRECT_PARTNER_ID = null;
+
+const CORRECT_TERM_FIELDS = {
+  __terms_invested:    { label: "Amount invested", key: "invested",    from: p => p.invested },
+  __terms_monthly:     { label: "Payout amount",   key: "monthly",     from: p => p.monthly },
+  __terms_tenure:      { label: "Tenure (months)", key: "tenure",      from: p => p.tenure },
+  __terms_totalPayout: { label: "Total payout",    key: "totalPayout", from: p => p.totalPayout },
+  __terms_investDate:  { label: "Investment date", key: "investDate",  from: p => p.investDate },
+};
+
+const CORRECT_PLAIN_FIELDS = {
+  partner_name: p => p.name,       email: p => p.email,       phone: p => p.phone,
+  pan: p => p.pan,                 aadhaar: p => p.aadhaar,   address: p => p.address,
+  bank_account: p => p.bankAccount, ifsc: p => p.ifsc,        bank_name: p => p.bankName,
+  transaction_id: p => p.txnId,    asset_names: p => p.assetNames,
+  asset_serials: p => p.assetSerials, asset_values: p => p.assetValues,
+};
+
+function openCorrectModal(partnerId) {
+  if (ROLE !== "admin") return;
+  const p = ALL_PARTNERS.find(x => x.id === partnerId);
+  if (!p) { showToast("Couldn't find that deal", "error"); return; }
+
+  CORRECT_PARTNER_ID = partnerId;
+  document.getElementById("correct-subtitle").textContent = p.name + " · " + (p.afpId || p.id);
+  document.getElementById("correct-field").value = "phone";
+  document.getElementById("correct-new").value = "";
+  document.getElementById("correct-reason").value = "";
+  document.getElementById("correct-error").style.display = "none";
+  document.getElementById("correct-history").textContent = "Loading…";
+  onCorrectFieldChange();
+
+  document.getElementById("correct-modal-bg").style.display = "block";
+  document.body.style.overflow = "hidden";
+  loadCorrectHistory(partnerId);
+}
+
+function closeCorrectModal(ev) {
+  if (ev && ev.target !== ev.currentTarget) return;
+  document.getElementById("correct-modal-bg").style.display = "none";
+  document.body.style.overflow = "";
+  CORRECT_PARTNER_ID = null;
+}
+
+function onCorrectFieldChange() {
+  const p = ALL_PARTNERS.find(x => x.id === CORRECT_PARTNER_ID);
+  if (!p) return;
+  const field = document.getElementById("correct-field").value;
+  const isTerms = field.startsWith("__terms_");
+  document.getElementById("correct-terms-warning").style.display = isTerms ? "block" : "none";
+
+  let cur;
+  if (isTerms) cur = CORRECT_TERM_FIELDS[field].from(p);
+  else if (CORRECT_PLAIN_FIELDS[field]) cur = CORRECT_PLAIN_FIELDS[field](p);
+
+  const el = document.getElementById("correct-current");
+  if (cur === undefined || cur === null || cur === "") {
+    el.textContent = "(empty — use Update Funding to fill a blank field)";
+  } else {
+    el.textContent = String(cur);
+  }
+}
+
+async function loadCorrectHistory(partnerId) {
+  const el = document.getElementById("correct-history");
+  const res = await api({ action: "dealHistory", partnerId });
+  if (!res.ok) { el.textContent = res.error || "Could not load history."; return; }
+  if (!res.history || !res.history.length) {
+    el.textContent = "Nothing recorded yet. Changes made from here on will appear.";
+    return;
+  }
+  el.innerHTML = res.history.map(h => {
+    const when = h.at ? new Date(h.at).toLocaleString("en-IN",
+      { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" }) : "";
+    const d = h.details || {};
+    let what = h.action;
+    if (h.action === "deal.field_corrected") {
+      what = `corrected <b>${d.field}</b>: “${d.old_value ?? ""}” → “${d.new_value ?? ""}”`;
+    } else if (h.action === "deal.terms_corrected") {
+      what = "corrected the deal terms";
+    } else if (h.action === "payout.processed") {
+      what = `marked a payout processed (₹${d.amount_paid ?? "?"}, txn ${d.transaction_id ?? "?"})`;
+    } else if (h.action === "payout.undone") {
+      what = "undid a processed payout";
+    } else if (h.action === "deal.updated") {
+      what = "filled in blank fields";
+    }
+    const why = d.reason ? `<div style="color:var(--muted);font-style:italic">“${d.reason}”</div>` : "";
+    return `<div style="padding:7px 0;border-bottom:1px solid var(--border)">
+      <div>${what}</div>
+      <div style="color:var(--muted);font-size:11px">${h.who || "?"} · ${when}</div>${why}</div>`;
+  }).join("");
+}
+
+async function submitCorrection() {
+  const err = document.getElementById("correct-error");
+  err.style.display = "none";
+
+  const field   = document.getElementById("correct-field").value;
+  const value   = document.getElementById("correct-new").value.trim();
+  const reason  = document.getElementById("correct-reason").value.trim();
+  const isTerms = field.startsWith("__terms_");
+
+  if (!value)  { err.textContent = "Enter the corrected value."; err.style.display = "block"; return; }
+  if (reason.length < 5) { err.textContent = "Please give a reason — at least 5 characters."; err.style.display = "block"; return; }
+
+  const btn = document.getElementById("correct-submit");
+  btn.disabled = true; btn.textContent = "Saving…";
+
+  let res;
+  if (isTerms) {
+    const spec = CORRECT_TERM_FIELDS[field];
+    res = await api({ action: "correctTerms", partnerId: CORRECT_PARTNER_ID,
+                      changes: { [spec.key]: value }, reason });
+  } else {
+    res = await api({ action: "correctField", partnerId: CORRECT_PARTNER_ID,
+                      field, newValue: value, reason });
+  }
+
+  btn.disabled = false; btn.textContent = "Save correction";
+
+  if (!res.ok) { err.textContent = res.error || "Could not save."; err.style.display = "block"; return; }
+
+  if (isTerms) {
+    showToast(`Corrected. ${res.processed_kept || 0} paid payout(s) left untouched, ${res.pending_rebuilt || 0} unpaid rebuilt ✓`);
+  } else {
+    showToast("Corrected ✓");
+  }
+
+  await refreshData();
+  document.getElementById("correct-new").value = "";
+  document.getElementById("correct-reason").value = "";
+  onCorrectFieldChange();
+  loadCorrectHistory(CORRECT_PARTNER_ID);
+  if (MODAL_PARTNER && MODAL_PARTNER.id === CORRECT_PARTNER_ID) openPartnerModal(CORRECT_PARTNER_ID);
 }
 
 // ── AGREEMENT LINK ──
@@ -3133,6 +3705,7 @@ function openPartnerModal(partnerId) {
         </div>
         <div style="display:flex;gap:8px">
           ${(ROLE === "admin" || ROLE === "finance_admin") ? `<button onclick="openAddPartnerModal('${p.id}')" style="display:inline-flex;align-items:center;gap:5px;background:#fff;color:var(--ink);border:1.5px solid var(--border);font-size:11px;font-weight:700;text-transform:none;letter-spacing:normal;padding:6px 12px;border-radius:6px;cursor:pointer">🔄 Update Funding</button>` : ""}
+          ${ROLE === "admin" ? `<button onclick="openCorrectModal('${p.id}')" style="display:inline-flex;align-items:center;gap:5px;background:#fff;color:var(--ink);border:1.5px solid var(--border);font-size:11px;font-weight:700;text-transform:none;letter-spacing:normal;padding:6px 12px;border-radius:6px;cursor:pointer">✏️ Correct a detail</button>` : ""}
           <a href="${getAgreementUrl(p)}" target="_blank" style="display:inline-flex;align-items:center;gap:5px;background:var(--navy);color:#fff;font-size:11px;font-weight:700;text-transform:none;letter-spacing:normal;padding:6px 12px;border-radius:6px;text-decoration:none">
             📄 Generate Agreement
           </a>
