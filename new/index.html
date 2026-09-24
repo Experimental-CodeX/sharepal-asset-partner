@@ -4386,8 +4386,11 @@ const PAYOUT_UPLOAD_HEADERS = [
 
 // Appears on the partner's bank statement. Letters, digits and spaces only,
 // 30 characters maximum. Banks truncate, so the useful part goes first.
+// No company name — the statement already shows who sent the money, so the
+// narration only needs to say which instalment this is.
 function payoutNarration(p) {
-  return `SharePal payout ${p.payoutNum || ""}`
+  const of = p.totalPayouts ? ` of ${p.totalPayouts}` : "";
+  return `Payout ${p.payoutNum || ""}${of}`
     .replace(/[^a-zA-Z0-9 ]/g, "")
     .replace(/\s+/g, " ")
     .trim()
@@ -4608,7 +4611,7 @@ function generatePayoutFile() {
   const stamp = new Date().toISOString().slice(0, 10);
   XLSX.writeFile(wb, `bulk_payout_${stamp}.xlsx`);
 
-  showToast(`File downloaded — ${selected.length} payouts, ${fmtINR(selected.reduce((a,r)=>a+r.netAmount,0))} total. Upload it to RazorpayX; they'll mark themselves processed.`);
+  showToast(`File downloaded — ${selected.length} payouts, ${fmtINR(selected.reduce((a,r)=>a+r.netAmount,0))} total. Upload it to RazorpayX; payouts will mark themselves processed.`);
 }
 
 // ── TABS ──
