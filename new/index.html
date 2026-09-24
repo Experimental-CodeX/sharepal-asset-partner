@@ -96,6 +96,49 @@ a { text-decoration: none; color: inherit; }
   white-space: nowrap;
 }
 .btn-top:hover { background: rgba(255,255,255,0.16); }
+
+/* Overflow menu (admin only) */
+.tools-wrap { position: relative; }
+.btn-tools {
+  position: relative; width: 34px; height: 34px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 9px; cursor: pointer;
+}
+.btn-tools:hover { background: rgba(255,255,255,0.18); }
+.btn-tools:focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; }
+.btn-tools .dots, .btn-tools .dots::before, .btn-tools .dots::after {
+  position: absolute; width: 3.5px; height: 3.5px; border-radius: 50%; background: #fff;
+}
+.btn-tools .dots::before, .btn-tools .dots::after { content: ""; left: 0; }
+.btn-tools .dots::before { top: -6px; }
+.btn-tools .dots::after  { top: 6px; }
+/* A failure shouldn't go quiet just because the screen moved into a menu. */
+.tools-dot {
+  position: absolute; top: 5px; right: 5px; width: 7px; height: 7px;
+  border-radius: 50%; background: #ff5a4d; border: 1.5px solid var(--navy, #030d31);
+}
+.tools-menu {
+  position: absolute; top: calc(100% + 8px); right: 0; z-index: 140;
+  min-width: 268px; background: #fff; border: 1px solid var(--border);
+  border-radius: 12px; padding: 6px; box-shadow: 0 12px 32px rgba(3,13,49,0.18);
+}
+.tools-item {
+  display: flex; align-items: flex-start; gap: 10px; width: 100%;
+  background: none; border: 0; border-radius: 8px; padding: 10px;
+  text-align: left; cursor: pointer; font: inherit; color: var(--ink);
+}
+.tools-item:hover { background: var(--bg); }
+.tools-item:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+.ti-icon { font-size: 15px; line-height: 1.3; }
+.ti-text { display: flex; flex-direction: column; gap: 1px; flex: 1; }
+.ti-title { font-size: 13px; font-weight: 700; }
+.ti-sub { font-size: 11px; color: var(--muted); }
+.ti-count {
+  align-self: center; font-size: 11px; font-weight: 700;
+  padding: 2px 8px; border-radius: 20px; background: #fbeceb; color: #9d2a20;
+}
+.ti-count.waiting { background: #fff8e6; color: #7a5800; }
 /* On a narrow screen the labels are dropped and only the icon is kept, so the
    top bar does not wrap onto two lines. */
 @media (max-width: 860px) {
@@ -447,8 +490,30 @@ tbody tr:hover td { background: #f9faff; }
     <div class="topbar-right">
       <span class="topbar-date" id="topbar-date"></span>
       <button class="btn-add-funding" id="btn-add-funding" onclick="openAddPartnerModal()">+ Add Funding</button>
-      <button class="btn-top" id="btn-sync" onclick="openSyncModal()" title="Agreement status sent to the asset partner platform" style="display:none">🔗 Platform sync</button>
-      <button class="btn-top" id="btn-team" onclick="openTeamModal()" title="People, PINs and sign-in history" style="display:none">👥 Team</button>
+      <div class="tools-wrap" id="tools-wrap" style="display:none">
+        <button class="btn-tools" id="btn-tools" onclick="toggleToolsMenu(event)"
+                aria-haspopup="true" aria-expanded="false" aria-label="More tools" title="More tools">
+          <span class="dots" aria-hidden="true"></span>
+          <span class="tools-dot" id="tools-dot" hidden></span>
+        </button>
+        <div class="tools-menu" id="tools-menu" role="menu" hidden>
+          <button class="tools-item" role="menuitem" onclick="pickTool('sync')">
+            <span class="ti-icon">🔗</span>
+            <span class="ti-text">
+              <span class="ti-title">Platform sync</span>
+              <span class="ti-sub" id="tools-sync-sub">Agreement and payout status</span>
+            </span>
+            <span class="ti-count" id="tools-sync-count" hidden></span>
+          </button>
+          <button class="tools-item" role="menuitem" onclick="pickTool('team')">
+            <span class="ti-icon">👥</span>
+            <span class="ti-text">
+              <span class="ti-title">Team &amp; security</span>
+              <span class="ti-sub">People, PINs, sign-in history</span>
+            </span>
+          </button>
+        </div>
+      </div>
       <button class="btn-refresh" id="btn-refresh" onclick="manualRefresh()" title="Refresh data">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
       </button>
@@ -2173,16 +2238,11 @@ async function bootApp() {
   if (btnTdsSettings) btnTdsSettings.style.display = (ROLE === "admin" || ROLE === "finance_admin") ? "inline-flex" : "none";
 
   // Team & security — admin only
-  const btnTeam = document.getElementById("btn-team");
-  if (btnTeam) btnTeam.style.display = (ROLE === "admin") ? "inline-flex" : "none";
-
-  // Platform sync — anyone who can move an agreement along needs to see
-  // whether it actually reached the platform
-  const btnSync = document.getElementById("btn-sync");
-  if (btnSync) {
-    btnSync.style.display =
-      ["admin","finance_admin","finance","sign"].includes(ROLE) ? "inline-flex" : "none";
-    if (btnSync.style.display !== "none") refreshSyncBadge();
+  // Admin tools live behind the ⋮ menu, and only an admin sees it at all.
+  const tools = document.getElementById("tools-wrap");
+  if (tools) {
+    tools.style.display = (ROLE === "admin") ? "block" : "none";
+    if (ROLE === "admin") refreshSyncBadge();
   }
 
   // Show setup banner if not configured
@@ -3418,28 +3478,76 @@ async function pushIfSigned(partnerId) {
   }
 }
 
-// A push that failed should be visible without anyone going looking for it.
+// ── Admin tools menu ──
+function toggleToolsMenu(ev) {
+  if (ev) ev.stopPropagation();
+  const menu = document.getElementById("tools-menu");
+  const btn  = document.getElementById("btn-tools");
+  const open = menu.hidden;
+  menu.hidden = !open;
+  btn.setAttribute("aria-expanded", String(open));
+  if (open) {
+    document.addEventListener("click", closeToolsMenu);
+    document.addEventListener("keydown", toolsMenuKey);
+    refreshSyncBadge();
+  }
+}
+function closeToolsMenu() {
+  const menu = document.getElementById("tools-menu");
+  if (!menu || menu.hidden) return;
+  menu.hidden = true;
+  const btn = document.getElementById("btn-tools");
+  if (btn) btn.setAttribute("aria-expanded", "false");
+  document.removeEventListener("click", closeToolsMenu);
+  document.removeEventListener("keydown", toolsMenuKey);
+}
+function toolsMenuKey(e) {
+  if (e.key === "Escape") {
+    closeToolsMenu();
+    const btn = document.getElementById("btn-tools");
+    if (btn) btn.focus();
+  }
+}
+function pickTool(which) {
+  closeToolsMenu();
+  if (which === "sync") openSyncModal();
+  if (which === "team") openTeamModal();
+}
+
+// Something that failed shouldn't go quiet just because the screen moved into
+// a menu, so the count sits on the menu item and a red dot sits on the ⋮ itself.
 async function refreshSyncBadge() {
   try {
     const res = await api({ action: "listSyncs" });
-    const btn = document.getElementById("btn-sync");
-    if (!btn || !res.ok) return;
+    if (!res.ok) return;
     const failed = res.failed || 0, pending = res.pending || 0;
+    const dot   = document.getElementById("tools-dot");
+    const count = document.getElementById("tools-sync-count");
+    const sub   = document.getElementById("tools-sync-sub");
+    if (!dot || !count || !sub) return;
+
     if (failed > 0) {
-      btn.innerHTML = "🔗 Platform sync <b style='color:#ff8a80'>" + failed + "</b>";
-      btn.title = failed + " agreement(s) the platform did not accept";
+      dot.hidden = false;
+      count.hidden = false;
+      count.className = "ti-count";
+      count.textContent = failed;
+      sub.textContent = failed + " not accepted by the platform";
     } else if (pending > 0) {
-      btn.innerHTML = "🔗 Platform sync <b style='color:#ffd479'>" + pending + "</b>";
-      btn.title = pending + " waiting to be sent";
+      dot.hidden = true;
+      count.hidden = false;
+      count.className = "ti-count waiting";
+      count.textContent = pending;
+      sub.textContent = pending + " waiting to be sent";
     } else {
-      btn.innerHTML = "🔗 Platform sync";
-      btn.title = "Agreement status sent to the asset partner platform";
+      dot.hidden = true;
+      count.hidden = true;
+      sub.textContent = "Agreement and payout status";
     }
   } catch (e) { /* a badge is not worth an error message */ }
 }
 
 function openSyncModal() {
-  if (!["admin","finance_admin","finance","sign"].includes(ROLE)) return;
+  if (ROLE !== "admin") return;
   document.getElementById("sync-modal-bg").style.display = "block";
   document.body.style.overflow = "hidden";
   document.getElementById("sync-output").style.display = "none";
@@ -4389,8 +4497,7 @@ const PAYOUT_UPLOAD_HEADERS = [
 // No company name — the statement already shows who sent the money, so the
 // narration only needs to say which instalment this is.
 function payoutNarration(p) {
-  const of = p.totalPayouts ? ` of ${p.totalPayouts}` : "";
-  return `Payout ${p.payoutNum || ""}${of}`
+  return `Payout ${p.payoutNum || ""}`
     .replace(/[^a-zA-Z0-9 ]/g, "")
     .replace(/\s+/g, " ")
     .trim()
