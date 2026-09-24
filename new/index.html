@@ -4361,15 +4361,38 @@ async function submitAddPartner() {
 // payout platform manually, executes the transfer there, and then marks
 // each payout processed here the normal way (with the real transaction ID)
 // once money has actually moved.
+// RazorpayX "Bank Transfer + Beneficiary Details" template, current version.
+// Copied character for character from Razorpay's own published CSV — a header
+// that differs even by a space gets the file rejected on upload.
+//
+// The column that matters most is the last one. "Payout Reference ID" carries
+// this tool's own payout key, RazorpayX returns it in the webhook, and that is
+// the only thing linking a bank payment back to the right row here. Without
+// it, nothing reconciles and every transaction ID goes back to being typed by
+// hand.
 const PAYOUT_UPLOAD_HEADERS = [
   "Beneficiary Name (Mandatory) Special characters not supported",
   "Beneficiary's Account Number (Mandatory) Typically 9-18 digits",
   "IFSC Code (Mandatory) 11 digit code of the beneficiary\u2019s bank account. Eg. HDFC0004277",
   "Payout Amount (Mandatory) Amount should be in rupees",
   "Payout Mode (Mandatory) Select IMPS/NEFT/RTGS",
+  "Payout Narration (Optional) Will appear on bank statement (max 30 char with no special characters)",
+  "Notes (Optional) A note for internal reference",
   "Phone Number (Optional)",
   "Email ID (Optional)",
+  "Contact Reference ID (Optional) Eg: Employee ID or Customer ID",
+  "Payout Reference ID (Optional) Eg: Bill no or Invoice No or Pay ID",
 ];
+
+// Appears on the partner's bank statement. Letters, digits and spaces only,
+// 30 characters maximum. Banks truncate, so the useful part goes first.
+function payoutNarration(p) {
+  return `SharePal payout ${p.payoutNum || ""}`
+    .replace(/[^a-zA-Z0-9 ]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 30);
+}
 
 let BULK_PAYOUT_ROWS = []; // built fresh each time the modal opens or the date filter changes
 let BP_SELECTED_DATE = null; // null = default "overdue & due today" view; else a specific "YYYY-MM-DD"
@@ -4546,24 +4569,46 @@ function generatePayoutFile() {
   if (!confirm(confirmMsg)) return;
 
   const mode = document.getElementById("bp-payout-mode").value;
+
+  // Two payouts sharing a reference would both match the same webhook and one
+  // would be marked from the other's payment. Payout keys are unique by
+  // construction, so this should never fire — which is exactly why it is worth
+  // checking before the file leaves.
+  const refs = selected.map(r => r.payout.key);
+  const dupes = refs.filter((x, i) => refs.indexOf(x) !== i);
+  if (dupes.length) {
+    showToast("Duplicate payout reference: " + dupes[0] + ". Nothing exported — tell Deep.", "error");
+    return;
+  }
+  const missingRef = selected.filter(r => !r.payout.key);
+  if (missingRef.length) {
+    showToast(missingRef.length + " payout(s) have no reference. Nothing exported — tell Deep.", "error");
+    return;
+  }
+
   const rows = selected.map(r => [
     r.name,
     r.account,
     r.ifsc,
     Math.round(r.netAmount * 100) / 100, // rupees, numeric — never a formatted string
     mode,
+    payoutNarration(r.payout),
+    r.payout.afpId || r.payout.partnerId || "",   // internal note, visible in RazorpayX
     r.phone,
     r.email,
+    "",                                           // contact reference — left to RazorpayX
+    r.payout.key,                                 // ← how the bank's confirmation finds its way home
   ]);
 
   const ws = XLSX.utils.aoa_to_sheet([PAYOUT_UPLOAD_HEADERS, ...rows]);
-  ws["!cols"] = [{ wch: 32 }, { wch: 33 }, { wch: 24 }, { wch: 28 }, { wch: 29 }, { wch: 20 }, { wch: 19 }];
+  ws["!cols"] = [{ wch: 32 }, { wch: 33 }, { wch: 24 }, { wch: 28 }, { wch: 29 },
+                 { wch: 26 }, { wch: 22 }, { wch: 20 }, { wch: 19 }, { wch: 26 }, { wch: 26 }];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Bank transfer + Bene details");
   const stamp = new Date().toISOString().slice(0, 10);
   XLSX.writeFile(wb, `bulk_payout_${stamp}.xlsx`);
 
-  showToast(`File downloaded — ${selected.length} payouts, ${fmtINR(selected.reduce((a,r)=>a+r.netAmount,0))} total.`);
+  showToast(`File downloaded — ${selected.length} payouts, ${fmtINR(selected.reduce((a,r)=>a+r.netAmount,0))} total. Upload it to RazorpayX; they'll mark themselves processed.`);
 }
 
 // ── TABS ──
