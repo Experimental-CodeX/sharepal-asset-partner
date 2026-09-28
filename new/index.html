@@ -140,6 +140,15 @@ a { text-decoration: none; color: inherit; }
   padding: 2px 8px; border-radius: 20px; background: #fbeceb; color: #9d2a20;
 }
 .ti-count.waiting { background: #fff8e6; color: #7a5800; }
+
+/* Status filter on the Platform sync screen */
+.sync-chip {
+  background: #fff; border: 1.5px solid var(--border); border-radius: 20px;
+  font: 700 11px/1 inherit; padding: 6px 12px; cursor: pointer; color: var(--muted);
+}
+.sync-chip:hover { background: var(--bg); }
+.sync-chip.active { background: var(--navy); border-color: var(--navy); color: #fff; }
+.sync-chip .n { opacity: .65; margin-left: 4px; font-weight: 600; }
 /* On a narrow screen the labels are dropped and only the icon is kept, so the
    top bar does not wrap onto two lines. */
 @media (max-width: 860px) {
@@ -873,6 +882,7 @@ tbody tr:hover td { background: #f9faff; }
             <button class="team-tab" id="sync-tab-payout_processed" onclick="switchSyncTab('payout_processed')">Payouts</button>
           </div>
           <div id="sync-summary" style="font-size:13px;margin-bottom:10px"></div>
+          <div id="sync-filters" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px"></div>
           <div style="font-size:11px;color:var(--muted);margin-bottom:14px;line-height:1.5">
             "On the platform" means the endpoint accepted the request. It has answered
             <b>true</b> before without applying the change, so for anything important,
@@ -3555,6 +3565,30 @@ async function refreshSyncBadge() {
 }
 
 let SYNC_TAB = "agreement_signed";
+let SYNC_FILTER = "all";
+let SYNC_ROWS = [];
+
+// The queue entry for a payout is "<deal id>-<instalment>", so the number is
+// recoverable even for rows that carry no payload — a skipped manual deal, say.
+function payoutNumberOf(s) {
+  const fromPayload = s.payload && s.payload.payout_number;
+  if (fromPayload !== undefined && fromPayload !== null && fromPayload !== "") return fromPayload;
+  const tail = String(s.ref_id || "").split("-").pop();
+  return /^\d+$/.test(tail) ? tail : null;
+}
+
+const SYNC_FILTERS = [
+  { key: "all",     label: "All",              match: () => true },
+  { key: "pending", label: "Waiting to send",  match: s => s.status === "pending" },
+  { key: "sent",    label: "On the platform",  match: s => s.status === "sent" },
+  { key: "failed",  label: "Not accepted",     match: s => s.status === "failed" },
+  { key: "skipped", label: "Nothing to send",  match: s => s.status === "skipped" },
+];
+
+function setSyncFilter(key) {
+  SYNC_FILTER = key;
+  drawSyncRows();
+}
 
 function openSyncModal() {
   if (ROLE !== "admin") return;
@@ -3566,6 +3600,7 @@ function openSyncModal() {
 
 function switchSyncTab(tab) {
   SYNC_TAB = tab;
+  SYNC_FILTER = "all";
   ["agreement_signed","payout_processed"].forEach(t =>
     document.getElementById("sync-tab-" + t).classList.toggle("active", t === tab));
   // Backfill only makes sense for agreements — payouts queue themselves as
@@ -3610,9 +3645,38 @@ async function renderSyncList() {
        ${pending} waiting to send.`
     : `${pending} waiting to send, none failed.`;
 
+  SYNC_ROWS = res.syncs;
+
   if (!res.syncs.length) {
+    document.getElementById("sync-filters").innerHTML = "";
     list.innerHTML = `<div style='color:var(--muted);font-size:12px'>Nothing yet. This fills up as ${
       isPayout ? "payouts are marked processed" : "agreements are signed"}.</div>`;
+    return;
+  }
+
+  // Only offer a filter that would actually find something
+  document.getElementById("sync-filters").innerHTML = SYNC_FILTERS
+    .map(f => {
+      const n = SYNC_ROWS.filter(f.match).length;
+      if (n === 0 && f.key !== "all") return "";
+      return `<button class="sync-chip${SYNC_FILTER === f.key ? " active" : ""}"
+        data-key="${f.key}" onclick="setSyncFilter('${f.key}')">${f.label}<span class="n">${n}</span></button>`;
+    }).join("");
+
+  drawSyncRows();
+}
+
+function drawSyncRows() {
+  const list = document.getElementById("sync-list");
+  const isPayout = (SYNC_TAB === "payout_processed");
+  const f = SYNC_FILTERS.find(x => x.key === SYNC_FILTER) || SYNC_FILTERS[0];
+  const res = { syncs: SYNC_ROWS.filter(f.match) };
+
+  document.querySelectorAll("#sync-filters .sync-chip").forEach(c =>
+    c.classList.toggle("active", c.dataset.key === f.key));
+
+  if (!res.syncs.length) {
+    list.innerHTML = `<div style='color:var(--muted);font-size:12px'>Nothing under "${f.label}".</div>`;
     return;
   }
 
@@ -3622,12 +3686,18 @@ async function renderSyncList() {
     const canResend = (s.status === "sent");
     const ref = s.ref_id || s.deal_id;
     const p = s.payload || {};
+    // Without the instalment number, a partner with several payouts shows
+    // several identical-looking rows.
+    const num = isPayout ? payoutNumberOf(s) : null;
+    const title = isPayout && num !== null
+      ? `${s.partner_name || s.deal_id} · Payout ${num}`
+      : (s.partner_name || s.deal_id);
     const detail = isPayout
-      ? `payout ${p.payout_number ?? ""} · ${p.transaction_id ? "txn " + p.transaction_id : "no txn"}${p.amount ? " · " + fmtINR(p.amount) : ""}`
+      ? `${p.transaction_id ? "txn " + p.transaction_id : "no txn yet"}${p.amount ? " · " + fmtINR(p.amount) : ""} · order ${s.order_id || s.deal_id}`
       : (s.order_id ? "order " + s.order_id : s.deal_id);
     return `<div style="padding:10px 0;border-bottom:1px solid var(--border)">
       <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">
-        <b style="font-size:13px">${s.partner_name || s.deal_id}</b>
+        <b style="font-size:13px">${title}</b>
         <span style="font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;background:${lbl.bg};color:${lbl.fg}">${lbl.text}</span>
         <span style="font-size:11px;color:var(--muted)">${detail}</span>
         ${canRetry  ? `<button class="team-act" style="margin-left:auto" onclick="retryOneSync('${ref}')">Retry</button>` : ""}
