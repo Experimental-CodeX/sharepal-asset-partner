@@ -2071,6 +2071,8 @@ async function api(params) {
       case "retrySync":       return await _rpc("retry_sync", { p_deal_id: params.dealId,
                                                                 p_event: params.event || "agreement_signed" });
       case "backfillSigned":  return await _rpc("backfill_signed_agreements", {});
+      case "backfillPayouts": return await _rpc("backfill_processed_payouts",
+                                                { p_since: params.since || null });
 
       case "pushSigned": {
         // The API token lives on the server, never here. This page is public —
@@ -3585,6 +3587,22 @@ const SYNC_FILTERS = [
   { key: "skipped", label: "Nothing to send",  match: s => s.status === "skipped" },
 ];
 
+// "replied 200: [json] null" is accurate but reads like a fault. It usually
+// means the endpoint accepted the request and simply returns nothing — which is
+// how Venkatesh's payout endpoint behaves, unlike his agreement one which
+// answers true or false. The raw reply is kept in the tooltip either way.
+function describeReply(s) {
+  const raw = String(s.response_body || "").replace(/^\[(json|form)\]\s*/, "").trim();
+  const empty = (raw === "" || raw === "null" || raw === "{}");
+  const tries = `${s.attempts} attempt${s.attempts === 1 ? "" : "s"}`;
+  if (s.status === "sent") {
+    return empty
+      ? `Accepted (${s.response_code}) — the platform returns no answer, so this only confirms the request was received · ${tries}`
+      : `Accepted (${s.response_code}) — replied ${raw.slice(0, 80)} · ${tries}`;
+  }
+  return `Refused (${s.response_code}) — ${raw ? raw.slice(0, 100) : "no reason given"} · ${tries}`;
+}
+
 function setSyncFilter(key) {
   SYNC_FILTER = key;
   drawSyncRows();
@@ -3603,10 +3621,12 @@ function switchSyncTab(tab) {
   SYNC_FILTER = "all";
   ["agreement_signed","payout_processed"].forEach(t =>
     document.getElementById("sync-tab-" + t).classList.toggle("active", t === tab));
-  // Backfill only makes sense for agreements — payouts queue themselves as
-  // they are processed, so there is no history to catch up on.
-  document.getElementById("sync-backfill-btn").style.display =
-    (tab === "agreement_signed") ? "inline-flex" : "none";
+  // Both kinds have a history from before this existed.
+  const bf = document.getElementById("sync-backfill-btn");
+  bf.style.display = "inline-flex";
+  bf.textContent = (tab === "agreement_signed")
+    ? "Queue already-signed agreements"
+    : "Queue older payouts";
   document.getElementById("sync-output").style.display = "none";
   renderSyncList();
 }
@@ -3704,7 +3724,7 @@ function drawSyncRows() {
         ${canResend ? `<button class="team-act" style="margin-left:auto" onclick="retryOneSync('${ref}')" title="The platform can answer 'true' without having applied it. Safe to send again.">Send again</button>` : ""}
       </div>
       ${s.note ? `<div style="font-size:11px;color:var(--muted);margin-top:3px">${s.note}</div>` : ""}
-      ${s.response_code ? `<div style="font-size:11px;color:var(--muted);margin-top:3px">replied ${s.response_code}: ${String(s.response_body || "").slice(0,120)} · ${s.attempts} attempt(s)</div>` : ""}
+      ${s.response_code ? `<div style="font-size:11px;color:var(--muted);margin-top:3px" title="${String(s.response_body || "").replace(/"/g, "&quot;").slice(0,300)}">${describeReply(s)}</div>` : ""}
     </div>`;
   }).join("");
 }
@@ -3755,14 +3775,49 @@ async function retryOneSync(dealId) {
 }
 
 async function runBackfill() {
-  if (!confirm(
-    "This queues every agreement already marked Signed so the platform can be told about them.\n\n" +
-    "It does not send anything by itself — you still press Send afterwards.\n\n" +
-    "Do a dry run first and check the list.")) return;
-  const res = await api({ action: "backfillSigned" });
+  if (SYNC_TAB === "agreement_signed") {
+    if (!confirm(
+      "This queues every agreement already marked Signed so the platform can be told about them.\n\n" +
+      "It does not send anything by itself — you still press Send afterwards.\n\n" +
+      "Do a dry run first and check the list.")) return;
+    const res = await api({ action: "backfillSigned" });
+    if (!res.ok) { showToast(res.error || "Could not queue", "error"); return; }
+    showToast(`${res.pending} queued, ${res.skipped} manual deal(s) skipped ✓`);
+    renderSyncList();
+    refreshSyncBadge();
+    return;
+  }
+
+  // Payouts. There are a hundred or so from before this existed, so offer a
+  // cut-off rather than making "all of them" the only choice.
+  const since = prompt(
+    "Queue older payouts so the platform can be told about them.\n\n" +
+    "Nothing is sent by this — you still press Send afterwards, in batches.\n\n" +
+    "From which date? Use YYYY-MM-DD, or leave blank for every payout ever made.",
+    "");
+  if (since === null) return;
+  const d = since.trim();
+  if (d && !/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+    showToast("Use the format YYYY-MM-DD, e.g. 2026-04-01", "error");
+    return;
+  }
+
+  const res = await api({ action: "backfillPayouts", since: d || null });
   if (!res.ok) { showToast(res.error || "Could not queue", "error"); return; }
-  showToast(`${res.pending} queued, ${res.skipped} manual deal(s) skipped ✓`);
+
+  const out = document.getElementById("sync-output");
+  out.style.display = "block";
+  out.textContent =
+    "NOTHING HAS BEEN SENT — these are only queued.\n\n" +
+    `Ready to send:        ${res.ready_to_send}\n` +
+    `Waiting for a bank reference: ${res.awaiting_reference}\n` +
+    `Manual deals skipped: ${res.skipped}\n\n` +
+    "Do a dry run next and check it, then send. Send goes 25 at a time, so " +
+    "press it more than once — and check the first batch landed before the rest.";
+
+  showToast(`${res.ready_to_send} payout(s) queued ✓`);
   renderSyncList();
+  refreshSyncBadge();
 }
 
 // ── TEAM & SECURITY (admin only) ──
