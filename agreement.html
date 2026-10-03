@@ -1677,7 +1677,7 @@ async function sendDigio() {
   try {
     // Step 1: Generate PDF blob from the preview HTML (Meon only accepts PDF)
     const g       = id => document.getElementById(id)?.value || '';
-    const fname   = `Loan_Agreement_${(g('lender_name')||'Lender').replace(/\s+/g,'_')}.pdf`;
+    const fname   = `Agreement_${(g('lender_name')||'Lender').replace(/\s+/g,'_')}.pdf`;
 
     document.getElementById('digio-send-lbl').innerHTML = '<span class="spin"></span> Generating PDF…';
     setDigioStatus('info', 'Generating PDF…', 'Converting agreement to PDF for Meon upload.');
@@ -2151,7 +2151,7 @@ async function downloadDOCX() {
     const a    = document.createElement('a');
     const g    = id => document.getElementById(id)?.value || '';
     a.href     = url;
-    a.download = `Loan_Agreement_${(g('lender_name')||'Agreement').replace(/\s+/g,'_')}.docx`;
+    a.download = `Agreement_${(g('lender_name')||'Agreement').replace(/\s+/g,'_')}.docx`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -2266,7 +2266,7 @@ async function openInGoogleDocs() {
 
     // Step 3: Upload to Google Drive, converting to Google Docs format on the fly
     const g = id => document.getElementById(id)?.value || '';
-    const fname = `Loan_Agreement_${(g('lender_name')||'Draft').replace(/\s+/g,'_')}`;
+    const fname = `Agreement_${(g('lender_name')||'Draft').replace(/\s+/g,'_')}`;
 
     const meta = JSON.stringify({
       name: fname,
@@ -2765,7 +2765,7 @@ async function histDOCX(id) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Loan_Agreement_${(rec.lender_name||'Agreement').replace(/\s+/g,'_')}.docx`;
+    a.download = `Agreement_${(rec.lender_name||'Agreement').replace(/\s+/g,'_')}.docx`;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     URL.revokeObjectURL(url);
   } catch(e) { alert('DOCX error: ' + e.message); }
@@ -2788,7 +2788,7 @@ async function histGDocs(id) {
   try {
     const token = await requestGISToken(clientId);
     const blob = await buildDocxBlob();
-    const fname = `Loan_Agreement_${(rec.lender_name||'Draft').replace(/\s+/g,'_')}`;
+    const fname = `Agreement_${(rec.lender_name||'Draft').replace(/\s+/g,'_')}`;
     const meta = JSON.stringify({ name: fname, mimeType: 'application/vnd.google-apps.document' });
     const form = new FormData();
     form.append('metadata', new Blob([meta], { type: 'application/json' }));
